@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  static const primary = Color(0xFF2F80ED);
-  static const primaryDark = Color(0xFF1768D7);
-  static const secondary = Color(0xFF20B486);
-  static const teal = Color(0xFF20B486);
-  static const tealDark = Color(0xFF128361);
-  static const pink = Color(0xFFFF4F8B);
-  static const background = Color(0xFFF8FBFD);
+  static const primary = Color(0xFF246BFD);
+  static const primaryDark = Color(0xFF154DC3);
+  static const secondary = Color(0xFF169C8A);
+  static const teal = Color(0xFF169C8A);
+  static const tealDark = Color(0xFF0E7467);
+  static const pink = Color(0xFFE06A73);
+  static const background = Color(0xFFF7F8F5);
   static const surface = Color(0xFFFFFFFF);
-  static const elevated = Color(0xFFF0F6FA);
-  static const softBlue = Color(0xFFEAF4FF);
-  static const borderSubtle = Color(0xFFEEF2F5);
-  static const border = Color(0xFFE3EAF0);
-  static const borderStrong = Color(0xFFD4DEE7);
-  static const textPrimary = Color(0xFF152231);
-  static const textSecondary = Color(0xFF607284);
-  static const muted = Color(0xFF8B99A6);
+  static const elevated = Color(0xFFF1F4F3);
+  static const softBlue = Color(0xFFEAF1FF);
+  static const borderSubtle = Color(0xFFEFF1EF);
+  static const border = Color(0xFFE2E6E4);
+  static const borderStrong = Color(0xFFD2D8D5);
+  static const textPrimary = Color(0xFF152536);
+  static const textSecondary = Color(0xFF586A78);
+  static const muted = Color(0xFF7F8D97);
   static const success = teal;
   static const warning = Color(0xFFF6A51C);
   static const danger = Color(0xFFD9515F);
@@ -28,7 +28,7 @@ abstract final class AppColors {
   );
 
   static const mysteryGradient = LinearGradient(
-    colors: [primary, Color(0xFF6D5CE7), pink],
+    colors: [Color(0xFF173D66), primary, teal],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -41,9 +41,15 @@ abstract final class AppColors {
 }
 
 abstract final class AppTokens {
-  static const pagePadding = 16.0;
-  static const cardRadius = 26.0;
-  static const controlRadius = 16.0;
+  static const pagePadding = 18.0;
+  static const cardRadius = 20.0;
+  static const controlRadius = 14.0;
+  static const space4 = 4.0;
+  static const space8 = 8.0;
+  static const space12 = 12.0;
+  static const space16 = 16.0;
+  static const space24 = 24.0;
+  static const space32 = 32.0;
   static const fast = Duration(milliseconds: 180);
   static const normal = Duration(milliseconds: 320);
 }
@@ -53,6 +59,7 @@ abstract final class AppTheme {
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: Brightness.light,
+      surface: AppColors.surface,
     );
 
     return ThemeData(
@@ -63,6 +70,7 @@ abstract final class AppTheme {
         surface: AppColors.surface,
       ),
       scaffoldBackgroundColor: AppColors.background,
+      fontFamily: 'Roboto',
       splashFactory: InkRipple.splashFactory,
       appBarTheme: const AppBarTheme(
         elevation: 0,
@@ -73,7 +81,7 @@ abstract final class AppTheme {
         titleTextStyle: TextStyle(
           color: AppColors.textPrimary,
           fontSize: 20,
-          fontWeight: FontWeight.w900,
+          fontWeight: FontWeight.w700,
         ),
       ),
       cardTheme: CardThemeData(
@@ -89,7 +97,7 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 50),
+          minimumSize: const Size(0, 52),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTokens.controlRadius),
@@ -101,7 +109,7 @@ abstract final class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primary,
           minimumSize: const Size(0, 48),
-          side: const BorderSide(color: AppColors.border),
+          side: const BorderSide(color: AppColors.borderStrong),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTokens.controlRadius),
           ),
@@ -111,37 +119,43 @@ abstract final class AppTheme {
       textTheme: const TextTheme(
         headlineLarge: TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 28,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -1.1,
+          fontSize: 30,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -.8,
+          height: 1.12,
         ),
         headlineMedium: TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 23,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -.7,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -.5,
+          height: 1.18,
         ),
         titleLarge: TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 19,
-          fontWeight: FontWeight.w900,
-          letterSpacing: -.35,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -.25,
         ),
         titleMedium: TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 15,
-          fontWeight: FontWeight.w800,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
         bodyMedium: TextStyle(
           color: AppColors.textSecondary,
-          fontSize: 13,
+          fontSize: 14,
+          height: 1.5,
+        ),
+        bodySmall: TextStyle(
+          color: AppColors.muted,
+          fontSize: 12,
           height: 1.45,
         ),
-        bodySmall: TextStyle(color: AppColors.muted, fontSize: 11, height: 1.4),
         labelLarge: TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -151,7 +165,7 @@ abstract final class AppTheme {
           horizontal: 14,
           vertical: 13,
         ),
-        hintStyle: const TextStyle(color: AppColors.muted, fontSize: 12),
+        hintStyle: const TextStyle(color: AppColors.muted, fontSize: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: AppColors.border),
@@ -173,6 +187,24 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surface,
         modalBackgroundColor: AppColors.surface,
         showDragHandle: true,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.surface,
+        selectedColor: AppColors.softBlue,
+        side: const BorderSide(color: AppColors.border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        labelStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(minimumSize: const Size.square(44)),
       ),
     );
   }

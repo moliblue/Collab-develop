@@ -65,6 +65,7 @@ class _AppShellViewState extends State<AppShellView> {
                           MapModuleView(
                             viewModel: vm.map,
                             places: vm.discovery.places,
+                            active: vm.tab == MainTab.map,
                             onBack: vm.back,
                             onXpReward: vm.rewardXp,
                             notify: vm.showToast,
@@ -120,14 +121,25 @@ class _AppShellViewState extends State<AppShellView> {
         const Text(
           'Amberly',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
         const Text(
           'Role: Admin',
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 10, color: AppColors.primary),
         ),
-        const SizedBox(height: 15),
+        const SizedBox(height: 20),
+        const Divider(),
+        const SizedBox(height: 8),
+        const Text(
+          'Development tools',
+          style: TextStyle(
+            color: AppColors.muted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: () {
             Navigator.pop(context);
@@ -177,14 +189,14 @@ class _Header extends StatelessWidget {
   final VoidCallback onProfileSettings;
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+    padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
     decoration: const BoxDecoration(
-      color: Color(0xFAFFFFFF),
+      color: AppColors.surface,
       border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
     ),
     child: Row(
       children: <Widget>[
-        if (viewModel.hasNestedScreen)
+        if (viewModel.hasNestedScreen && viewModel.tab != MainTab.map)
           IconButton(
             tooltip: 'Back',
             onPressed: viewModel.back,
@@ -194,58 +206,24 @@ class _Header extends StatelessWidget {
             ),
             icon: const Icon(Icons.arrow_back_rounded, size: 19),
           )
-        else if (viewModel.tab != MainTab.plan) ...<Widget>[
-          InkWell(
-            onTap: () => viewModel.selectTab(MainTab.mystery),
-            borderRadius: BorderRadius.circular(14),
-            child: const Row(
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 19,
-                  backgroundColor: AppColors.primary,
-                  child: Icon(
-                    Icons.explore_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Explore My',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -.4,
-                      ),
-                    ),
-                    Text(
-                      '● Malaysia · explore nearby',
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+        else ...<Widget>[
+          const CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primary,
+            child: Icon(Icons.explore_rounded, color: Colors.white, size: 20),
           ),
+          const SizedBox(width: 10),
         ],
         if (viewModel.tab == MainTab.plan) ...<Widget>[
-          const SizedBox(width: 7),
           Expanded(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: viewModel.plan.planName,
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 14,
                   color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
                 items: viewModel.plan.history
                     .map(
@@ -287,8 +265,28 @@ class _Header extends StatelessWidget {
             onPressed: () => viewModel.plan.setSection(PlanSection.history),
             icon: const Icon(Icons.add_rounded, color: AppColors.primary),
           ),
-        ] else
-          const Spacer(),
+        ] else ...<Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  _title(viewModel.tab),
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -.25,
+                  ),
+                ),
+                const Text(
+                  'Explore Malaysia your way',
+                  style: TextStyle(fontSize: 11, color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
+        ],
         IconButton(
           tooltip: 'Profile settings',
           onPressed: onProfileSettings,
@@ -302,138 +300,60 @@ class _Header extends StatelessWidget {
       ],
     ),
   );
+
+  String _title(MainTab tab) => switch (tab) {
+    MainTab.discover => 'Discover',
+    MainTab.map => 'Explore map',
+    MainTab.mystery => 'Mystery Journey',
+    MainTab.plan => 'My trip',
+    MainTab.profile => 'Traveller profile',
+  };
 }
 
 class _BottomNavigation extends StatelessWidget {
   const _BottomNavigation({required this.viewModel});
   final AppViewModel viewModel;
   @override
-  Widget build(BuildContext context) {
-    const tabs = <(MainTab, String, IconData)>[
-      (MainTab.discover, 'Discover', Icons.search_rounded),
-      (MainTab.map, 'Map', Icons.map_rounded),
-      (MainTab.mystery, 'Mystery', Icons.explore_rounded),
-      (MainTab.plan, 'Plan', Icons.calendar_month_rounded),
-      (MainTab.profile, 'Profile', Icons.person_rounded),
-    ];
-    return Container(
-      height: 74,
-      padding: const EdgeInsets.fromLTRB(5, 6, 5, 7),
-      decoration: const BoxDecoration(
-        color: Color(0xFCFFFFFF),
-        border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Color(0x112A435C),
-            blurRadius: 25,
-            offset: Offset(0, -8),
-          ),
-        ],
+  Widget build(BuildContext context) => NavigationBar(
+    height: 68,
+    selectedIndex: viewModel.tab.index,
+    backgroundColor: AppColors.surface,
+    indicatorColor: AppColors.softBlue,
+    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+    onDestinationSelected: (int index) =>
+        viewModel.selectTab(MainTab.values[index]),
+    destinations: <NavigationDestination>[
+      const NavigationDestination(
+        icon: Icon(Icons.search_rounded, key: Key('tab_discover')),
+        selectedIcon: Icon(Icons.travel_explore_rounded),
+        label: 'Discover',
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: tabs.map(((MainTab, String, IconData) item) {
-          final (tab, label, icon) = item;
-          final active = viewModel.tab == tab;
-          final mystery = tab == MainTab.mystery;
-          if (mystery) {
-            return Expanded(
-              child: Transform.translate(
-                offset: const Offset(0, -9),
-                child: InkWell(
-                  key: const Key('tab_mystery'),
-                  onTap: () => viewModel.selectTab(tab),
-                  borderRadius: BorderRadius.circular(32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Badge(
-                        isLabelVisible: viewModel.mystery.journeyActive,
-                        label: const Text(
-                          'LIVE',
-                          style: TextStyle(
-                            fontSize: 6,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        backgroundColor: const Color(0xFF70E0B5),
-                        textColor: const Color(0xFF155842),
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
-                            boxShadow: const <BoxShadow>[
-                              BoxShadow(
-                                color: Color(0x482F80ED),
-                                blurRadius: 20,
-                                offset: Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.explore_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w900,
-                          color: active ? AppColors.primary : AppColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }
-          return Expanded(
-            child: InkWell(
-              key: Key('tab_${label.toLowerCase()}'),
-              onTap: () => viewModel.selectTab(tab),
-              borderRadius: BorderRadius.circular(17),
-              child: Container(
-                height: 53,
-                decoration: BoxDecoration(
-                  color: active ? AppColors.softBlue : Colors.transparent,
-                  borderRadius: BorderRadius.circular(17),
-                  border: active
-                      ? Border.all(color: const Color(0xFFD7E8FF))
-                      : null,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      icon,
-                      size: 21,
-                      color: active ? AppColors.primary : AppColors.muted,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                        color: active ? AppColors.primary : AppColors.muted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+      const NavigationDestination(
+        icon: Icon(Icons.map_outlined, key: Key('tab_map')),
+        selectedIcon: Icon(Icons.map_rounded),
+        label: 'Map',
       ),
-    );
-  }
+      NavigationDestination(
+        icon: Badge(
+          isLabelVisible: viewModel.mystery.journeyActive,
+          smallSize: 7,
+          child: const Icon(Icons.explore_outlined, key: Key('tab_mystery')),
+        ),
+        selectedIcon: const Icon(Icons.explore_rounded),
+        label: 'Mystery',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.calendar_month_outlined, key: Key('tab_plan')),
+        selectedIcon: Icon(Icons.calendar_month_rounded),
+        label: 'Plan',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.person_outline_rounded, key: Key('tab_profile')),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
+    ],
+  );
 }
 
 class _Toast extends StatelessWidget {

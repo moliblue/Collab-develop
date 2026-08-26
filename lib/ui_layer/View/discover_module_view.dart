@@ -38,10 +38,6 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
       }
       return switch (widget.viewModel.section) {
         DiscoverSection.bookmarks => _bookmarks(),
-        DiscoverSection.recommend => _RecommendSpot(
-          viewModel: widget.viewModel,
-          notify: widget.notify,
-        ),
         DiscoverSection.discover => _discover(),
       };
     },
@@ -56,46 +52,62 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: <Widget>[
         Container(
-          padding: const EdgeInsets.all(17),
+          height: 190,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: AppColors.softBlue,
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
           ),
-          child: Row(
+          child: Stack(
+            fit: StackFit.expand,
             children: <Widget>[
-              Expanded(
+              Image.asset('assets/petaling_street.png', fit: BoxFit.cover),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[Color(0x220C2130), Color(0xD90C2130)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: Badge(
+                  label: Text('${vm.bookmarks.length}'),
+                  child: IconButton(
+                    key: const Key('open_bookmarks'),
+                    tooltip: 'View saved places',
+                    onPressed: () => vm.setSection(DiscoverSection.bookmarks),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: .94),
+                      foregroundColor: AppColors.primary,
+                    ),
+                    icon: const Icon(Icons.bookmark_rounded),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 18,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Eyebrow('✈ Discover Malaysia'),
-                    const SizedBox(height: 4),
+                    const Eyebrow('Discover Malaysia', color: Colors.white),
+                    const SizedBox(height: 6),
                     Text(
-                      'Where to next?',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      'Find your next local story',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineMedium?.copyWith(color: Colors.white),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     const Text(
-                      'Local favourites, heritage gems and good stories.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
+                      'Heritage, food and places worth slowing down for.',
+                      style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 13),
                     ),
                   ],
-                ),
-              ),
-              Badge(
-                label: Text('${vm.bookmarks.length}'),
-                child: IconButton(
-                  key: const Key('open_bookmarks'),
-                  tooltip: 'View saved places',
-                  onPressed: () => vm.setSection(DiscoverSection.bookmarks),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.warning,
-                    minimumSize: const Size.square(48),
-                  ),
-                  icon: const Icon(Icons.bookmark_rounded),
                 ),
               ),
             ],
@@ -134,6 +146,34 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children:
+                <String>[
+                  'Traditional Heritage Site',
+                  'Local Food',
+                  'Local Craft',
+                  'Local Micro Business',
+                ].map((String category) {
+                  final selected = vm.categories.contains(category);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: AppChip(
+                      label: switch (category) {
+                        'Traditional Heritage Site' => 'Heritage',
+                        'Local Micro Business' => 'Local makers',
+                        _ => category.replaceFirst('Local ', ''),
+                      },
+                      selected: selected,
+                      onTap: () => vm.toggleCategory(category),
+                    ),
+                  );
+                }).toList(),
+          ),
         ),
         if (vm.filtersOpen) ...<Widget>[
           const SizedBox(height: 10),
@@ -221,12 +261,12 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
             ),
             const Text(
               ' places to explore',
-              style: TextStyle(fontSize: 10, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
             ),
             const Spacer(),
             const Text(
               'Sorted A–Z',
-              style: TextStyle(fontSize: 10, color: AppColors.muted),
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
             ),
           ],
         ),
@@ -260,13 +300,6 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
               ),
             ),
           ),
-        const SizedBox(height: 3),
-        OutlinedButton.icon(
-          key: const Key('recommend_spot'),
-          onPressed: () => vm.setSection(DiscoverSection.recommend),
-          icon: const Icon(Icons.add_location_alt_rounded),
-          label: const Text('Recommend New Spot'),
-        ),
       ],
     );
   }
@@ -343,17 +376,17 @@ class _DestinationCard extends StatelessWidget {
   Widget build(BuildContext context) => AppCard(
     onTap: onTap,
     padding: EdgeInsets.zero,
-    radius: 28,
+    radius: AppTokens.cardRadius,
     child: Column(
       children: <Widget>[
         SizedBox(
-          height: 178,
+          height: 184,
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(27),
+                  top: Radius.circular(19),
                 ),
                 child: Hero(
                   tag: place.id,
@@ -362,7 +395,7 @@ class _DestinationCard extends StatelessWidget {
               ),
               const DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(27)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
                   gradient: LinearGradient(
                     colors: <Color>[Colors.transparent, Color(0x70152231)],
                     begin: Alignment.center,
@@ -386,8 +419,8 @@ class _DestinationCard extends StatelessWidget {
                     place.category,
                     style: TextStyle(
                       color: accent,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -451,17 +484,18 @@ class _DestinationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
                       place.shortDescription,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         color: AppColors.muted,
+                        height: 1.35,
                       ),
                     ),
                   ],
@@ -507,7 +541,7 @@ class _ImagePill extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           text,
-          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800),
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
         ),
       ],
     ),
@@ -882,341 +916,4 @@ class _LocationDetailState extends State<_LocationDetail> {
       ),
     ),
   );
-}
-
-class _RecommendSpot extends StatefulWidget {
-  const _RecommendSpot({required this.viewModel, required this.notify});
-  final DiscoveryViewModel viewModel;
-  final void Function(String, Color) notify;
-  @override
-  State<_RecommendSpot> createState() => _RecommendSpotState();
-}
-
-class _RecommendSpotState extends State<_RecommendSpot> {
-  final name = TextEditingController();
-  final description = TextEditingController();
-  String category = '';
-  bool photoReady = false;
-  bool locating = false;
-  @override
-  void dispose() {
-    name.dispose();
-    description.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => ListView(
-    key: const Key('recommend_form'),
-    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-    children: <Widget>[
-      Row(
-        children: <Widget>[
-          IconButton(
-            tooltip: 'Back',
-            onPressed: () =>
-                widget.viewModel.setSection(DiscoverSection.discover),
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          const Expanded(
-            child: SectionTitle(
-              'Recommend New Spot',
-              subtitle: 'Help travellers find local heritage',
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 13),
-      AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            TextField(
-              controller: name,
-              decoration: const InputDecoration(
-                labelText: 'Spot name *',
-                hintText: 'e.g. Heritage Hainan Kopitiam',
-              ),
-            ),
-            const SizedBox(height: 11),
-            DropdownButtonFormField<String>(
-              initialValue: category.isEmpty ? null : category,
-              decoration: const InputDecoration(labelText: 'Category *'),
-              items:
-                  <String>[
-                        'Traditional Heritage Site',
-                        'Local Craft',
-                        'Local Food',
-                        'Local Micro Business',
-                      ]
-                      .map(
-                        (String c) => DropdownMenuItem<String>(
-                          value: c,
-                          child: Text(c, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (String? v) => setState(() => category = v ?? ''),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              height: 175,
-              decoration: BoxDecoration(
-                color: AppColors.elevated,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Stack(
-                children: <Widget>[
-                  const Positioned.fill(
-                    child: CustomPaint(painter: _PinMapPainter()),
-                  ),
-                  const Center(
-                    child: Icon(
-                      Icons.location_pin,
-                      color: AppColors.primary,
-                      size: 42,
-                    ),
-                  ),
-                  Positioned(
-                    left: 10,
-                    right: 10,
-                    bottom: 9,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: .94),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        '5.4182° N, 100.3411° E · George Town, Penang',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: locating
-                  ? null
-                  : () async {
-                      setState(() => locating = true);
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 350),
-                      );
-                      if (mounted) {
-                        setState(() => locating = false);
-                        widget.notify(
-                          'Mock GPS location refreshed.',
-                          AppColors.teal,
-                        );
-                      }
-                    },
-              icon: const Icon(Icons.my_location_rounded),
-              label: Text(locating ? 'Locating…' : 'Auto-locate GPS'),
-            ),
-            const SizedBox(height: 11),
-            TextField(
-              controller: description,
-              minLines: 3,
-              maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Description *',
-                hintText: 'What makes this place special?',
-              ),
-            ),
-            const SizedBox(height: 11),
-            InkWell(
-              onTap: () => setState(() => photoReady = true),
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                height: 145,
-                decoration: BoxDecoration(
-                  color: photoReady ? AppColors.softBlue : AppColors.elevated,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: photoReady
-                        ? AppColors.primary
-                        : AppColors.borderStrong,
-                    width: photoReady ? 1.5 : 1,
-                  ),
-                ),
-                child: photoReady
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: <Widget>[
-                            Image.asset(
-                              'assets/batik_artisan.png',
-                              fit: BoxFit.cover,
-                            ),
-                            const Positioned(
-                              right: 9,
-                              bottom: 9,
-                              child: _ImagePill(
-                                icon: Icons.check_rounded,
-                                text: 'Photo ready',
-                                color: AppColors.teal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(
-                            Icons.add_a_photo_rounded,
-                            color: AppColors.muted,
-                            size: 30,
-                          ),
-                          SizedBox(height: 7),
-                          Text(
-                            'Tap to add a JPG/PNG photo',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            'Demo uses a bundled local image',
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: AppColors.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 14),
-      FilledButton.icon(
-        onPressed: _submit,
-        icon: const Icon(Icons.upload_rounded),
-        label: const Text('Submit Recommended Spot'),
-      ),
-    ],
-  );
-
-  Future<void> _submit() async {
-    if (name.text.trim().isEmpty ||
-        category.isEmpty ||
-        description.text.trim().isEmpty ||
-        !photoReady) {
-      widget.notify(
-        'Complete all required spot details and add a photo.',
-        AppColors.danger,
-      );
-      return;
-    }
-    final duplicate = widget.viewModel.findDuplicate(name.text);
-    if (duplicate != null) {
-      await showDialog<void>(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          icon: const Icon(
-            Icons.warning_amber_rounded,
-            color: AppColors.warning,
-            size: 38,
-          ),
-          title: const Text('Existing Location Found'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  duplicate.image,
-                  height: 110,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                duplicate.name,
-                style: const TextStyle(fontWeight: FontWeight.w900),
-              ),
-              const Text(
-                'Would you like to merge your rating and review?',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                duplicate.reviewsCount++;
-                Navigator.pop(context);
-                widget.viewModel.setSection(DiscoverSection.discover);
-                widget.notify(
-                  'Your contribution was merged into the existing spot.',
-                  AppColors.teal,
-                );
-              },
-              child: const Text('Yes, Merge'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      widget.viewModel.addRecommended(
-        name: name.text,
-        category: category,
-        description: description.text,
-      );
-      widget.notify('Recommended spot added successfully!', AppColors.teal);
-    }
-  }
-}
-
-class _PinMapPainter extends CustomPainter {
-  const _PinMapPainter();
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..color = const Color(0xFFD8E7EF)
-      ..strokeWidth = 2;
-    for (double y = 20; y < size.height; y += 32) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y + 8), p);
-    }
-    for (double x = 12; x < size.width; x += 48) {
-      canvas.drawLine(Offset(x, 0), Offset(x - 20, size.height), p);
-    }
-    final water = Paint()..color = const Color(0xFFCAE8F4);
-    canvas.drawPath(
-      Path()
-        ..moveTo(0, size.height * .68)
-        ..quadraticBezierTo(
-          size.width * .45,
-          size.height * .5,
-          size.width,
-          size.height * .72,
-        )
-        ..lineTo(size.width, size.height)
-        ..lineTo(0, size.height)
-        ..close(),
-      water,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

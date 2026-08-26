@@ -43,13 +43,13 @@ class _PremiumAnimatedButtonState extends State<PremiumAnimatedButton> {
         duration: const Duration(milliseconds: 180),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
-          height: 58,
+          height: 52,
           decoration: BoxDecoration(
             gradient: widget.isOutlined
                 ? null
                 : widget.gradient ?? AppColors.blueGradient,
             color: widget.isOutlined ? Colors.white : null,
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(AppTokens.controlRadius),
             border: widget.isOutlined
                 ? Border.all(color: AppColors.border)
                 : null,
@@ -60,16 +60,16 @@ class _PremiumAnimatedButtonState extends State<PremiumAnimatedButton> {
                       color: AppColors.primary.withValues(
                         alpha: _pressed ? .16 : .28,
                       ),
-                      blurRadius: _pressed ? 10 : 22,
-                      offset: Offset(0, _pressed ? 4 : 10),
+                      blurRadius: _pressed ? 8 : 14,
+                      offset: Offset(0, _pressed ? 3 : 6),
                     ),
                   ],
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(AppTokens.controlRadius),
             child: InkWell(
-              borderRadius: BorderRadius.circular(19),
+              borderRadius: BorderRadius.circular(AppTokens.controlRadius),
               onTap: disabled ? null : widget.onPressed,
               onTapDown: disabled ? null : (_) => _setPressed(true),
               onTapCancel: disabled ? null : () => _setPressed(false),
@@ -109,7 +109,7 @@ class _PremiumAnimatedButtonState extends State<PremiumAnimatedButton> {
                                         ? AppColors.primary
                                         : Colors.white,
                                     fontSize: 16,
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),

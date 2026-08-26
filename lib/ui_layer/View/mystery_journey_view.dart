@@ -114,15 +114,14 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       const SizedBox(height: 12),
     ],
     Container(
-      height: 300,
+      height: 286,
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF5FF),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x17304F75),
-            blurRadius: 36,
-            offset: Offset(0, 14),
+            color: Color(0x18203548),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -130,115 +129,41 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 145,
-            child: Image.asset(
-              'assets/sultan_abdul_samad.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-            ),
-          ),
-          const Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 120,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[Colors.transparent, Color(0x7A142A3A)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+          Image.asset('assets/sultan_abdul_samad.png', fit: BoxFit.cover),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: <Color>[Color(0x180B2234), Color(0xDF0B2234)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) =>
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: constraints.maxWidth,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          const Eyebrow('✦ Mystery trip'),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Less planning.\nMore exploring.',
-                            style: Theme.of(context).textTheme.headlineLarge
-                                ?.copyWith(color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(height: 6),
-                          const SizedBox(
-                            width: 235,
-                            child: Text(
-                              'Follow playful clues and discover Malaysia’s stories, food and hidden corners.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 11,
-                                height: 1.45,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: .92),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: const Row(
-                              children: <Widget>[
-                                _AvatarStack(),
-                                SizedBox(width: 9),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        '1,248 explorers nearby',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                      Text(
-                                        'finding their next story',
-                                        style: TextStyle(
-                                          color: AppColors.muted,
-                                          fontSize: 9,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  'Popular nearby',
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Eyebrow('Mystery Journey', color: Colors.white),
+                const SizedBox(height: 8),
+                Text(
+                  'Follow a clue.\nFind a story.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineLarge?.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Discover a Malaysian place without revealing the destination too soon.',
+                  style: TextStyle(
+                    color: Color(0xE8FFFFFF),
+                    fontSize: 13,
+                    height: 1.45,
                   ),
+                ),
+              ],
             ),
           ),
         ],
@@ -254,8 +179,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         Expanded(
           child: _modeCard(
             JourneyMode.solo,
-            'Solo mode',
-            'Solve the mystery on your own',
+            'Solo Explorer',
+            'Follow the clues at your own pace',
             Icons.person_rounded,
             AppColors.primary,
           ),
@@ -264,8 +189,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         Expanded(
           child: _modeCard(
             JourneyMode.group,
-            'Team mode',
-            'Explore with nearby travellers',
+            'Group Explorer',
+            'Discover with nearby travellers',
             Icons.groups_rounded,
             AppColors.teal,
           ),
@@ -320,11 +245,6 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               AppChip(
                 label: '${widget.viewModel.radius.round()} km',
                 selected: true,
-              ),
-              AppChip(
-                label: widget.viewModel.time,
-                selected: true,
-                selectedColor: AppColors.warning,
               ),
             ],
           ),
@@ -383,11 +303,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     final selected = widget.viewModel.mode == mode;
     return AppCard(
       onTap: () => widget.viewModel.setMode(mode),
-      radius: 25,
+      radius: AppTokens.cardRadius,
       color: selected ? color.withValues(alpha: .09) : Colors.white,
       borderColor: selected ? color : AppColors.border,
       child: SizedBox(
-        height: 112,
+        height: 132,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -398,14 +318,14 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             const Spacer(),
             Text(
               title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 3),
             Text(
               subtitle,
               maxLines: 2,
               style: const TextStyle(
-                fontSize: 10,
+                fontSize: 12,
                 color: AppColors.textSecondary,
                 height: 1.3,
               ),
@@ -435,16 +355,19 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             const SizedBox(height: 7),
             Wrap(
               spacing: 7,
-              children: <String>['Culture', 'History', 'Food', 'Art']
-                  .map(
-                    (String c) => AppChip(
-                      label: c,
-                      selected: widget.viewModel.categories.contains(c),
-                      onTap: () =>
-                          setSheet(() => widget.viewModel.toggleCategory(c)),
-                    ),
-                  )
-                  .toList(),
+              runSpacing: 7,
+              children:
+                  <String>['Culture', 'History', 'Local food', 'Art & streets']
+                      .map(
+                        (String c) => AppChip(
+                          label: c,
+                          selected: widget.viewModel.categories.contains(c),
+                          onTap: () => setSheet(
+                            () => widget.viewModel.toggleCategory(c),
+                          ),
+                        ),
+                      )
+                      .toList(),
             ),
             const SizedBox(height: 16),
             Text(
@@ -453,29 +376,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             ),
             Slider(
               value: widget.viewModel.radius,
-              min: 1,
-              max: 25,
-              divisions: 24,
+              min: 5,
+              max: 30,
+              divisions: 5,
               onChanged: (double value) =>
                   setSheet(() => widget.viewModel.setRadius(value)),
-            ),
-            const Text(
-              'Time of day',
-              style: TextStyle(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 7,
-              children: <String>['Morning', 'Afternoon', 'Evening']
-                  .map(
-                    (String t) => AppChip(
-                      label: t,
-                      selected: widget.viewModel.time == t,
-                      onTap: () => setSheet(() => widget.viewModel.setTime(t)),
-                      selectedColor: AppColors.warning,
-                    ),
-                  )
-                  .toList(),
             ),
             const SizedBox(height: 18),
             FilledButton(
@@ -764,7 +669,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   Widget _preferences() => _scroll(<Widget>[
     const SectionTitle(
       'Mystery preferences',
-      subtitle: 'Pick categories, distance and time of day.',
+      subtitle: 'Choose interests and a comfortable discovery radius.',
     ),
     const SizedBox(height: 12),
     AppCard(
@@ -773,15 +678,17 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         children: <Widget>[
           Wrap(
             spacing: 7,
-            children: <String>['Culture', 'History', 'Food', 'Art']
-                .map(
-                  (String c) => AppChip(
-                    label: c,
-                    selected: widget.viewModel.categories.contains(c),
-                    onTap: () => widget.viewModel.toggleCategory(c),
-                  ),
-                )
-                .toList(),
+            runSpacing: 7,
+            children:
+                <String>['Culture', 'History', 'Local food', 'Art & streets']
+                    .map(
+                      (String c) => AppChip(
+                        label: c,
+                        selected: widget.viewModel.categories.contains(c),
+                        onTap: () => widget.viewModel.toggleCategory(c),
+                      ),
+                    )
+                    .toList(),
           ),
           const SizedBox(height: 14),
           Text(
@@ -790,22 +697,10 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ),
           Slider(
             value: widget.viewModel.radius,
-            min: 1,
-            max: 25,
-            divisions: 24,
+            min: 5,
+            max: 30,
+            divisions: 5,
             onChanged: widget.viewModel.setRadius,
-          ),
-          Wrap(
-            spacing: 7,
-            children: <String>['Morning', 'Afternoon', 'Evening']
-                .map(
-                  (String t) => AppChip(
-                    label: t,
-                    selected: t == widget.viewModel.time,
-                    onTap: () => widget.viewModel.setTime(t),
-                  ),
-                )
-                .toList(),
           ),
         ],
       ),
@@ -827,25 +722,25 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     AnimatedBuilder(
       animation: _shakeController,
       builder: (BuildContext context, Widget? child) => Transform.rotate(
-        angle: math.sin(_shakeController.value * math.pi * 2) * .11,
+        angle: math.sin(_shakeController.value * math.pi * 2) * .055,
         child: Transform.translate(
-          offset: Offset(math.sin(_shakeController.value * math.pi * 4) * 8, 0),
+          offset: Offset(math.sin(_shakeController.value * math.pi * 4) * 4, 0),
           child: child,
         ),
       ),
       child: Center(
         child: Container(
-          width: 145,
-          height: 220,
+          width: 138,
+          height: 196,
           decoration: BoxDecoration(
-            gradient: AppColors.mysteryGradient,
-            borderRadius: BorderRadius.circular(34),
-            border: Border.all(color: Colors.white, width: 7),
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white, width: 5),
             boxShadow: const <BoxShadow>[
               BoxShadow(
-                color: Color(0x442F80ED),
-                blurRadius: 35,
-                offset: Offset(0, 16),
+                color: Color(0x2D173D66),
+                blurRadius: 24,
+                offset: Offset(0, 12),
               ),
             ],
           ),
@@ -879,13 +774,13 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         widget.notify('Mystery clue generated!', AppColors.teal);
       },
       icon: const Icon(Icons.touch_app_rounded),
-      label: const Text('Tap to Discover (emulator)'),
+      label: const Text('Discover now'),
     ),
     const SizedBox(height: 8),
     const Center(
       child: Text(
-        'Motion sensing unavailable? The tap fallback is always available.',
-        style: TextStyle(fontSize: 10, color: AppColors.muted),
+        'Prefer not to shake? Use the button to continue.',
+        style: TextStyle(fontSize: 12, color: AppColors.muted),
       ),
     ),
   ]);
@@ -894,8 +789,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: AppColors.mysteryGradient,
-        borderRadius: BorderRadius.circular(28),
+        color: const Color(0xFF173D66),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -907,7 +802,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
           SizedBox(height: 6),
@@ -1057,8 +952,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       ),
       label: Text(
         widget.viewModel.mode == JourneyMode.group
-            ? 'Group Check-in'
-            : 'Simulate Arrival',
+            ? 'Group Verified Arrival'
+            : 'Verified Arrival',
       ),
     ),
     const SizedBox(height: 8),
@@ -1079,14 +974,15 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   }
 
   void _confirmRoute() {
+    void revealAndNavigate() {
+      widget.viewModel.revealRoute();
+      widget.onDirections();
+    }
+
     if (widget.viewModel.mode == JourneyMode.group) {
-      _voteDialog('Reveal the exact route?', widget.viewModel.revealRoute);
+      _voteDialog('Reveal the exact route?', revealAndNavigate);
     } else {
-      _voteDialog(
-        'Reveal exact route?',
-        widget.viewModel.revealRoute,
-        group: false,
-      );
+      _voteDialog('Reveal exact route?', revealAndNavigate, group: false);
     }
   }
 
@@ -1389,31 +1285,6 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           OutlinedButton(onPressed: onSecondary, child: Text(secondary)),
         ],
       ),
-    ),
-  );
-}
-
-class _AvatarStack extends StatelessWidget {
-  const _AvatarStack();
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 72,
-    height: 32,
-    child: Stack(
-      children: const <Widget>[
-        Positioned(
-          left: 0,
-          child: InitialsAvatar('AM', radius: 16, color: Color(0xFFDDEEFF)),
-        ),
-        Positioned(
-          left: 20,
-          child: InitialsAvatar('JL', radius: 16, color: Color(0xFFE2F6ED)),
-        ),
-        Positioned(
-          left: 40,
-          child: InitialsAvatar('SK', radius: 16, color: Color(0xFFFFF0D8)),
-        ),
-      ],
     ),
   );
 }

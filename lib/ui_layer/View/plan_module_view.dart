@@ -100,8 +100,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   label,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
                     color: selected
                         ? AppColors.primary
                         : AppColors.textSecondary,
@@ -126,7 +126,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           height: 196,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
             boxShadow: const <BoxShadow>[
               BoxShadow(
                 color: Color(0x29304F70),
@@ -200,7 +200,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Text(
@@ -361,12 +361,14 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           ReorderableListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
             itemCount: day.activities.length,
             onReorderItem: vm.reorder,
             itemBuilder: (BuildContext context, int i) => Padding(
               key: ValueKey<String>(day.activities[i].id),
               padding: const EdgeInsets.only(bottom: 9),
               child: _ActivityCard(
+                index: i,
                 item: day.activities[i],
                 onEdit: () => _activitySheet(day.activities[i]),
                 onDelete: () => _deleteActivity(day.activities[i]),
@@ -467,30 +469,6 @@ class _PlanModuleViewState extends State<PlanModuleView> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const SectionTitle(
-                'Heritage recommendations',
-                subtitle: 'More stories for this route',
-              ),
-              const SizedBox(height: 9),
-              _recommendation(
-                'Batu Caves Cathedral Cavern',
-                'Gombak, Selangor',
-                'assets/batu_caves.png',
-              ),
-              const Divider(),
-              _recommendation(
-                'Cheong Fatt Tze Blue Mansion',
-                'George Town, Penang',
-                'assets/blue_mansion.png',
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -522,55 +500,6 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           ),
         ),
       );
-
-  Widget _recommendation(String title, String location, String image) => Row(
-    children: <Widget>[
-      ClipRRect(
-        borderRadius: BorderRadius.circular(13),
-        child: Image.asset(image, width: 58, height: 58, fit: BoxFit.cover),
-      ),
-      const SizedBox(width: 9),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              title,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
-            ),
-            Text(
-              location,
-              style: const TextStyle(fontSize: 9, color: AppColors.muted),
-            ),
-          ],
-        ),
-      ),
-      IconButton(
-        tooltip: 'Add recommendation to day',
-        onPressed: () {
-          final p = HeritagePlace(
-            id: title,
-            name: title,
-            category: 'Traditional Heritage Site',
-            state: 'Malaysia',
-            shortDescription: 'Heritage recommendation',
-            description: 'Heritage recommendation',
-            image: image,
-            distanceKm: 1,
-            rating: 4.8,
-            reviewsCount: 20,
-            latitude: 5.42,
-            longitude: 100.34,
-            address: location,
-            hours: 'Daily',
-          );
-          widget.viewModel.addPlace(p);
-          widget.notify('Heritage recommendation added.', AppColors.teal);
-        },
-        icon: const Icon(Icons.add_circle_rounded, color: AppColors.primary),
-      ),
-    ],
-  );
 
   Widget _history() => ListView(
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -1251,10 +1180,12 @@ class _PlanModuleViewState extends State<PlanModuleView> {
 
 class _ActivityCard extends StatelessWidget {
   const _ActivityCard({
+    required this.index,
     required this.item,
     required this.onEdit,
     required this.onDelete,
   });
+  final int index;
   final ActivityItem item;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -1264,7 +1195,7 @@ class _ActivityCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         ReorderableDragStartListener(
-          index: 0,
+          index: index,
           child: const Padding(
             padding: EdgeInsets.only(top: 6, right: 7),
             child: Icon(Icons.drag_indicator_rounded, color: AppColors.muted),
@@ -1290,7 +1221,7 @@ class _ActivityCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 9,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -1312,14 +1243,14 @@ class _ActivityCard extends StatelessWidget {
               Text(
                 item.title,
                 style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 item.location,
-                style: const TextStyle(fontSize: 9, color: AppColors.muted),
+                style: const TextStyle(fontSize: 12, color: AppColors.muted),
               ),
               if (item.notes.isNotEmpty)
                 Padding(
@@ -1327,7 +1258,7 @@ class _ActivityCard extends StatelessWidget {
                   child: Text(
                     item.notes,
                     style: const TextStyle(
-                      fontSize: 10,
+                      fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
                   ),
