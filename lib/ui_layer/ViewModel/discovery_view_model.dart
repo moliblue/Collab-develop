@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Models/mock_data.dart';
 
-enum DiscoverSection { discover, bookmarks, recommend }
+enum DiscoverSection { discover, bookmarks }
 
 class DiscoveryViewModel extends ChangeNotifier {
   final List<HeritagePlace> _places = createPlaces();
@@ -109,54 +109,6 @@ class DiscoveryViewModel extends ChangeNotifier {
         place.reviews.length;
     notifyListeners();
     return null;
-  }
-
-  HeritagePlace? findDuplicate(String name) {
-    final normalized = name.toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
-    if (normalized.isEmpty) return null;
-    for (final p in _places) {
-      final existing = p.name.toLowerCase().replaceAll(RegExp('[^a-z0-9]'), '');
-      if (existing.contains(normalized) || normalized.contains(existing)) {
-        return p;
-      }
-    }
-    return null;
-  }
-
-  void addRecommended({
-    required String name,
-    required String category,
-    required String description,
-  }) {
-    _places.insert(
-      0,
-      HeritagePlace(
-        id: 'user-${_places.length + 1}',
-        name: name.trim(),
-        category: category,
-        state: 'Penang',
-        shortDescription: description.trim(),
-        description: description.trim(),
-        image: '$assetRoot/batik_artisan.png',
-        distanceKm: .1,
-        rating: 5,
-        reviewsCount: 1,
-        latitude: 5.4182,
-        longitude: 100.3411,
-        address: 'GPS Location · George Town, Penang',
-        hours: 'Hours provided by contributor',
-        reviews: <Review>[
-          Review(
-            name: 'Amberly',
-            date: 'August 24, 2026',
-            rating: 5,
-            comment: 'New community recommendation.',
-          ),
-        ],
-      ),
-    );
-    _section = DiscoverSection.discover;
-    notifyListeners();
   }
 
   void reset() {

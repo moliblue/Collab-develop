@@ -86,7 +86,7 @@ class _ShakeFindViewState extends State<ShakeFindView>
         const Text(
           'Where will curiosity take you?',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         const Text(
@@ -163,8 +163,8 @@ class _ShakeFindViewState extends State<ShakeFindView>
     return Container(
       height: 210,
       decoration: BoxDecoration(
-        gradient: AppColors.blueGradient,
-        borderRadius: BorderRadius.circular(30),
+        color: const Color(0xFF173D66),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: .22),
@@ -200,7 +200,7 @@ class _ShakeFindViewState extends State<ShakeFindView>
         Text(
           routeVisible ? 'Route revealed' : 'Your mystery clue',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w900),
+          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 18),
         _InfoCard(
@@ -270,7 +270,7 @@ class _ShakeFindViewState extends State<ShakeFindView>
         const Text(
           'Journey completed!',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900),
+          style: TextStyle(fontSize: 29, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 10),
         Text(
@@ -321,12 +321,12 @@ class _PreferencesSheetState extends State<_PreferencesSheet> {
           children: [
             const Text(
               'Travel preferences',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
-              children: ['History', 'Culture', 'Food', 'Nature']
+              children: ['Culture', 'History', 'Local food', 'Art & streets']
                   .map(
                     (item) => FilterChip(
                       label: Text(item),
@@ -343,9 +343,9 @@ class _PreferencesSheetState extends State<_PreferencesSheet> {
             Text('Radius: ${radius.toStringAsFixed(0)} km'),
             Slider(
               value: radius,
-              min: 1,
-              max: 15,
-              divisions: 14,
+              min: 5,
+              max: 30,
+              divisions: 5,
               onChanged: (value) => setState(() => radius = value),
             ),
             FilledButton(

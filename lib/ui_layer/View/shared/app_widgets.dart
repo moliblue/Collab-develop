@@ -9,7 +9,7 @@ class AppCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(16),
     this.color,
     this.borderColor,
-    this.radius = 24,
+    this.radius = AppTokens.cardRadius,
     this.onTap,
   });
   final Widget child;
@@ -28,9 +28,9 @@ class AppCard extends StatelessWidget {
         borderRadius: borderRadius,
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x0D2E4C68),
-            blurRadius: 24,
-            offset: Offset(0, 8),
+            color: Color(0x0A203548),
+            blurRadius: 16,
+            offset: Offset(0, 6),
           ),
         ],
       ),
@@ -61,9 +61,9 @@ class Eyebrow extends StatelessWidget {
     text.toUpperCase(),
     style: TextStyle(
       color: color,
-      fontSize: 9,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 1.25,
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 1.05,
     ),
   );
 }
@@ -111,29 +111,70 @@ class AppChip extends StatelessWidget {
   final Color selectedColor;
 
   @override
-  Widget build(BuildContext context) => FilterChip(
-    selected: selected,
-    onSelected: onTap == null ? null : (_) => onTap!(),
-    avatar: icon == null
-        ? null
-        : Icon(
-            icon,
-            size: 14,
-            color: selected ? selectedColor : AppColors.textSecondary,
-          ),
-    label: Text(label),
-    labelStyle: TextStyle(
-      fontSize: 10,
-      fontWeight: FontWeight.w800,
-      color: selected ? selectedColor : AppColors.textSecondary,
-    ),
-    selectedColor: selectedColor.withValues(alpha: .1),
-    backgroundColor: AppColors.surface,
-    side: BorderSide(color: selected ? selectedColor : AppColors.border),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    showCheckmark: false,
-    visualDensity: VisualDensity.compact,
-  );
+  Widget build(BuildContext context) {
+    final foreground = selected ? selectedColor : AppColors.textSecondary;
+    if (onTap == null) {
+      return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final constrained = constraints.hasBoundedWidth;
+          final compact = constrained && constraints.maxWidth < 80;
+          final labelWidget = Text(
+            label,
+            maxLines: 1,
+            overflow: constrained ? TextOverflow.ellipsis : TextOverflow.clip,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: foreground,
+            ),
+          );
+          return Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 4 : 11,
+              vertical: 7,
+            ),
+            decoration: BoxDecoration(
+              color: selected
+                  ? selectedColor.withValues(alpha: .1)
+                  : AppColors.surface,
+              border: Border.all(
+                color: selected ? selectedColor : AppColors.border,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: constrained ? MainAxisSize.max : MainAxisSize.min,
+              children: <Widget>[
+                if (icon != null && !compact) ...<Widget>[
+                  Icon(icon, size: 14, color: foreground),
+                  const SizedBox(width: 5),
+                ],
+                if (constrained) Expanded(child: labelWidget) else labelWidget,
+              ],
+            ),
+          );
+        },
+      );
+    }
+    return FilterChip(
+      selected: selected,
+      onSelected: (_) => onTap!(),
+      avatar: icon == null ? null : Icon(icon, size: 14, color: foreground),
+      label: Text(label),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: foreground,
+      ),
+      selectedColor: selectedColor.withValues(alpha: .1),
+      backgroundColor: AppColors.surface,
+      side: BorderSide(color: selected ? selectedColor : AppColors.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      showCheckmark: false,
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+  }
 }
 
 class EmptyState extends StatelessWidget {
@@ -196,7 +237,7 @@ class InitialsAvatar extends StatelessWidget {
       style: TextStyle(
         color: AppColors.textPrimary,
         fontSize: radius * .48,
-        fontWeight: FontWeight.w900,
+        fontWeight: FontWeight.w700,
       ),
     ),
   );
@@ -249,7 +290,7 @@ Future<T?> showAppSheet<T>(BuildContext context, Widget child) =>
       useSafeArea: true,
       constraints: const BoxConstraints(maxWidth: 520),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => Padding(
         padding: EdgeInsets.only(

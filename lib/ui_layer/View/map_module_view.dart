@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
+import '../../data_layer/Service Managers/device/map_navigation_service.dart';
 import '../ViewModel/map_quest_view_model.dart';
 import 'shared/app_widgets.dart';
 
@@ -14,12 +18,14 @@ class MapModuleView extends StatefulWidget {
     super.key,
     required this.viewModel,
     required this.places,
+    required this.active,
     required this.onBack,
     required this.onXpReward,
     required this.notify,
   });
   final MapQuestViewModel viewModel;
   final List<HeritagePlace> places;
+  final bool active;
   final VoidCallback onBack;
   final ValueChanged<int> onXpReward;
   final void Function(String, Color) notify;
@@ -29,7 +35,271 @@ class MapModuleView extends StatefulWidget {
 
 class _MapModuleViewState extends State<MapModuleView> {
   final MapController controller = MapController();
+  final MapNavigationService navigation = MapNavigationService();
+  StreamSubscription<Position>? _positionSubscription;
+  StreamSubscription<double?>? _headingSubscription;
   bool filtersOpen = false;
+  bool _navigationActive = false;
+  bool _locating = false;
+  bool _routeLoading = false;
+  bool _guidanceMode = false;
+  LatLng? _userPosition;
+  LatLng? _routedFrom;
+  double _heading = 0;
+  double _routeDistanceMeters = 0;
+  double _routeDurationSeconds = 0;
+  List<LatLng> _roadRoute = <LatLng>[];
+  String? _routeIssue;
+  String? _locationIssue;
+  String? _lastRouteSignature;
+  int _routeRequest = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startNavigation());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MapModuleView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) {
+      _startNavigation();
+    } else if (!widget.active && oldWidget.active) {
+      _stopNavigation();
+    }
+  }
+
+  @override
+  void dispose() {
+    _positionSubscription?.cancel();
+    _headingSubscription?.cancel();
+    controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startNavigation() async {
+    if (_navigationActive || !mounted) return;
+    _navigationActive = true;
+    setState(() {
+      _locating = true;
+      _locationIssue = null;
+    });
+    try {
+      final access = await navigation.requestLocationAccess();
+      if (!mounted || !_navigationActive) return;
+      if (access != LocationAccessStatus.ready) {
+        setState(() {
+          _navigationActive = false;
+          _locating = false;
+          _locationIssue = switch (access) {
+            LocationAccessStatus.servicesDisabled =>
+              'Turn on Location Services to navigate.',
+            LocationAccessStatus.denied =>
+              'Allow location access to show your position.',
+            LocationAccessStatus.deniedForever =>
+              'Enable location permission in Android settings.',
+            LocationAccessStatus.ready => null,
+          };
+        });
+        return;
+      }
+      _positionSubscription = navigation.positionStream.listen(
+        _updatePosition,
+        onError: (Object _) {
+          if (mounted) {
+            setState(() {
+              _navigationActive = false;
+              _locating = false;
+              _locationIssue = 'Live GPS is temporarily unavailable.';
+            });
+          }
+        },
+      );
+      _headingSubscription = navigation.headingStream?.listen((double? value) {
+        if (!mounted || value == null) return;
+        setState(() => _heading = value);
+        if (_guidanceMode && _userPosition != null) {
+          controller.moveAndRotate(_userPosition!, 17.5, (360 - value) % 360);
+        }
+      });
+      final lastKnown = await navigation.getLastKnownPosition();
+      if (lastKnown != null && mounted && _navigationActive) {
+        _updatePosition(lastKnown);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _navigationActive = false;
+          _locating = false;
+          _locationIssue = 'Live location is unavailable on this device.';
+        });
+      }
+    }
+  }
+
+  void _stopNavigation() {
+    _navigationActive = false;
+    _positionSubscription?.cancel();
+    _headingSubscription?.cancel();
+    _positionSubscription = null;
+    _headingSubscription = null;
+  }
+
+  void _updatePosition(Position position) {
+    if (!mounted) return;
+    final next = LatLng(position.latitude, position.longitude);
+    final moved = _routedFrom == null
+        ? double.infinity
+        : const Distance().as(LengthUnit.Meter, _routedFrom!, next);
+    setState(() {
+      _userPosition = next;
+      _locating = false;
+      _locationIssue = null;
+      if (position.heading >= 0 && position.headingAccuracy > 0) {
+        _heading = position.heading;
+      }
+    });
+    if (_guidanceMode) {
+      controller.moveAndRotate(next, 17.5, (360 - _heading) % 360);
+    }
+    if (moved > 40 && _hasRouteTarget) _loadRoadRoute();
+  }
+
+  bool get _hasRouteTarget =>
+      widget.viewModel.directionTarget != null ||
+      widget.viewModel.routeStops.isNotEmpty;
+
+  List<LatLng> _routeWaypoints() {
+    if (_userPosition == null) return <LatLng>[];
+    if (widget.viewModel.routeStops.isNotEmpty) {
+      return <LatLng>[
+        _userPosition!,
+        ...widget.viewModel.routeStops.map(
+          (ActivityItem item) => LatLng(item.latitude, item.longitude),
+        ),
+      ];
+    }
+    final target = widget.viewModel.directionTarget;
+    return target == null
+        ? <LatLng>[]
+        : <LatLng>[_userPosition!, LatLng(target.latitude, target.longitude)];
+  }
+
+  void _syncRoute() {
+    final vm = widget.viewModel;
+    final signature = vm.directionTarget != null
+        ? 'place:${vm.directionTarget!.id}'
+        : vm.routeStops.isNotEmpty
+        ? 'day:${vm.routeStops.map((ActivityItem item) => item.id).join(',')}'
+        : 'none';
+    if (signature == _lastRouteSignature) return;
+    _lastRouteSignature = signature;
+    _routeRequest++;
+    _roadRoute = <LatLng>[];
+    _routeIssue = null;
+    _guidanceMode = false;
+    if (signature != 'none') {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
+    }
+  }
+
+  Future<void> _loadRoadRoute() async {
+    final waypoints = _routeWaypoints();
+    if (!mounted || !widget.active || waypoints.length < 2) {
+      if (mounted && _hasRouteTarget && _userPosition == null) {
+        setState(() {
+          _routeIssue = 'Waiting for your GPS position…';
+        });
+      }
+      return;
+    }
+    final request = ++_routeRequest;
+    setState(() {
+      _routeLoading = true;
+      _routeIssue = null;
+    });
+    try {
+      final result = await navigation.fetchDrivingRoute(waypoints);
+      if (!mounted || request != _routeRequest) return;
+      setState(() {
+        _roadRoute = result.points;
+        _routeDistanceMeters = result.distanceMeters;
+        _routeDurationSeconds = result.durationSeconds;
+        _routedFrom = _userPosition;
+        _routeLoading = false;
+      });
+      _fitRoute(result.points);
+    } catch (_) {
+      if (!mounted || request != _routeRequest) return;
+      setState(() {
+        _roadRoute = waypoints;
+        _routeDistanceMeters = const Distance().as(
+          LengthUnit.Meter,
+          waypoints.first,
+          waypoints.last,
+        );
+        _routeDurationSeconds = 0;
+        _routeLoading = false;
+        _routeIssue = 'Road routing unavailable · showing direct connection';
+      });
+      _fitRoute(waypoints);
+    }
+  }
+
+  void _fitRoute(List<LatLng> points) {
+    if (!mounted || points.length < 2) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      controller.fitCamera(
+        CameraFit.coordinates(
+          coordinates: points,
+          padding: const EdgeInsets.fromLTRB(54, 120, 54, 210),
+          maxZoom: 17,
+        ),
+      );
+    });
+  }
+
+  void _centerOnUser() {
+    if (_userPosition == null) {
+      _startNavigation();
+      widget.notify(
+        _locationIssue ?? 'Waiting for your GPS position…',
+        AppColors.primary,
+      );
+      return;
+    }
+    controller.move(_userPosition!, 16.5);
+  }
+
+  void _toggleGuidance() {
+    if (_userPosition == null) {
+      _centerOnUser();
+      return;
+    }
+    setState(() => _guidanceMode = !_guidanceMode);
+    if (_guidanceMode) {
+      controller.moveAndRotate(_userPosition!, 17.5, (360 - _heading) % 360);
+    } else {
+      controller.rotate(0);
+      if (_roadRoute.isNotEmpty) _fitRoute(_roadRoute);
+    }
+  }
+
+  String get _routeDetail {
+    if (_routeLoading) return 'Calculating the best road route…';
+    if (_routeIssue != null) return _routeIssue!;
+    if (_routeDistanceMeters <= 0) return 'Waiting for live location…';
+    final distance = _routeDistanceMeters >= 1000
+        ? '${(_routeDistanceMeters / 1000).toStringAsFixed(1)} km'
+        : '${_routeDistanceMeters.round()} m';
+    if (_routeDurationSeconds <= 0) return distance;
+    final minutes = (_routeDurationSeconds / 60).ceil();
+    return '$distance · about $minutes min';
+  }
 
   List<HeritagePlace> get filtered {
     final q = widget.viewModel.query.toLowerCase();
@@ -57,22 +327,8 @@ class _MapModuleViewState extends State<MapModuleView> {
     animation: widget.viewModel,
     builder: (BuildContext context, _) {
       final vm = widget.viewModel;
-      final points = vm.routeStops.isNotEmpty
-          ? <LatLng>[
-              const LatLng(5.4182, 100.3411),
-              ...vm.routeStops.map(
-                (ActivityItem a) => LatLng(a.latitude, a.longitude),
-              ),
-            ]
-          : vm.directionTarget == null
-          ? <LatLng>[]
-          : <LatLng>[
-              const LatLng(5.4182, 100.3411),
-              LatLng(
-                vm.directionTarget!.latitude,
-                vm.directionTarget!.longitude,
-              ),
-            ];
+      _syncRoute();
+      final points = _roadRoute.isNotEmpty ? _roadRoute : _routeWaypoints();
       return Stack(
         children: <Widget>[
           Positioned.fill(
@@ -85,37 +341,51 @@ class _MapModuleViewState extends State<MapModuleView> {
               ),
               children: <Widget>[
                 const _OfflineMapBackground(),
-                CircleLayer(
-                  circles: <CircleMarker>[
-                    CircleMarker(
-                      point: const LatLng(5.4182, 100.3411),
-                      radius: vm.radius * 650,
-                      useRadiusInMeter: true,
-                      color: AppColors.teal.withValues(alpha: .06),
-                      borderColor: AppColors.teal.withValues(alpha: .45),
-                      borderStrokeWidth: 2,
-                    ),
-                  ],
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.finditmy.findit_my',
+                  maxNativeZoom: 19,
                 ),
+                if (_userPosition != null && !_hasRouteTarget)
+                  CircleLayer(
+                    circles: <CircleMarker>[
+                      CircleMarker(
+                        point: _userPosition!,
+                        radius: vm.radius * 650,
+                        useRadiusInMeter: true,
+                        color: AppColors.teal.withValues(alpha: .06),
+                        borderColor: AppColors.teal.withValues(alpha: .45),
+                        borderStrokeWidth: 2,
+                      ),
+                    ],
+                  ),
                 if (points.length > 1)
                   PolylineLayer(
                     polylines: <Polyline>[
                       Polyline(
                         points: points,
-                        color: AppColors.tealDark,
-                        strokeWidth: 5,
-                        pattern: const StrokePattern.dotted(),
+                        color: Colors.white,
+                        strokeWidth: 9,
+                      ),
+                      Polyline(
+                        points: points,
+                        color: AppColors.primary,
+                        strokeWidth: 5.5,
                       ),
                     ],
                   ),
                 MarkerLayer(
+                  rotate: true,
                   markers: <Marker>[
-                    const Marker(
-                      point: LatLng(5.4182, 100.3411),
-                      width: 50,
-                      height: 50,
-                      child: _UserMarker(),
-                    ),
+                    if (_userPosition != null)
+                      Marker(
+                        point: _userPosition!,
+                        width: 64,
+                        height: 64,
+                        child: _UserMarker(
+                          heading: _guidanceMode ? 0 : _heading,
+                        ),
+                      ),
                     if (vm.routeStops.isEmpty && vm.directionTarget == null)
                       ...filtered.map(
                         (HeritagePlace p) => Marker(
@@ -154,6 +424,11 @@ class _MapModuleViewState extends State<MapModuleView> {
                     }),
                   ],
                 ),
+                const RichAttributionWidget(
+                  attributions: <SourceAttribution>[
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
+                ),
               ],
             ),
           ),
@@ -185,7 +460,7 @@ class _MapModuleViewState extends State<MapModuleView> {
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             prefixIcon: Icon(Icons.search_rounded),
-                            hintText: 'Search heritage map…',
+                            hintText: 'Search the map',
                             contentPadding: EdgeInsets.symmetric(vertical: 11),
                           ),
                         ),
@@ -278,15 +553,31 @@ class _MapModuleViewState extends State<MapModuleView> {
                   tooltip: 'Centre on me',
                   backgroundColor: Colors.white,
                   foregroundColor: AppColors.primary,
-                  onPressed: () {
-                    controller.move(const LatLng(5.4182, 100.3411), 14);
-                    widget.notify(
-                      'Centered on Penang UNESCO Heritage Hub.',
-                      AppColors.teal,
-                    );
-                  },
-                  child: const Icon(Icons.my_location_rounded),
+                  onPressed: _centerOnUser,
+                  child: _locating
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.my_location_rounded),
                 ),
+                if (_hasRouteTarget) ...<Widget>[
+                  const SizedBox(height: 8),
+                  FloatingActionButton.small(
+                    heroTag: 'guidance',
+                    tooltip: _guidanceMode
+                        ? 'Stop heading-up guidance'
+                        : 'Start heading-up guidance',
+                    backgroundColor: _guidanceMode
+                        ? AppColors.primary
+                        : Colors.white,
+                    foregroundColor: _guidanceMode
+                        ? Colors.white
+                        : AppColors.primary,
+                    onPressed: _toggleGuidance,
+                    child: const Icon(Icons.navigation_rounded),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
                   heroTag: 'zoom',
@@ -308,10 +599,20 @@ class _MapModuleViewState extends State<MapModuleView> {
               right: 12,
               bottom: 14,
               child: _RoutePanel(
-                title: 'Directions in Map',
+                title: _guidanceMode ? 'Guiding you' : 'Route ready',
                 subtitle: vm.directionTarget!.name,
-                detail: '18.4 km · 27 min · Offline direct preview',
-                onClose: vm.clearDirections,
+                detail: _routeDetail,
+                loading: _routeLoading,
+                guidanceActive: _guidanceMode,
+                onGuide: _toggleGuidance,
+                onClose: () {
+                  setState(() {
+                    _guidanceMode = false;
+                    _roadRoute = <LatLng>[];
+                  });
+                  controller.rotate(0);
+                  vm.clearDirections();
+                },
               ),
             ),
           if (vm.routeStops.isNotEmpty)
@@ -416,19 +717,37 @@ class _MapPainter extends CustomPainter {
 }
 
 class _UserMarker extends StatelessWidget {
-  const _UserMarker();
+  const _UserMarker({required this.heading});
+  final double heading;
   @override
   Widget build(BuildContext context) => Center(
     child: Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: AppColors.tealDark,
+      width: 48,
+      height: 48,
+      decoration: const BoxDecoration(
+        color: Color(0x33246BFD),
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 4),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(color: Colors.black26, blurRadius: 8),
-        ],
+      ),
+      alignment: Alignment.center,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: const <BoxShadow>[
+            BoxShadow(color: Colors.black26, blurRadius: 8),
+          ],
+        ),
+        child: Transform.rotate(
+          angle: heading * math.pi / 180,
+          child: const Icon(
+            Icons.navigation_rounded,
+            size: 20,
+            color: Colors.white,
+          ),
+        ),
       ),
     ),
   );
@@ -524,27 +843,43 @@ class _RoutePanel extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.detail,
+    required this.loading,
+    required this.guidanceActive,
+    required this.onGuide,
     required this.onClose,
   });
   final String title;
   final String subtitle;
   final String detail;
+  final bool loading;
+  final bool guidanceActive;
+  final VoidCallback onGuide;
   final VoidCallback onClose;
   @override
   Widget build(BuildContext context) => AppCard(
     radius: 20,
     child: Row(
       children: <Widget>[
-        const CircleAvatar(
-          backgroundColor: AppColors.primary,
-          child: Icon(Icons.navigation_rounded, color: Colors.white),
+        CircleAvatar(
+          backgroundColor: guidanceActive
+              ? AppColors.tealDark
+              : AppColors.primary,
+          child: loading
+              ? const SizedBox.square(
+                  dimension: 17,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(Icons.navigation_rounded, color: Colors.white),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Eyebrow('Directions in Map'),
+              Eyebrow(title),
               Text(
                 subtitle,
                 maxLines: 1,
@@ -553,9 +888,21 @@ class _RoutePanel extends StatelessWidget {
               ),
               Text(
                 detail,
-                style: const TextStyle(fontSize: 9, color: AppColors.muted),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 10, color: AppColors.muted),
               ),
             ],
+          ),
+        ),
+        IconButton(
+          tooltip: guidanceActive ? 'Stop guidance' : 'Start guidance',
+          onPressed: loading ? null : onGuide,
+          icon: Icon(
+            guidanceActive
+                ? Icons.pause_circle_filled_rounded
+                : Icons.navigation_rounded,
+            color: AppColors.primary,
           ),
         ),
         IconButton(
@@ -660,187 +1007,193 @@ class _LocationSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Positioned.fill(
     child: Material(
-      color: const Color(0x55152231),
+      color: Colors.transparent,
       child: Align(
         alignment: Alignment.bottomCenter,
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * .76,
-            maxWidth: 520,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                SizedBox(
-                  height: 190,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(30),
-                        ),
-                        child: Image.asset(place.image, fit: BoxFit.cover),
-                      ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(30),
-                          ),
-                          gradient: LinearGradient(
-                            colors: <Color>[
-                              Colors.transparent,
-                              Color(0xB0152231),
-                            ],
-                            begin: Alignment.center,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: IconButton(
-                          tooltip: 'Close',
-                          onPressed: () => vm.select(null),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white,
-                          ),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                      ),
-                      Positioned(
-                        left: 15,
-                        right: 15,
-                        bottom: 13,
-                        child: Text(
-                          place.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * .62,
+              maxWidth: 520,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+              border: Border.all(color: AppColors.border),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x24203548),
+                  blurRadius: 28,
+                  offset: Offset(0, 12),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          const Icon(
-                            Icons.star_rounded,
-                            size: 16,
-                            color: AppColors.warning,
-                          ),
-                          Text(
-                            ' ${place.rating.toStringAsFixed(1)}',
-                            style: const TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          const SizedBox(width: 12),
-                          const Icon(
-                            Icons.place_rounded,
-                            size: 15,
-                            color: AppColors.primary,
-                          ),
-                          Text(
-                            ' ${place.distanceKm.toStringAsFixed(1)} km away',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 9),
-                      Text(
-                        place.shortDescription,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 12),
-                      AppCard(
-                        color: const Color(0xFFF3EEFF),
-                        borderColor: const Color(0xFFE0D3FF),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Row(
-                              children: <Widget>[
-                                Icon(
-                                  Icons.camera_alt_rounded,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                                SizedBox(width: 7),
-                                Text(
-                                  'PICTURE QUEST',
-                                  style: TextStyle(
-                                    color: Color(0xFF6D28D9),
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                Spacer(),
-                                AppChip(label: '+250 XP', selected: true),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  SizedBox(
+                    height: 155,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        Image.asset(place.image, fit: BoxFit.cover),
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: <Color>[
+                                Colors.transparent,
+                                Color(0xB0152231),
                               ],
+                              begin: Alignment.center,
+                              end: Alignment.bottomCenter,
                             ),
-                            SizedBox(height: 7),
-                            Text(
-                              'Capture a heritage detail',
-                              style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: IconButton(
+                            tooltip: 'Close',
+                            onPressed: () => vm.select(null),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.white,
+                            ),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ),
+                        Positioned(
+                          left: 15,
+                          right: 15,
+                          bottom: 13,
+                          child: Text(
+                            place.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 16,
+                              color: AppColors.warning,
                             ),
                             Text(
-                              'Reach the location, capture an original photo and share your reflection.',
-                              style: TextStyle(
+                              ' ${place.rating.toStringAsFixed(1)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Icon(
+                              Icons.place_rounded,
+                              size: 15,
+                              color: AppColors.primary,
+                            ),
+                            Text(
+                              ' ${place.distanceKm.toStringAsFixed(1)} km away',
+                              style: const TextStyle(
                                 fontSize: 10,
                                 color: AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      FilledButton.icon(
-                        onPressed: () => vm.showDirections(place),
-                        icon: const Icon(Icons.navigation_rounded),
-                        label: const Text('Get Directions'),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        key: const Key('open_map_location_details'),
-                        onPressed: () => _memo(context),
-                        icon: const Icon(Icons.menu_book_rounded),
-                        label: const Text('Heritage Memo'),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: vm.isCompleted(place.id)
-                            ? null
-                            : () {
-                                if (!vm.gpsNearby) {
-                                  _rangeDialog(context);
-                                } else {
-                                  _quest(context);
-                                }
-                              },
-                        icon: const Icon(Icons.workspace_premium_rounded),
-                        label: Text(
-                          vm.isCompleted(place.id)
-                              ? 'Picture Quest Completed'
-                              : 'Join Picture Quest',
+                        const SizedBox(height: 9),
+                        Text(
+                          place.shortDescription,
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        AppCard(
+                          color: AppColors.softBlue,
+                          borderColor: const Color(0xFFD4E2FF),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Row(
+                                children: <Widget>[
+                                  Icon(
+                                    Icons.camera_alt_rounded,
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: 7),
+                                  Text(
+                                    'PICTURE QUEST',
+                                    style: TextStyle(
+                                      color: AppColors.primaryDark,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  AppChip(label: '+250 XP', selected: true),
+                                ],
+                              ),
+                              SizedBox(height: 7),
+                              Text(
+                                'Capture a heritage detail',
+                                style: TextStyle(fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                'Reach the location, capture an original photo and share your reflection.',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          onPressed: () => vm.showDirections(place),
+                          icon: const Icon(Icons.navigation_rounded),
+                          label: const Text('Get Directions'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          key: const Key('open_map_location_details'),
+                          onPressed: () => _memo(context),
+                          icon: const Icon(Icons.menu_book_rounded),
+                          label: const Text('Heritage Memo'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: vm.isCompleted(place.id)
+                              ? null
+                              : () {
+                                  if (!vm.gpsNearby) {
+                                    _rangeDialog(context);
+                                  } else {
+                                    _quest(context);
+                                  }
+                                },
+                          icon: const Icon(Icons.workspace_premium_rounded),
+                          label: Text(
+                            vm.isCompleted(place.id)
+                                ? 'Picture Quest Completed'
+                                : 'Join Picture Quest',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

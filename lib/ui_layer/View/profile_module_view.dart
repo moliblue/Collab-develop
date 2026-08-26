@@ -72,9 +72,31 @@ class _Dashboard extends StatelessWidget {
       ),
       const SizedBox(height: 13),
       AppCard(
-        radius: 28,
+        radius: AppTokens.cardRadius,
         child: Column(
           children: <Widget>[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Stack(
+                children: <Widget>[
+                  Image.asset(
+                    'assets/blue_mansion.png',
+                    height: 108,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  const Positioned(
+                    left: 12,
+                    bottom: 10,
+                    child: AppChip(
+                      label: 'Malaysia heritage explorer',
+                      selected: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: <Widget>[
                 Stack(
@@ -112,7 +134,7 @@ class _Dashboard extends StatelessWidget {
                         viewModel.name,
                         style: const TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -480,8 +502,8 @@ class _BadgesView extends StatelessWidget {
       Container(
         padding: const EdgeInsets.all(17),
         decoration: BoxDecoration(
-          gradient: AppColors.mysteryGradient,
-          borderRadius: BorderRadius.circular(28),
+          color: const Color(0xFF173D66),
+          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
         ),
         child: Row(
           children: <Widget>[
@@ -504,7 +526,7 @@ class _BadgesView extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 17,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
@@ -791,23 +813,55 @@ class _LoginViewState extends State<_LoginView> {
     key: const Key('login_screen'),
     padding: const EdgeInsets.fromLTRB(20, 42, 20, 28),
     children: <Widget>[
-      const Center(
-        child: CircleAvatar(
-          radius: 35,
-          backgroundColor: AppColors.primary,
-          child: Icon(Icons.explore_rounded, color: Colors.white, size: 39),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+        child: SizedBox(
+          height: 150,
+          child: Stack(
+            fit: StackFit.expand,
+            children: <Widget>[
+              Image.asset('assets/batu_caves.png', fit: BoxFit.cover),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[Colors.transparent, Color(0xA9152536)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+              const Positioned(
+                left: 16,
+                bottom: 14,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.explore_rounded, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Explore My',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 18),
       Text(
         'Welcome Back',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.headlineMedium,
       ),
       const Text(
-        'Sign in to your Explore My account',
+        'Continue planning and discovering Malaysia',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 10, color: AppColors.muted),
+        style: TextStyle(fontSize: 12, color: AppColors.muted),
       ),
       const SizedBox(height: 20),
       AppCard(

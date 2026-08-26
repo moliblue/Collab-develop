@@ -64,6 +64,7 @@ void main() {
   ) async {
     final model = AppViewModel()..selectTab(MainTab.discover);
     await pumpApp(tester, viewModel: model);
+    expect(find.byKey(const Key('recommend_spot')), findsNothing);
     final place = model.discovery.places.firstWhere(
       (HeritagePlace item) => !item.bookmarked,
     );
@@ -84,6 +85,32 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
     expect(find.text(place.name), findsWidgets);
     expect(find.byKey(const Key('write_review')), findsOneWidget);
+  });
+
+  testWidgets('Mystery reveal opens the mapped route immediately', (
+    WidgetTester tester,
+  ) async {
+    final model = await pumpApp(tester);
+
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-home')),
+      const Offset(0, -520),
+    );
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(find.byKey(const Key('start_mystery')));
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(find.byKey(const Key('tap_to_discover')));
+    await tester.pump(const Duration(milliseconds: 120));
+
+    await tester.ensureVisible(find.text('Reveal route'));
+    await tester.tap(find.text('Reveal route'));
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(find.text('Reveal Route'));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(model.mystery.routeRevealed, isTrue);
+    expect(model.tab, MainTab.map);
+    expect(model.map.directionTarget, isNotNull);
   });
 
   testWidgets('Plan exposes activity and plan creation workflows', (
