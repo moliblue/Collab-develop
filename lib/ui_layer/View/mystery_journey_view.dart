@@ -29,6 +29,9 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     with SingleTickerProviderStateMixin {
   bool _chatOpen = false;
   bool _checkInComplete = false;
+  final List<String> _teamActivity = <String>[
+    'Group journey started — 3 travellers connected.',
+  ];
   late final AnimationController _shakeController;
 
   @override
@@ -146,17 +149,17 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Eyebrow('Mystery Journey', color: Colors.white),
+                const Eyebrow('Mystery trip', color: Colors.white),
                 const SizedBox(height: 8),
                 Text(
-                  'Follow a clue.\nFind a story.',
+                  'Less planning.\nMore exploring.',
                   style: Theme.of(
                     context,
                   ).textTheme.headlineLarge?.copyWith(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Discover a Malaysian place without revealing the destination too soon.',
+                  'Follow playful clues and discover Malaysia’s stories, food and hidden corners.',
                   style: TextStyle(
                     color: Color(0xE8FFFFFF),
                     fontSize: 13,
@@ -179,8 +182,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         Expanded(
           child: _modeCard(
             JourneyMode.solo,
-            'Solo Explorer',
-            'Follow the clues at your own pace',
+            'Solo mode',
+            'Solve the mystery on your own',
             Icons.person_rounded,
             AppColors.primary,
           ),
@@ -189,8 +192,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         Expanded(
           child: _modeCard(
             JourneyMode.group,
-            'Group Explorer',
-            'Discover with nearby travellers',
+            'Team mode',
+            'Solve it with nearby teammates',
             Icons.groups_rounded,
             AppColors.teal,
           ),
@@ -214,11 +217,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Your travel mood',
+                      'My travel mood',
                       style: TextStyle(fontWeight: FontWeight.w900),
                     ),
                     Text(
-                      'Personalise the surprise',
+                      'Make the surprise feel more you',
                       style: TextStyle(fontSize: 10, color: AppColors.muted),
                     ),
                   ],
@@ -243,7 +246,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                 ),
               ),
               AppChip(
-                label: '${widget.viewModel.radius.round()} km',
+                label: 'Within ${widget.viewModel.radius.round()} km',
                 selected: true,
               ),
             ],
@@ -289,7 +292,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         );
       },
       icon: const Icon(Icons.auto_awesome_rounded),
-      label: const Text('Surprise me'),
+      label: const Text('Surprise me — anywhere fun!'),
     ),
   ], key: const PageStorageKey<String>('mystery-home'));
 
@@ -377,8 +380,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             Slider(
               value: widget.viewModel.radius,
               min: 5,
-              max: 30,
-              divisions: 5,
+              max: 50,
+              divisions: 9,
               onChanged: (double value) =>
                   setSheet(() => widget.viewModel.setRadius(value)),
             ),
@@ -454,7 +457,9 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               )
             : const Icon(Icons.radar_rounded),
         label: Text(
-          widget.viewModel.scanning ? 'Scanning nearby…' : 'Scan for teammates',
+          widget.viewModel.scanning
+              ? 'Searching Within 1 km…'
+              : 'Find Nearby Travellers',
         ),
       ),
     if (widget.viewModel.matched) ...<Widget>[
@@ -497,16 +502,16 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         widget.viewModel.setMode(JourneyMode.solo);
         widget.viewModel.setStage(MysteryStage.home);
       },
-      child: const Text('Continue Solo instead'),
+      child: const Text('Continue Solo Instead'),
     ),
-  ]);
+  ], key: const PageStorageKey<String>('mystery-group-setup'));
 
   Widget _groupWaiting() => _scroll(<Widget>[
-    const Eyebrow('Group room · You are host', color: AppColors.teal),
+    const Eyebrow('Nearby group found · You are host', color: AppColors.teal),
     const SizedBox(height: 4),
     const SectionTitle(
-      'Ready for a shared mystery?',
-      subtitle: 'Everyone must be ready before the trip begins.',
+      '3 travellers within 1 km',
+      subtitle: 'Exact locations stay private until the journey begins.',
     ),
     const SizedBox(height: 14),
     AppCard(
@@ -580,27 +585,31 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
-              backgroundColor: widget.viewModel.groupPreferencesSet
+              backgroundColor: widget.viewModel.groupChatUnlocked
                   ? const Color(0xFFE9FAF4)
                   : AppColors.elevated,
               child: Icon(
-                widget.viewModel.groupPreferencesSet
+                widget.viewModel.groupChatUnlocked
                     ? Icons.chat_rounded
                     : Icons.lock_rounded,
-                color: widget.viewModel.groupPreferencesSet
+                color: widget.viewModel.groupChatUnlocked
                     ? AppColors.teal
                     : AppColors.muted,
               ),
             ),
             title: Text(
-              widget.viewModel.groupPreferencesSet
+              widget.viewModel.groupChatUnlocked
                   ? 'Group chat unlocked'
                   : 'Group chat locked',
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-            subtitle: const Text('Chat unlocks after preferences are set'),
+            subtitle: Text(
+              widget.viewModel.groupChatUnlocked
+                  ? '${widget.viewModel.roomMemberCount} people in this room'
+                  : 'Chat unlocks when another traveller joins',
+            ),
             trailing: IconButton(
-              onPressed: widget.viewModel.groupPreferencesSet
+              onPressed: widget.viewModel.groupChatUnlocked
                   ? () => setState(() => _chatOpen = !_chatOpen)
                   : null,
               icon: Icon(_chatOpen ? Icons.expand_less : Icons.expand_more),
@@ -649,7 +658,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ),
     const SizedBox(height: 16),
     FilledButton.icon(
-      onPressed: widget.viewModel.ready && widget.viewModel.groupPreferencesSet
+      onPressed: widget.viewModel.ready
           ? () => widget.viewModel.setStage(MysteryStage.shake)
           : null,
       icon: const Icon(Icons.rocket_launch_rounded),
@@ -664,7 +673,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       icon: const Icon(Icons.auto_awesome_rounded),
       label: const Text('Surprise the group'),
     ),
-  ]);
+  ], key: const PageStorageKey<String>('mystery-group-waiting'));
 
   Widget _preferences() => _scroll(<Widget>[
     const SectionTitle(
@@ -698,8 +707,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           Slider(
             value: widget.viewModel.radius,
             min: 5,
-            max: 30,
-            divisions: 5,
+            max: 50,
+            divisions: 9,
             onChanged: widget.viewModel.setRadius,
           ),
         ],
@@ -718,7 +727,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   ]);
 
   Widget _shake() => _scroll(<Widget>[
-    const SizedBox(height: 38),
+    const SizedBox(height: 24),
     AnimatedBuilder(
       animation: _shakeController,
       builder: (BuildContext context, Widget? child) => Transform.rotate(
@@ -754,27 +763,88 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ),
     const SizedBox(height: 34),
     Text(
-      'Shake to discover',
+      widget.viewModel.mode == JourneyMode.group
+          ? 'Ready to sync?'
+          : 'Shake your phone!',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headlineLarge,
     ),
     const SizedBox(height: 8),
     Text(
       widget.viewModel.mode == JourneyMode.group
-          ? 'Shake together to reveal your shared mystery clue.'
-          : 'Give your phone a confident shake. We’ll choose a destination from your travel mood.',
+          ? 'When everyone is ready, the host can trigger one shared reveal for the whole room.'
+          : 'Shake your phone to generate your personalized mystery heritage clue.',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodyMedium,
     ),
+    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
+      const SizedBox(height: 20),
+      AppCard(
+        color: const Color(0xFFE9FAF4),
+        borderColor: const Color(0xFFBFECDD),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                const Expanded(
+                  child: Text(
+                    'Room ready check',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                AppChip(
+                  label: widget.viewModel.ready ? 'All synced' : 'Waiting',
+                  selected: widget.viewModel.ready,
+                  selectedColor: AppColors.teal,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              title: const Text(
+                'You',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: const Text('Tap to toggle your ready status'),
+              value: widget.viewModel.ready,
+              onChanged: widget.viewModel.setReady,
+              activeThumbColor: AppColors.teal,
+            ),
+            const _TravellerTile(
+              initials: 'LT',
+              name: 'Lucas Tan',
+              status: 'Ready',
+              color: Colors.white,
+            ),
+            const _TravellerTile(
+              initials: 'AS',
+              name: 'Amirah S.',
+              status: 'Ready',
+              color: Colors.white,
+            ),
+          ],
+        ),
+      ),
+    ],
     const SizedBox(height: 26),
     FilledButton.icon(
       key: const Key('tap_to_discover'),
-      onPressed: () {
-        widget.viewModel.startJourney();
-        widget.notify('Mystery clue generated!', AppColors.teal);
-      },
+      onPressed:
+          widget.viewModel.mode == JourneyMode.group && !widget.viewModel.ready
+          ? null
+          : () {
+              widget.viewModel.startJourney();
+              widget.notify('Mystery clue generated!', AppColors.teal);
+            },
       icon: const Icon(Icons.touch_app_rounded),
-      label: const Text('Discover now'),
+      label: Text(
+        widget.viewModel.mode == JourneyMode.group
+            ? 'Sync Shake & Reveal for Everyone'
+            : 'Simulate Phone Shake Action',
+      ),
     ),
     const SizedBox(height: 8),
     const Center(
@@ -783,7 +853,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         style: TextStyle(fontSize: 12, color: AppColors.muted),
       ),
     ),
-  ]);
+  ], key: const PageStorageKey<String>('mystery-shake'));
 
   Widget _active() => _scroll(<Widget>[
     Container(
@@ -884,7 +954,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           child: OutlinedButton.icon(
             onPressed: widget.viewModel.hintCount >= 2 ? null : _askHint,
             icon: const Icon(Icons.lightbulb_outline_rounded),
-            label: const Text('Unlock hint'),
+            label: Text(
+              widget.viewModel.mode == JourneyMode.group
+                  ? 'Request Group Hint'
+                  : 'Unlock hint',
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -895,12 +969,64 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                 : _confirmRoute,
             icon: const Icon(Icons.route_rounded),
             label: Text(
-              widget.viewModel.routeRevealed ? 'Open Map' : 'Reveal route',
+              widget.viewModel.routeRevealed
+                  ? 'Open Map'
+                  : widget.viewModel.mode == JourneyMode.group
+                  ? 'Vote to Reveal'
+                  : 'Reveal route',
             ),
           ),
         ),
       ],
     ),
+    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
+      const SizedBox(height: 12),
+      AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Row(
+              children: <Widget>[
+                Icon(Icons.monitor_heart_rounded, color: AppColors.teal),
+                SizedBox(width: 8),
+                Text(
+                  'Team activity',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+            const Divider(height: 22),
+            ..._teamActivity.map(
+              (String activity) => Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: CircleAvatar(
+                        radius: 3,
+                        backgroundColor: AppColors.teal,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        activity,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
     const SizedBox(height: 12),
     if (widget.viewModel.mode == JourneyMode.group)
       AppCard(
@@ -966,7 +1092,12 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
 
   void _askHint() {
     if (widget.viewModel.mode == JourneyMode.group) {
-      _voteDialog('Unlock this group hint?', widget.viewModel.unlockHint);
+      _voteDialog(
+        'Unlock this group hint?',
+        widget.viewModel.unlockHint,
+        activityMessage:
+            'Amirah approved your hint request — hint unlocked (2/3).',
+      );
     } else {
       widget.viewModel.unlockHint();
       widget.notify('New hint unlocked.', AppColors.primary);
@@ -980,7 +1111,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     }
 
     if (widget.viewModel.mode == JourneyMode.group) {
-      _voteDialog('Reveal the exact route?', revealAndNavigate);
+      _voteDialog(
+        'Reveal the exact route?',
+        revealAndNavigate,
+        activityMessage: 'Route reveal approved by You and Amirah (2/3).',
+      );
     } else {
       _voteDialog('Reveal exact route?', revealAndNavigate, group: false);
     }
@@ -990,39 +1125,128 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     String title,
     VoidCallback accepted, {
     bool group = true,
+    String? activityMessage,
   }) async {
+    var yesVotes = 0;
+    var resolving = false;
     await showDialog<void>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-        icon: Icon(
-          group ? Icons.how_to_vote_rounded : Icons.route_rounded,
-          color: AppColors.primary,
-          size: 34,
-        ),
-        title: Text(title, textAlign: TextAlign.center),
-        content: Text(
-          group
-              ? 'A majority of 2 out of 3 travellers is required. Help may reduce the final achievement score.'
-              : 'The precise destination and navigation route will be shown.',
-          textAlign: TextAlign.center,
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      barrierDismissible: !group,
+      builder: (BuildContext dialogContext) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setDialog) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
           ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              if (group) {
-                widget.notify('Vote passed · 3/3 approved.', AppColors.teal);
-              }
-              accepted();
-            },
-            child: Text(group ? 'Vote Yes' : 'Reveal Route'),
+          icon: Icon(
+            group ? Icons.how_to_vote_rounded : Icons.route_rounded,
+            color: AppColors.primary,
+            size: 34,
           ),
-        ],
+          title: Text(title, textAlign: TextAlign.center),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                group
+                    ? 'A majority of 2 out of 3 travellers is required. Revealing help may reduce the final achievement score.'
+                    : 'The precise destination and navigation route will be shown.',
+                textAlign: TextAlign.center,
+              ),
+              if (group) ...<Widget>[
+                const SizedBox(height: 16),
+                _VoteMemberRow(
+                  name: 'You',
+                  status: yesVotes >= 1
+                      ? 'Approved'
+                      : resolving
+                      ? 'Deciding…'
+                      : 'Waiting',
+                  approved: yesVotes >= 1,
+                ),
+                _VoteMemberRow(
+                  name: 'Amirah',
+                  status: yesVotes >= 2
+                      ? 'Approved'
+                      : resolving
+                      ? 'Deciding…'
+                      : 'Waiting',
+                  approved: yesVotes >= 2,
+                ),
+                const _VoteMemberRow(
+                  name: 'Lucas',
+                  status: 'Waiting',
+                  approved: false,
+                ),
+                const SizedBox(height: 10),
+                LinearProgressIndicator(
+                  value: yesVotes / 3,
+                  minHeight: 7,
+                  borderRadius: BorderRadius.circular(10),
+                  backgroundColor: AppColors.elevated,
+                  color: AppColors.teal,
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  '$yesVotes/3 approved · 2 required',
+                  key: const Key('vote_status'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: resolving ? null : () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: resolving
+                  ? null
+                  : () async {
+                      if (!group) {
+                        Navigator.pop(dialogContext);
+                        accepted();
+                        return;
+                      }
+                      setDialog(() {
+                        resolving = true;
+                        yesVotes = 1;
+                      });
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 700),
+                      );
+                      if (!dialogContext.mounted) return;
+                      setDialog(() => yesVotes = 2);
+                      await Future<void>.delayed(
+                        const Duration(milliseconds: 850),
+                      );
+                      if (!dialogContext.mounted) return;
+                      Navigator.pop(dialogContext);
+                      if (activityMessage != null && mounted) {
+                        setState(
+                          () => _teamActivity.insert(0, activityMessage),
+                        );
+                      }
+                      widget.notify(
+                        'Vote passed · 2/3 approved.',
+                        AppColors.teal,
+                      );
+                      accepted();
+                    },
+              child: Text(
+                resolving
+                    ? 'Waiting…'
+                    : group
+                    ? 'Vote Yes'
+                    : 'Reveal Route',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1314,6 +1538,55 @@ class _TravellerTile extends StatelessWidget {
       Icons.check_circle_rounded,
       color: AppColors.teal,
       size: 18,
+    ),
+  );
+}
+
+class _VoteMemberRow extends StatelessWidget {
+  const _VoteMemberRow({
+    required this.name,
+    required this.status,
+    required this.approved,
+  });
+
+  final String name;
+  final String status;
+  final bool approved;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 7),
+    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+    decoration: BoxDecoration(
+      color: approved ? const Color(0xFFE9FAF4) : AppColors.elevated,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: approved ? const Color(0xFFBFECDD) : AppColors.border,
+      ),
+    ),
+    child: Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            name,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+          ),
+        ),
+        Icon(
+          approved ? Icons.check_circle_rounded : Icons.schedule_rounded,
+          size: 15,
+          color: approved ? AppColors.teal : AppColors.muted,
+        ),
+        const SizedBox(width: 5),
+        Text(
+          status,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: approved ? AppColors.tealDark : AppColors.muted,
+          ),
+        ),
+      ],
     ),
   );
 }

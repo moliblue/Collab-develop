@@ -52,6 +52,7 @@ class _MapModuleViewState extends State<MapModuleView> {
   String? _routeIssue;
   String? _locationIssue;
   String? _lastRouteSignature;
+  bool _routeReloadPending = false;
   int _routeRequest = 0;
 
   @override
@@ -165,7 +166,13 @@ class _MapModuleViewState extends State<MapModuleView> {
     if (_guidanceMode) {
       controller.moveAndRotate(next, 17.5, (360 - _heading) % 360);
     }
-    if (moved > 40 && _hasRouteTarget) _loadRoadRoute();
+    if (moved > 40 && _hasRouteTarget) {
+      if (_routeLoading) {
+        _routeReloadPending = true;
+      } else {
+        _loadRoadRoute();
+      }
+    }
   }
 
   bool get _hasRouteTarget =>
@@ -197,16 +204,25 @@ class _MapModuleViewState extends State<MapModuleView> {
         : 'none';
     if (signature == _lastRouteSignature) return;
     _lastRouteSignature = signature;
-    _routeRequest++;
     _roadRoute = <LatLng>[];
     _routeIssue = null;
+    _routedFrom = null;
     _guidanceMode = false;
     if (signature != 'none') {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
+    } else {
+      _routeReloadPending = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasRouteTarget) controller.rotate(0);
+      });
     }
   }
 
   Future<void> _loadRoadRoute() async {
+    if (_routeLoading) {
+      _routeReloadPending = true;
+      return;
+    }
     final waypoints = _routeWaypoints();
     if (!mounted || !widget.active || waypoints.length < 2) {
       if (mounted && _hasRouteTarget && _userPosition == null) {
@@ -216,6 +232,9 @@ class _MapModuleViewState extends State<MapModuleView> {
       }
       return;
     }
+    _routeReloadPending = false;
+    final signature = _lastRouteSignature;
+    final routeOrigin = waypoints.first;
     final request = ++_routeRequest;
     setState(() {
       _routeLoading = true;
@@ -223,17 +242,24 @@ class _MapModuleViewState extends State<MapModuleView> {
     });
     try {
       final result = await navigation.fetchDrivingRoute(waypoints);
-      if (!mounted || request != _routeRequest) return;
+      if (!mounted ||
+          request != _routeRequest ||
+          signature != _lastRouteSignature) {
+        return;
+      }
       setState(() {
         _roadRoute = result.points;
         _routeDistanceMeters = result.distanceMeters;
         _routeDurationSeconds = result.durationSeconds;
-        _routedFrom = _userPosition;
-        _routeLoading = false;
+        _routedFrom = routeOrigin;
       });
       _fitRoute(result.points);
     } catch (_) {
-      if (!mounted || request != _routeRequest) return;
+      if (!mounted ||
+          request != _routeRequest ||
+          signature != _lastRouteSignature) {
+        return;
+      }
       setState(() {
         _roadRoute = waypoints;
         _routeDistanceMeters = const Distance().as(
@@ -242,10 +268,32 @@ class _MapModuleViewState extends State<MapModuleView> {
           waypoints.last,
         );
         _routeDurationSeconds = 0;
-        _routeLoading = false;
+        _routedFrom = routeOrigin;
         _routeIssue = 'Road routing unavailable · showing direct connection';
       });
       _fitRoute(waypoints);
+    } finally {
+      if (mounted && request == _routeRequest) {
+        setState(() => _routeLoading = false);
+
+        final currentPosition = _userPosition;
+        final movedWhileLoading =
+            currentPosition != null &&
+            const Distance().as(
+                  LengthUnit.Meter,
+                  routeOrigin,
+                  currentPosition,
+                ) >
+                40;
+        final shouldReload =
+            _hasRouteTarget &&
+            (signature != _lastRouteSignature ||
+                (_routeReloadPending && movedWhileLoading));
+        _routeReloadPending = false;
+        if (shouldReload) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
+        }
+      }
     }
   }
 

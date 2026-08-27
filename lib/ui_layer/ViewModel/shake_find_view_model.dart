@@ -212,8 +212,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   bool _journeyActive = false;
   bool _scanning = false;
   bool _matched = false;
+  int _roomMemberCount = 1;
   bool _ready = true;
-  bool _groupPreferencesSet = false;
+  // The prototype enters the room with the traveller's saved preferences
+  // selected. The host can still edit them or choose Surprise Me.
+  bool _groupPreferencesSet = true;
   int _hintCount = 0;
   bool _routeRevealed = false;
   final List<String> _messages = <String>[
@@ -229,6 +232,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   bool get journeyActive => _journeyActive;
   bool get scanning => _scanning;
   bool get matched => _matched;
+  int get roomMemberCount => _roomMemberCount;
+  bool get groupChatUnlocked => _roomMemberCount > 1;
   bool get ready => _ready;
   bool get groupPreferencesSet => _groupPreferencesSet;
   int get hintCount => _hintCount;
@@ -281,10 +286,13 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   Future<void> scanNearby() async {
     if (_scanning) return;
     _scanning = true;
+    _matched = false;
     notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: 650));
+    await Future<void>.delayed(const Duration(milliseconds: 900));
     _scanning = false;
     _matched = true;
+    _roomMemberCount = 3;
+    _stage = app.MysteryStage.groupWaiting;
     notifyListeners();
   }
 

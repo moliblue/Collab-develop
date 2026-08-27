@@ -59,6 +59,70 @@ void main() {
     expect(find.text('Follow the clock’s story'), findsOneWidget);
   });
 
+  testWidgets('group Mystery matches, checks readiness, and starts together', (
+    WidgetTester tester,
+  ) async {
+    final model = await pumpApp(tester);
+
+    model.mystery.setMode(JourneyMode.group);
+    model.mystery.setStage(MysteryStage.groupSetup);
+    await tester.pump();
+    expect(find.text('Find Nearby Travellers'), findsOneWidget);
+
+    await tester.tap(find.text('Find Nearby Travellers'));
+    await tester.pump(const Duration(milliseconds: 950));
+    expect(model.mystery.stage, MysteryStage.groupWaiting);
+    expect(find.text('3 travellers within 1 km'), findsOneWidget);
+    expect(find.text('Group chat unlocked'), findsOneWidget);
+    expect(find.text('3 people in this room'), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-group-waiting')),
+      const Offset(0, -700),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Start Group Journey'));
+    await tester.pump();
+    expect(model.mystery.stage, MysteryStage.shake);
+    expect(find.text('Room ready check'), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-shake')),
+      const Offset(0, -650),
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('tap_to_discover')));
+    await tester.pump();
+    expect(model.mystery.stage, MysteryStage.active);
+    expect(model.mystery.journeyActive, isTrue);
+  });
+
+  testWidgets('group vote shows member status and majority progress', (
+    WidgetTester tester,
+  ) async {
+    final model = AppViewModel();
+    model.mystery.setMode(JourneyMode.group);
+    model.mystery.startJourney();
+    await pumpApp(tester, viewModel: model);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -650));
+    await tester.pump();
+    await tester.tap(find.text('Request Group Hint'));
+    await tester.pump();
+    expect(find.text('0/3 approved · 2 required'), findsOneWidget);
+    expect(find.text('You'), findsWidgets);
+    expect(find.text('Amirah'), findsOneWidget);
+
+    await tester.tap(find.text('Vote Yes'));
+    await tester.pump();
+    expect(find.text('1/3 approved · 2 required'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 750));
+    expect(find.text('2/3 approved · 2 required'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(model.mystery.hintCount, 1);
+    expect(find.textContaining('hint unlocked (2/3)'), findsOneWidget);
+  });
+
   testWidgets('Discover bookmarks a place and opens its detail', (
     WidgetTester tester,
   ) async {
