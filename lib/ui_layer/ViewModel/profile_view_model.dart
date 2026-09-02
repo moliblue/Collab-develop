@@ -10,6 +10,8 @@ class ProfileViewModel extends ChangeNotifier {
       'Heritage enthusiast exploring UNESCO trails and local traditional crafts across Malaysia.';
   String _language = 'English (US)';
   int _xp = 1450;
+  int _level = 3;
+  int _streakDays = 0;
   String _badgeStatus = 'All';
   BadgeData? _selectedBadge;
 
@@ -18,7 +20,8 @@ class ProfileViewModel extends ChangeNotifier {
   String get bio => _bio;
   String get language => _language;
   int get xp => _xp;
-  int get level => 3;
+  int get level => _level;
+  int get streakDays => _streakDays;
   int get trips => 8;
   String get badgeStatus => _badgeStatus;
   BadgeData? get selectedBadge => _selectedBadge;
@@ -62,6 +65,17 @@ class ProfileViewModel extends ChangeNotifier {
 
   void rewardXp(int amount) {
     _xp += amount;
+    notifyListeners();
+  }
+
+  void applyJourneyProgress({
+    required int xp,
+    required int explorerLevel,
+    required int streakDays,
+  }) {
+    _xp = xp;
+    _level = explorerLevel;
+    _streakDays = streakDays;
     notifyListeners();
   }
 

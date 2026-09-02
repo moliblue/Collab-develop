@@ -8,6 +8,9 @@ class ShakeSensorService {
   ShakeSensorService({
     this.shakeThreshold = 5.5,
     this.jerkThreshold = 9,
+    this.requiredImpulses = 3,
+    this.shakeWindow = const Duration(milliseconds: 900),
+    this.minimumImpulseGap = const Duration(milliseconds: 70),
     this.cooldown = const Duration(milliseconds: 1400),
   });
 
@@ -16,9 +19,15 @@ class ShakeSensorService {
 
   /// Change between consecutive raw acceleration samples, in m/s².
   final double jerkThreshold;
+  final int requiredImpulses;
+  final Duration shakeWindow;
+  final Duration minimumImpulseGap;
   final Duration cooldown;
   StreamSubscription<AccelerometerEvent>? _subscription;
   DateTime? _lastShake;
+  DateTime? _shakeWindowStartedAt;
+  DateTime? _lastImpulse;
+  int _impulseCount = 0;
   AccelerometerEvent? _previousEvent;
   bool _disposed = false;
 
@@ -31,6 +40,9 @@ class ShakeSensorService {
     if (_disposed) throw StateError('ShakeSensorService is disposed.');
     unawaited(stopListening());
     _lastShake = null;
+    _shakeWindowStartedAt = null;
+    _lastImpulse = null;
+    _impulseCount = 0;
     _previousEvent = null;
     _subscription =
         accelerometerEventStream(
@@ -61,7 +73,28 @@ class ShakeSensorService {
             if (_lastShake != null && now.difference(_lastShake!) < cooldown) {
               return;
             }
+
+            // A real shake produces several alternating acceleration impulses.
+            // Requiring multiple separated impulses prevents a single bump,
+            // screen rotation, or putting the phone down from starting a journey.
+            if (_lastImpulse != null &&
+                now.difference(_lastImpulse!) < minimumImpulseGap) {
+              return;
+            }
+            _lastImpulse = now;
+            if (_shakeWindowStartedAt == null ||
+                now.difference(_shakeWindowStartedAt!) > shakeWindow) {
+              _shakeWindowStartedAt = now;
+              _impulseCount = 1;
+              return;
+            }
+            _impulseCount++;
+            if (_impulseCount < requiredImpulses) return;
+
             _lastShake = now;
+            _shakeWindowStartedAt = null;
+            _lastImpulse = null;
+            _impulseCount = 0;
             debugPrint(
               'Shake detected: linear=${linearAcceleration.toStringAsFixed(2)}, '
               'jerk=${jerk.toStringAsFixed(2)}',

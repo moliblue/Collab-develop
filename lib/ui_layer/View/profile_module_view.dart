@@ -39,6 +39,7 @@ class ProfileModuleView extends StatelessWidget {
       ),
       ProfileStage.dashboard => _Dashboard(
         viewModel: viewModel,
+        authViewModel: authViewModel,
         notify: notify,
       ),
     },
@@ -46,8 +47,13 @@ class ProfileModuleView extends StatelessWidget {
 }
 
 class _Dashboard extends StatelessWidget {
-  const _Dashboard({required this.viewModel, required this.notify});
+  const _Dashboard({
+    required this.viewModel,
+    required this.authViewModel,
+    required this.notify,
+  });
   final ProfileViewModel viewModel;
+  final AuthViewModel authViewModel;
   final void Function(String, Color) notify;
   @override
   Widget build(BuildContext context) => ListView(
@@ -469,6 +475,7 @@ class _Dashboard extends StatelessWidget {
       ),
     );
     if (yes == true) {
+      await authViewModel.logout();
       viewModel.logout();
       notify('Logged out successfully.', AppColors.primary);
     }
@@ -799,8 +806,8 @@ class _LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<_LoginView> {
-  final email = TextEditingController(text: 'explorer@gmail.com');
-  final password = TextEditingController(text: 'Password123!');
+  final email = TextEditingController();
+  final password = TextEditingController();
   @override
   void dispose() {
     email.dispose();
@@ -1057,8 +1064,16 @@ class _RegisterViewState extends State<_RegisterView> {
     if (error != null) {
       widget.notify(error, AppColors.danger);
     } else {
-      widget.profile.authenticated(name: fields[0].text);
-      widget.notify('Account registered successfully!', AppColors.teal);
+      if (widget.auth.isAuthenticated) {
+        widget.profile.authenticated(name: fields[0].text);
+        widget.notify('Account registered successfully!', AppColors.teal);
+      } else {
+        widget.profile.setStage(ProfileStage.login);
+        widget.notify(
+          'Registration received. Confirm your email, then sign in.',
+          AppColors.teal,
+        );
+      }
     }
   }
 }
@@ -1163,8 +1178,9 @@ class _RecoverViewState extends State<_RecoverView> {
                   ),
                   const SizedBox(height: 12),
                   FilledButton(
-                    onPressed: () {
-                      final error = widget.auth.recover(email.text);
+                    onPressed: () async {
+                      final error = await widget.auth.recover(email.text);
+                      if (!context.mounted) return;
                       if (error != null) {
                         widget.notify(error, AppColors.danger);
                       } else {

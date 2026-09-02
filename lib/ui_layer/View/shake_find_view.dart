@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_theme.dart';
-import '../../../data_layer/Models/shake_find/journey.dart';
-import '../../ViewModel/shake_find_view_model.dart';
-import '../shared/premium_animated_button.dart';
+import '../../core/theme/app_theme.dart';
+import '../../data_layer/Models/journey.dart';
+import '../ViewModel/shake_find_view_model.dart';
+import 'shared/premium_animated_button.dart';
 
 class ShakeFindView extends StatefulWidget {
   const ShakeFindView({super.key, required this.viewModel});
