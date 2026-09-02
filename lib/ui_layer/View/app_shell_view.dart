@@ -64,7 +64,6 @@ class _AppShellViewState extends State<AppShellView> {
                           ),
                           MapModuleView(
                             viewModel: vm.map,
-                            places: vm.discovery.places,
                             active: vm.tab == MainTab.map,
                             onBack: vm.back,
                             onXpReward: vm.rewardXp,

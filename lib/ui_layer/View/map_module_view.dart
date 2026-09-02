@@ -17,14 +17,12 @@ class MapModuleView extends StatefulWidget {
   const MapModuleView({
     super.key,
     required this.viewModel,
-    required this.places,
     required this.active,
     required this.onBack,
     required this.onXpReward,
     required this.notify,
   });
   final MapQuestViewModel viewModel;
-  final List<HeritagePlace> places;
   final bool active;
   final VoidCallback onBack;
   final ValueChanged<int> onXpReward;
@@ -36,6 +34,7 @@ class MapModuleView extends StatefulWidget {
 class _MapModuleViewState extends State<MapModuleView> {
   final MapController controller = MapController();
   final MapNavigationService navigation = MapNavigationService();
+  final ValueNotifier<double> _headingNotifier = ValueNotifier<double>(0);
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<double?>? _headingSubscription;
   bool filtersOpen = false;
@@ -54,6 +53,12 @@ class _MapModuleViewState extends State<MapModuleView> {
   String? _lastRouteSignature;
   bool _routeReloadPending = false;
   int _routeRequest = 0;
+  bool _heritageLoadStarted = false;
+  bool _showHeritageLabels = false;
+  DateTime? _lastHeadingUpdate;
+
+  static const Duration _headingUpdateInterval = Duration(milliseconds: 200);
+  static const double _heritageLabelZoomThreshold = 15;
 
   @override
   void initState() {
@@ -77,6 +82,7 @@ class _MapModuleViewState extends State<MapModuleView> {
   void dispose() {
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
+    _headingNotifier.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -96,12 +102,10 @@ class _MapModuleViewState extends State<MapModuleView> {
           _navigationActive = false;
           _locating = false;
           _locationIssue = switch (access) {
-            LocationAccessStatus.servicesDisabled =>
-              'Turn on Location Services to navigate.',
-            LocationAccessStatus.denied =>
-              'Allow location access to show your position.',
+            LocationAccessStatus.servicesDisabled ||
+            LocationAccessStatus.denied ||
             LocationAccessStatus.deniedForever =>
-              'Enable location permission in Android settings.',
+              'Current location is unavailable. Please enable location services and try again.',
             LocationAccessStatus.ready => null,
           };
         });
@@ -114,14 +118,23 @@ class _MapModuleViewState extends State<MapModuleView> {
             setState(() {
               _navigationActive = false;
               _locating = false;
-              _locationIssue = 'Live GPS is temporarily unavailable.';
+              _locationIssue =
+                  'Current location is unavailable. Please enable location services and try again.';
             });
           }
         },
       );
       _headingSubscription = navigation.headingStream?.listen((double? value) {
         if (!mounted || value == null) return;
-        setState(() => _heading = value);
+        final now = DateTime.now();
+        final lastUpdate = _lastHeadingUpdate;
+        if (lastUpdate != null &&
+            now.difference(lastUpdate) < _headingUpdateInterval) {
+          return;
+        }
+        _lastHeadingUpdate = now;
+        _heading = value;
+        _headingNotifier.value = value;
         if (_guidanceMode && _userPosition != null) {
           controller.moveAndRotate(_userPosition!, 17.5, (360 - value) % 360);
         }
@@ -135,7 +148,8 @@ class _MapModuleViewState extends State<MapModuleView> {
         setState(() {
           _navigationActive = false;
           _locating = false;
-          _locationIssue = 'Live location is unavailable on this device.';
+          _locationIssue =
+              'Current location is unavailable. Please enable location services and try again.';
         });
       }
     }
@@ -147,6 +161,12 @@ class _MapModuleViewState extends State<MapModuleView> {
     _headingSubscription?.cancel();
     _positionSubscription = null;
     _headingSubscription = null;
+  }
+
+  void _updateHeritageLabelVisibility(MapCamera camera, bool hasGesture) {
+    final showLabels = camera.zoom >= _heritageLabelZoomThreshold;
+    if (showLabels == _showHeritageLabels || !mounted) return;
+    setState(() => _showHeritageLabels = showLabels);
   }
 
   void _updatePosition(Position position) {
@@ -163,8 +183,21 @@ class _MapModuleViewState extends State<MapModuleView> {
         _heading = position.heading;
       }
     });
+    if (position.heading >= 0 && position.headingAccuracy > 0) {
+      _headingNotifier.value = position.heading;
+    }
     if (_guidanceMode) {
       controller.moveAndRotate(next, 17.5, (360 - _heading) % 360);
+    }
+    if (!_heritageLoadStarted) {
+      _heritageLoadStarted = true;
+      if (!_hasRouteTarget) controller.move(next, 14);
+      unawaited(
+        widget.viewModel.loadNearbyHeritage(
+          latitude: next.latitude,
+          longitude: next.longitude,
+        ),
+      );
     }
     if (moved > 40 && _hasRouteTarget) {
       if (_routeLoading) {
@@ -351,9 +384,10 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   List<HeritagePlace> get filtered {
     final q = widget.viewModel.query.toLowerCase();
-    return widget.places
+    return widget.viewModel.nearbyPlaces
         .where(
           (HeritagePlace p) =>
+              p.distanceKm <= widget.viewModel.radius &&
               (q.isEmpty ||
                   p.name.toLowerCase().contains(q) ||
                   p.address.toLowerCase().contains(q)) &&
@@ -367,6 +401,11 @@ class _MapModuleViewState extends State<MapModuleView> {
     'Traditional Heritage Site' => 'Historical Monument',
     'Local Craft' => 'Cultural Heritage',
     'Local Food' => 'Cultural Heritage',
+    'Architecture' ||
+    'Historical Monument' ||
+    'Cultural Heritage' ||
+    'Temple & Sacred' ||
+    'Museum' => p.category,
     _ => 'Architecture',
   };
 
@@ -382,10 +421,11 @@ class _MapModuleViewState extends State<MapModuleView> {
           Positioned.fill(
             child: FlutterMap(
               mapController: controller,
-              options: const MapOptions(
-                initialCenter: LatLng(5.4182, 100.3411),
+              options: MapOptions(
+                initialCenter: const LatLng(5.4182, 100.3411),
                 initialZoom: 12.2,
-                backgroundColor: Color(0xFFE7F0EA),
+                backgroundColor: const Color(0xFFE7F0EA),
+                onPositionChanged: _updateHeritageLabelVisibility,
               ),
               children: <Widget>[
                 const _OfflineMapBackground(),
@@ -399,7 +439,7 @@ class _MapModuleViewState extends State<MapModuleView> {
                     circles: <CircleMarker>[
                       CircleMarker(
                         point: _userPosition!,
-                        radius: vm.radius * 650,
+                        radius: vm.radius * 1000,
                         useRadiusInMeter: true,
                         color: AppColors.teal.withValues(alpha: .06),
                         borderColor: AppColors.teal.withValues(alpha: .45),
@@ -430,19 +470,23 @@ class _MapModuleViewState extends State<MapModuleView> {
                         point: _userPosition!,
                         width: 64,
                         height: 64,
-                        child: _UserMarker(
-                          heading: _guidanceMode ? 0 : _heading,
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _headingNotifier,
+                          builder: (BuildContext context, double heading, _) =>
+                              _UserMarker(heading: _guidanceMode ? 0 : heading),
                         ),
                       ),
                     if (vm.routeStops.isEmpty && vm.directionTarget == null)
                       ...filtered.map(
                         (HeritagePlace p) => Marker(
                           point: LatLng(p.latitude, p.longitude),
-                          width: 130,
-                          height: 52,
+                          alignment: Alignment.topCenter,
+                          width: 150,
+                          height: 84,
                           child: _PlaceMarker(
                             place: p,
                             bookmarked: p.bookmarked,
+                            showLabel: _showHeritageLabels,
                             onTap: () => vm.select(p),
                           ),
                         ),
@@ -532,6 +576,59 @@ class _MapModuleViewState extends State<MapModuleView> {
                       ),
                     ],
                   ),
+                  if (vm.heritageLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: LinearProgressIndicator(minHeight: 3),
+                    ),
+                  if (vm.heritageIssue != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: AppCard(
+                        radius: 14,
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                vm.heritageIssue!,
+                                style: const TextStyle(
+                                  color: AppColors.danger,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed:
+                                  vm.heritageLoading || _userPosition == null
+                                  ? null
+                                  : () => vm.retryNearbyHeritage(
+                                      latitude: _userPosition!.latitude,
+                                      longitude: _userPosition!.longitude,
+                                    ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (vm.heritageLoadAttempted &&
+                      !vm.heritageLoading &&
+                      vm.heritageIssue == null &&
+                      vm.nearbyPlaces.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: AppCard(
+                        radius: 14,
+                        child: Text(
+                          'No named heritage locations were found in this area.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
                   if (filtersOpen)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -541,18 +638,21 @@ class _MapModuleViewState extends State<MapModuleView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'Search radius · ${vm.radius.round()} km',
+                              'Search radius · ${_radiusLabel(vm.radius)}',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
                             Slider(
-                              value: vm.radius,
-                              min: 1,
-                              max: 25,
-                              divisions: 24,
-                              onChanged: vm.setRadius,
+                              value: vm.radiusOptionIndex.toDouble(),
+                              min: 0,
+                              max:
+                                  (MapQuestViewModel.radiusOptionsKm.length - 1)
+                                      .toDouble(),
+                              divisions:
+                                  MapQuestViewModel.radiusOptionsKm.length - 1,
+                              onChanged: vm.setRadiusOption,
                             ),
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -686,6 +786,10 @@ class _MapModuleViewState extends State<MapModuleView> {
       );
     },
   );
+
+  String _radiusLabel(double radiusKm) => radiusKm < 1
+      ? '${(radiusKm * 1000).round()} m'
+      : '${radiusKm.round()} km';
 }
 
 class _OfflineMapBackground extends StatelessWidget {
@@ -805,62 +909,106 @@ class _PlaceMarker extends StatelessWidget {
   const _PlaceMarker({
     required this.place,
     required this.bookmarked,
+    required this.showLabel,
     required this.onTap,
   });
   final HeritagePlace place;
   final bool bookmarked;
+  final bool showLabel;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: bookmarked ? AppColors.warning : AppColors.border,
-            ),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(color: Colors.black12, blurRadius: 9),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              if (bookmarked)
-                const Icon(
-                  Icons.star_rounded,
-                  size: 12,
-                  color: AppColors.warning,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: place.name,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Stack(
+        children: <Widget>[
+          if (showLabel)
+            Positioned(
+              left: 4,
+              right: 4,
+              bottom: 50,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .92),
+                  borderRadius: BorderRadius.circular(5),
                 ),
-              const Icon(
-                Icons.museum_rounded,
-                size: 15,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  place.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    place.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 10,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-            ],
+            ),
+          Positioned(
+            left: 51,
+            bottom: 0,
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: <Widget>[
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                Positioned(
+                  top: 10,
+                  child: Icon(
+                    _categoryIcon(place.category),
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                if (bookmarked)
+                  const Positioned(
+                    top: 0,
+                    right: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 11,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-        const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
-      ],
+        ],
+      ),
     ),
   );
+
+  IconData _categoryIcon(String category) => switch (category) {
+    'Temple & Sacred' => Icons.temple_buddhist_rounded,
+    'Architecture' => Icons.account_balance_rounded,
+    'Cultural Heritage' => Icons.palette_rounded,
+    _ => Icons.museum_rounded,
+  };
 }
 
 class _NumberMarker extends StatelessWidget {
@@ -1041,6 +1189,26 @@ class _DayRoutePanel extends StatelessWidget {
   );
 }
 
+class _PlaceImage extends StatelessWidget {
+  const _PlaceImage({required this.place});
+
+  final HeritagePlace place;
+
+  @override
+  Widget build(BuildContext context) => place.image.isEmpty
+      ? const ColoredBox(
+          color: AppColors.softBlue,
+          child: Center(
+            child: Icon(
+              Icons.museum_rounded,
+              size: 54,
+              color: AppColors.primary,
+            ),
+          ),
+        )
+      : Image.asset(place.image, fit: BoxFit.cover);
+}
+
 class _LocationSheet extends StatelessWidget {
   const _LocationSheet({
     required this.place,
@@ -1087,7 +1255,7 @@ class _LocationSheet extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: <Widget>[
-                        Image.asset(place.image, fit: BoxFit.cover),
+                        _PlaceImage(place: place),
                         const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -1135,18 +1303,20 @@ class _LocationSheet extends StatelessWidget {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 16,
-                              color: AppColors.warning,
-                            ),
-                            Text(
-                              ' ${place.rating.toStringAsFixed(1)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
+                            if (place.rating > 0) ...<Widget>[
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 16,
+                                color: AppColors.warning,
                               ),
-                            ),
-                            const SizedBox(width: 12),
+                              Text(
+                                ' ${place.rating.toStringAsFixed(1)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
                             const Icon(
                               Icons.place_rounded,
                               size: 15,
@@ -1393,7 +1563,7 @@ class _QuestFormState extends State<_QuestForm> {
           child: photo
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(22),
-                  child: Image.asset(widget.place.image, fit: BoxFit.cover),
+                  child: _PlaceImage(place: widget.place),
                 )
               : const Column(
                   mainAxisAlignment: MainAxisAlignment.center,

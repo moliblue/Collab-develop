@@ -1,6 +1,12 @@
 import 'package:flutter/foundation.dart';
 
+import '../../data_layer/Repositories/auth_repository.dart';
+
 class AuthViewModel extends ChangeNotifier {
+  AuthViewModel({AuthRepository? repository})
+    : _repository = repository ?? AuthRepository();
+
+  final AuthRepository _repository;
   bool _busy = false;
   bool _recoverySent = false;
   bool get busy => _busy;
@@ -15,14 +21,12 @@ class AuthViewModel extends ChangeNotifier {
     if (password.length < 8) return 'Password must be at least 8 characters.';
     _busy = true;
     notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    _busy = false;
-    notifyListeners();
-    if (email.trim().toLowerCase() != 'explorer@gmail.com' ||
-        password != 'Password123!') {
-      return 'Either email or password is incorrect.';
+    try {
+      return await _repository.login(email: email.trim(), password: password);
+    } finally {
+      _busy = false;
+      notifyListeners();
     }
-    return null;
   }
 
   Future<String?> register({
