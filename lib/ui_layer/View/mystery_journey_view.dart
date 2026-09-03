@@ -484,7 +484,9 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     return _TravellerTile(
       initials: initials.isEmpty ? '?' : initials,
       name: member.displayName,
-      status: '${member.isHost ? 'Host · ' : ''}${member.status}',
+      status:
+          '${member.isHost ? 'Host · ' : ''}'
+          '${member.participantStatus ?? member.status}',
       color: color,
     );
   }
@@ -1130,13 +1132,14 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       children: <Widget>[
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: widget.viewModel.hintCount >= 3 ? null : _askHint,
+            onPressed:
+                widget.viewModel.hintCount >= 3 ||
+                    (widget.viewModel.mode == JourneyMode.group &&
+                        widget.viewModel.hasSubmittedVote(GroupVoteType.hint))
+                ? null
+                : _askHint,
             icon: const Icon(Icons.lightbulb_outline_rounded),
-            label: Text(
-              widget.viewModel.mode == JourneyMode.group
-                  ? 'Request Group Hint'
-                  : 'Unlock hint',
-            ),
+            label: Text(_voteButtonLabel(GroupVoteType.hint, 'Unlock hint')),
           ),
         ),
         const SizedBox(width: 8),
@@ -1144,14 +1147,15 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           child: FilledButton.icon(
             onPressed: widget.viewModel.routeRevealed
                 ? widget.onDirections
+                : widget.viewModel.mode == JourneyMode.group &&
+                      widget.viewModel.hasSubmittedVote(GroupVoteType.route)
+                ? null
                 : _confirmRoute,
             icon: const Icon(Icons.route_rounded),
             label: Text(
               widget.viewModel.routeRevealed
                   ? 'Open Map'
-                  : widget.viewModel.mode == JourneyMode.group
-                  ? 'Vote to Reveal'
-                  : 'Reveal route',
+                  : _voteButtonLabel(GroupVoteType.route, 'Reveal route'),
             ),
           ),
         ),
@@ -1190,7 +1194,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${member.displayName}: ${member.status}',
+                        '${member.displayName}: '
+                        '${member.participantStatus ?? member.status}',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -1255,6 +1260,10 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ],
         ),
       ),
+    if (kDebugMode) ...<Widget>[
+      const SizedBox(height: 12),
+      _developerTestingCard(),
+    ],
     const SizedBox(height: 12),
     FilledButton.icon(
       key: const Key('test_real_arrival'),
@@ -1262,7 +1271,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ? null
           : widget.viewModel.testArrivalNow,
       icon: const Icon(Icons.gps_fixed_rounded),
-      label: const Text('Test Arrival with Real GPS'),
+      label: const Text('Check Arrival with Real GPS'),
     ),
     const SizedBox(height: 8),
     TextButton.icon(
@@ -1271,6 +1280,70 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       label: const Text('Leave and continue later'),
     ),
   ]);
+
+  Widget _developerTestingCard() {
+    final canSimulateTestExplorer =
+        widget.viewModel.mode == JourneyMode.group &&
+        widget.viewModel.isHost &&
+        widget.viewModel.hasActiveTestExplorer;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          const Row(
+            children: <Widget>[
+              Icon(Icons.science_rounded, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text(
+                'Developer Testing',
+                style: TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+          if (canSimulateTestExplorer) ...<Widget>[
+            const SizedBox(height: 8),
+            OutlinedButton(
+              key: const Key('simulate_test_explorer_hint_vote'),
+              onPressed:
+                  widget.viewModel.loading ||
+                      widget.viewModel.hasTestExplorerVote(GroupVoteType.hint)
+                  ? null
+                  : () => _simulateTestExplorerVote(GroupVoteType.hint),
+              child: const Text('Simulate Test Explorer Hint Vote'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              key: const Key('simulate_test_explorer_route_vote'),
+              onPressed:
+                  widget.viewModel.loading ||
+                      widget.viewModel.hasTestExplorerVote(GroupVoteType.route)
+                  ? null
+                  : () => _simulateTestExplorerVote(GroupVoteType.route),
+              child: const Text('Simulate Test Explorer Reveal Vote'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('simulate_test_explorer_arrival'),
+              onPressed: widget.viewModel.loading
+                  ? null
+                  : () => widget.viewModel.simulateArrival(testExplorer: true),
+              icon: const Icon(Icons.person_pin_circle_rounded),
+              label: const Text('Simulate Test Explorer Arrival'),
+            ),
+          ],
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            key: const Key('simulate_my_arrival'),
+            onPressed: widget.viewModel.loading
+                ? null
+                : widget.viewModel.simulateArrival,
+            icon: const Icon(Icons.my_location_rounded),
+            label: const Text('Simulate My Arrival'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _sendChat(String value) {
     final message = value.trim();
@@ -1316,7 +1389,10 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
 
   void _confirmRoute() {
     if (widget.viewModel.mode == JourneyMode.group) {
-      unawaited(_castGroupVote(GroupVoteType.route));
+      _voteDialog(
+        'Vote to reveal exact route?',
+        () => unawaited(_castGroupVote(GroupVoteType.route)),
+      );
       return;
     }
     Future<void> revealAndNavigate() async {
@@ -1343,126 +1419,67 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     }
   }
 
+  Future<void> _simulateTestExplorerVote(GroupVoteType type) async {
+    final outcome = await widget.viewModel.simulateTestExplorerVote(type);
+    if (!mounted || outcome == null) return;
+    widget.notify(
+      'Test Explorer · ${outcome.message}',
+      outcome.passed ? AppColors.teal : AppColors.primary,
+    );
+  }
+
+  String _voteButtonLabel(GroupVoteType type, String soloLabel) {
+    if (widget.viewModel.mode != JourneyMode.group) return soloLabel;
+    final status = widget.viewModel.voteStatus(type);
+    final action = type == GroupVoteType.hint
+        ? 'Request Group Hint'
+        : 'Vote to Reveal';
+    if (status == null || status.requiredVotes == 0) return action;
+    if (status.currentUserVoted && !status.passed) {
+      return 'Vote submitted ${status.yesVotes}/${status.requiredVotes}';
+    }
+    return '$action ${status.yesVotes}/${status.requiredVotes}';
+  }
+
   Future<void> _voteDialog(
     String title,
     VoidCallback accepted, {
     bool group = true,
   }) async {
-    var yesVotes = 0;
-    var resolving = false;
     await showDialog<void>(
       context: context,
-      barrierDismissible: !group,
-      builder: (BuildContext dialogContext) => StatefulBuilder(
-        builder: (BuildContext context, StateSetter setDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          icon: Icon(
-            group ? Icons.how_to_vote_rounded : Icons.route_rounded,
-            color: AppColors.primary,
-            size: 34,
-          ),
-          title: Text(title, textAlign: TextAlign.center),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                group
-                    ? 'A majority of 2 out of 3 travellers is required. Revealing help may reduce the final achievement score.'
-                    : 'The precise destination and navigation route will be shown.',
-                textAlign: TextAlign.center,
-              ),
-              if (group) ...<Widget>[
-                const SizedBox(height: 16),
-                _VoteMemberRow(
-                  name: 'You',
-                  status: yesVotes >= 1
-                      ? 'Approved'
-                      : resolving
-                      ? 'Deciding…'
-                      : 'Waiting',
-                  approved: yesVotes >= 1,
-                ),
-                _VoteMemberRow(
-                  name: 'Amirah',
-                  status: yesVotes >= 2
-                      ? 'Approved'
-                      : resolving
-                      ? 'Deciding…'
-                      : 'Waiting',
-                  approved: yesVotes >= 2,
-                ),
-                const _VoteMemberRow(
-                  name: 'Lucas',
-                  status: 'Waiting',
-                  approved: false,
-                ),
-                const SizedBox(height: 10),
-                LinearProgressIndicator(
-                  value: yesVotes / 3,
-                  minHeight: 7,
-                  borderRadius: BorderRadius.circular(10),
-                  backgroundColor: AppColors.elevated,
-                  color: AppColors.teal,
-                ),
-                const SizedBox(height: 7),
-                Text(
-                  '$yesVotes/3 approved · 2 required',
-                  key: const Key('vote_status'),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: resolving ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: resolving
-                  ? null
-                  : () async {
-                      if (!group) {
-                        Navigator.pop(dialogContext);
-                        accepted();
-                        return;
-                      }
-                      setDialog(() {
-                        resolving = true;
-                        yesVotes = 1;
-                      });
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 700),
-                      );
-                      if (!dialogContext.mounted) return;
-                      setDialog(() => yesVotes = 2);
-                      await Future<void>.delayed(
-                        const Duration(milliseconds: 850),
-                      );
-                      if (!dialogContext.mounted) return;
-                      Navigator.pop(dialogContext);
-                      widget.notify(
-                        'Vote passed · 2/3 approved.',
-                        AppColors.teal,
-                      );
-                      accepted();
-                    },
-              child: Text(
-                resolving
-                    ? 'Waiting…'
-                    : group
-                    ? 'Vote Yes'
-                    : 'Reveal Route',
-              ),
+      builder: (BuildContext dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        icon: Icon(
+          group ? Icons.how_to_vote_rounded : Icons.route_rounded,
+          color: AppColors.primary,
+          size: 34,
+        ),
+        title: Text(title, textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              group
+                  ? 'Your vote will be saved. The exact destination stays hidden until a majority of active travellers approve.'
+                  : 'The precise destination and navigation route will be shown.',
+              textAlign: TextAlign.center,
             ),
           ],
         ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              accepted();
+            },
+            child: Text(group ? 'Submit Vote' : 'Reveal Route'),
+          ),
+        ],
       ),
     );
   }
@@ -1693,55 +1710,6 @@ class _TravellerTile extends StatelessWidget {
       Icons.check_circle_rounded,
       color: AppColors.teal,
       size: 18,
-    ),
-  );
-}
-
-class _VoteMemberRow extends StatelessWidget {
-  const _VoteMemberRow({
-    required this.name,
-    required this.status,
-    required this.approved,
-  });
-
-  final String name;
-  final String status;
-  final bool approved;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 7),
-    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
-    decoration: BoxDecoration(
-      color: approved ? const Color(0xFFE9FAF4) : AppColors.elevated,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: approved ? const Color(0xFFBFECDD) : AppColors.border,
-      ),
-    ),
-    child: Row(
-      children: <Widget>[
-        Expanded(
-          child: Text(
-            name,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-          ),
-        ),
-        Icon(
-          approved ? Icons.check_circle_rounded : Icons.schedule_rounded,
-          size: 15,
-          color: approved ? AppColors.teal : AppColors.muted,
-        ),
-        const SizedBox(width: 5),
-        Text(
-          status,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            color: approved ? AppColors.tealDark : AppColors.muted,
-          ),
-        ),
-      ],
     ),
   );
 }

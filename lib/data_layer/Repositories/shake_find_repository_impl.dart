@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../Models/journey.dart';
@@ -29,6 +30,10 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   static const double arrivalRadiusMeters = 50;
   static const Duration arrivalDwell = Duration(seconds: 10);
   static const int completionXp = 100;
+  static const String defaultTestingRoomId =
+      'feaba709-0a28-4481-a22e-87c842990a3f';
+  static const String testExplorerProfileId =
+      '3f701fe7-dd8e-4c8c-b3a4-611799d411c0';
 
   final ShakeSensorService _sensorService;
   final SupabaseService _supabase;
@@ -431,48 +436,76 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     if (_completingParticipant) return _activeJourney ?? journey;
     _completingParticipant = true;
     try {
-      final participantId = _participantId(journey);
-      final completedAt = DateTime.now().toUtc();
-      final rows = await _client
-          .from('journey_participants')
-          .update(<String, dynamic>{
-            'participant_status': 'completed',
-            'completed_at': completedAt.toIso8601String(),
-          })
-          .eq('id', participantId)
-          .eq('participant_status', 'active')
-          .select('id');
-      if (rows.isEmpty) return _loadJourney(journey.id);
-      await _recordArrival(
-        participantId,
-        reading,
-        distance,
-        'verified',
-        verifiedAt: completedAt,
-      );
-      if (journey.mode == JourneyMode.solo) {
-        await _client
-            .from('mystery_journeys')
-            .update(<String, dynamic>{
-              'status': 'completed',
-              'completed_at': completedAt.toIso8601String(),
-            })
-            .eq('id', journey.id)
-            .eq('status', 'active');
-      } else {
-        await _closeGroupIfFinished(journey);
-      }
-      await _rewardProfile();
-      final result = journey.copyWith(
-        status: JourneyStatus.completed,
+      return _completeParticipant(
+        journey,
+        latitude: reading.latitude,
+        longitude: reading.longitude,
         distanceMeters: distance,
-        completedAt: completedAt,
       );
-      _activeJourney = result;
-      return result;
     } finally {
       _completingParticipant = false;
     }
+  }
+
+  @override
+  Future<Journey> simulateArrival(
+    Journey journey, {
+    bool testExplorer = false,
+  }) async {
+    if (!kDebugMode) {
+      throw const JourneyDataException(
+        'Arrival simulation is only available in debug builds.',
+      );
+    }
+    final destination = journey.destination;
+    if (destination == null || journey.id.startsWith('waiting:')) {
+      throw const JourneyDataException(
+        'Start the Mystery Journey before simulating arrival.',
+      );
+    }
+    if (testExplorer &&
+        (journey.mode != JourneyMode.group || !journey.isHost)) {
+      throw const JourneyDataException(
+        'Only the Group Journey host can simulate Test Explorer arrival.',
+      );
+    }
+    return _completeParticipant(
+      journey,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+      distanceMeters: 0,
+      testExplorer: testExplorer,
+    );
+  }
+
+  Future<Journey> _completeParticipant(
+    Journey journey, {
+    required double latitude,
+    required double longitude,
+    required double distanceMeters,
+    bool testExplorer = false,
+  }) async {
+    await _client.rpc(
+      'complete_journey_participant',
+      params: <String, dynamic>{
+        'p_journey_id': journey.id,
+        'p_latitude': latitude,
+        'p_longitude': longitude,
+        'p_distance_meters': distanceMeters,
+        'p_simulate_test_explorer': testExplorer,
+      },
+    );
+    if (testExplorer) {
+      final members = journey.groupRoomId == null
+          ? journey.members
+          : await _loadGroupMembers(journey.groupRoomId!);
+      final result = journey.copyWith(members: members);
+      _activeJourney = result;
+      return result;
+    }
+    final result = await _loadJourney(journey.id);
+    _activeJourney = result.copyWith(distanceMeters: distanceMeters);
+    return _activeJourney!;
   }
 
   Future<void> _recordArrival(
@@ -489,20 +522,6 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     'verification_status': status,
     if (verifiedAt != null) 'verified_at': verifiedAt.toIso8601String(),
   });
-
-  Future<void> _rewardProfile() async {
-    final profile = await getCurrentProfile();
-    final xp = profile.xp + completionXp;
-    final level = max(profile.explorerLevel, (xp ~/ 500) + 1);
-    await _client
-        .from('profiles')
-        .update(<String, dynamic>{
-          'xp': xp,
-          'explorer_level': level,
-          'streak_days': profile.streakDays + 1,
-        })
-        .eq('id', profile.userId);
-  }
 
   @override
   Future<void> cancelJourney() async {
@@ -552,8 +571,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         continue;
       }
       final distance = _location.distanceBetween(location, latitude, longitude);
-      if (distance > radiusMeters) continue;
+      final isDebugTestingRoom =
+          kDebugMode && row['id'].toString() == defaultTestingRoomId;
+      if (distance > radiusMeters && !isDebugTestingRoom) continue;
       final members = await _loadGroupMembers(row['id'].toString());
+      if (members.any((member) => member.userId == userId)) continue;
       const capacity = 4;
       if (members.length >= capacity) continue;
       final roomPreferences = _roomPreferences(row['preferences']);
@@ -671,8 +693,9 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   @override
   Future<GroupVoteOutcome> castGroupVote(
     Journey journey,
-    GroupVoteType type,
-  ) async {
+    GroupVoteType type, {
+    bool simulateTestExplorer = false,
+  }) async {
     if (journey.mode != JourneyMode.group || journey.groupRoomId == null) {
       throw const JourneyDataException(
         'Group voting is only available in an active Group Journey.',
@@ -686,8 +709,36 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         'p_vote_round': type == GroupVoteType.hint
             ? journey.additionalHints.length + 1
             : 1,
+        'p_simulate_test_explorer': simulateTestExplorer,
       },
     );
+    return _groupVoteOutcome(type, response);
+  }
+
+  @override
+  Future<GroupVoteOutcome> getGroupVoteStatus(
+    Journey journey,
+    GroupVoteType type,
+  ) async {
+    if (journey.mode != JourneyMode.group || journey.groupRoomId == null) {
+      throw const JourneyDataException(
+        'Group voting is only available in an active Group Journey.',
+      );
+    }
+    final response = await _client.rpc(
+      'get_group_action_vote_status',
+      params: <String, dynamic>{
+        'p_journey_id': journey.id,
+        'p_vote_type': type.name,
+        'p_vote_round': type == GroupVoteType.hint
+            ? journey.additionalHints.length + 1
+            : 1,
+      },
+    );
+    return _groupVoteOutcome(type, response);
+  }
+
+  GroupVoteOutcome _groupVoteOutcome(GroupVoteType type, dynamic response) {
     final value = Map<String, dynamic>.from(response as Map);
     return GroupVoteOutcome(
       type: type,
@@ -695,6 +746,10 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       requiredVotes: _asInt(value['required_votes']),
       memberCount: _asInt(value['member_count']),
       passed: value['passed'] == true,
+      voteRound: _asInt(value['vote_round'], fallback: 1),
+      currentUserVoted: value['current_user_voted'] == true,
+      testExplorerVoted: value['test_explorer_voted'] == true,
+      alreadyVoted: value['already_voted'] == true,
     );
   }
 
@@ -777,21 +832,55 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   }
 
   Future<List<JourneyMember>> _loadGroupMembers(String roomId) async {
+    final room = await _client
+        .from('group_rooms')
+        .select('journey_id')
+        .eq('id', roomId)
+        .maybeSingle();
+    final journeyId = room?['journey_id']?.toString();
+    final participantStatuses = <String, String>{};
+    if (journeyId != null && journeyId.isNotEmpty) {
+      final participants = await _client
+          .from('journey_participants')
+          .select('user_id, participant_status')
+          .eq('journey_id', journeyId);
+      for (final participant in participants) {
+        participantStatuses[participant['user_id'].toString()] =
+            participant['participant_status']?.toString() ?? 'active';
+      }
+    }
     final rows = await _client
         .from('group_room_members')
         .select()
         .eq('room_id', roomId)
         .neq('member_status', 'left');
-    return rows
-        .map(
-          (row) => JourneyMember(
-            userId: row['user_id'].toString(),
-            displayName: _shortId(row['user_id'].toString()),
-            role: row['role']?.toString() ?? 'member',
-            status: row['member_status']?.toString() ?? 'waiting',
-          ),
-        )
-        .toList(growable: false);
+    final members = <JourneyMember>[];
+    for (final row in rows) {
+      final memberUserId = row['user_id'].toString();
+      final profile = await _client
+          .from('profiles')
+          .select('username, full_name')
+          .eq('id', memberUserId)
+          .maybeSingle();
+      final fullName = profile?['full_name']?.toString().trim();
+      final username = profile?['username']?.toString().trim();
+      members.add(
+        JourneyMember(
+          userId: memberUserId,
+          displayName: memberUserId == testExplorerProfileId
+              ? 'Test Explorer'
+              : fullName?.isNotEmpty == true
+              ? fullName!
+              : username?.isNotEmpty == true
+              ? username!
+              : _shortId(memberUserId),
+          role: row['role']?.toString() ?? 'member',
+          status: row['member_status']?.toString() ?? 'waiting',
+          participantStatus: participantStatuses[memberUserId],
+        ),
+      );
+    }
+    return members;
   }
 
   Future<Journey> _joinGroupRoom(String roomId) async {
@@ -810,6 +899,10 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       throw const JourneyDataException(
         'This room has started or is no longer available.',
       );
+    }
+    final expiresAt = DateTime.tryParse(room['expires_at']?.toString() ?? '');
+    if (expiresAt != null && !expiresAt.isAfter(DateTime.now().toUtc())) {
+      throw const JourneyDataException('This waiting room has expired.');
     }
     final members = await _loadGroupMembers(roomId);
     if (members.length >= 4) {
@@ -831,7 +924,8 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       hostLatitude,
       hostLongitude,
     );
-    if (distance > 1000) {
+    final isDebugTestingRoom = kDebugMode && roomId == defaultTestingRoomId;
+    if (distance > 1000 && !isDebugTestingRoom) {
       throw const JourneyDataException(
         'This room is no longer within the 1 km nearby area.',
       );
@@ -891,7 +985,9 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     final clue = await _initialClue(destination.id);
     final activatedAt = DateTime.now().toUtc();
     final deadline = activatedAt.add(const Duration(hours: 24));
+    final waitingRoomExpiresAt = room['expires_at']?.toString();
     String? journeyId;
+    var roomActivated = false;
     try {
       final row = await _client
           .from('mystery_journeys')
@@ -907,7 +1003,26 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
           .select()
           .single();
       journeyId = row['id'].toString();
-      final participantRows = await _client
+      final roomRows = await _client
+          .from('group_rooms')
+          .update(<String, dynamic>{
+            'journey_id': journeyId,
+            'status': 'active',
+            'activated_at': activatedAt.toIso8601String(),
+            'expires_at': deadline.toIso8601String(),
+          })
+          .eq('id', roomId)
+          .eq('host_user_id', userId)
+          .eq('status', 'waiting')
+          .isFilter('journey_id', null)
+          .select('id');
+      if (roomRows.isEmpty) {
+        throw const JourneyDataException(
+          'The room state changed before discovery completed.',
+        );
+      }
+      roomActivated = true;
+      await _client
           .from('journey_participants')
           .insert(
             members
@@ -919,35 +1034,19 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
                   },
                 )
                 .toList(growable: false),
-          )
-          .select();
+          );
       await _saveJourneyCategories(journeyId, preferences.categories);
-      final roomRows = await _client
-          .from('group_rooms')
-          .update(<String, dynamic>{
-            'journey_id': journeyId,
-            'status': 'active',
-            'activated_at': activatedAt.toIso8601String(),
-            'expires_at': deadline.toIso8601String(),
-          })
-          .eq('id', roomId)
-          .eq('status', 'waiting')
-          .select('id');
-      if (roomRows.isEmpty) {
-        throw const JourneyDataException(
-          'The room state changed before discovery completed.',
-        );
-      }
       await _client
           .from('group_room_members')
           .update(<String, dynamic>{'member_status': 'active'})
           .eq('room_id', roomId)
           .eq('member_status', 'waiting');
-      final ownParticipant = Map<String, dynamic>.from(
-        participantRows.firstWhere(
-          (row) => row['user_id'].toString() == userId,
-        ),
-      );
+      final ownParticipant = await _client
+          .from('journey_participants')
+          .select('id, user_id')
+          .eq('journey_id', journeyId)
+          .eq('user_id', userId)
+          .single();
       final result = Journey(
         id: journeyId,
         participantId: ownParticipant['id'].toString(),
@@ -975,6 +1074,19 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
             .from('journey_participants')
             .delete()
             .eq('journey_id', journeyId);
+        if (roomActivated) {
+          await _client
+              .from('group_rooms')
+              .update(<String, dynamic>{
+                'journey_id': null,
+                'status': 'waiting',
+                'activated_at': null,
+                'expires_at': waitingRoomExpiresAt,
+              })
+              .eq('id', roomId)
+              .eq('host_user_id', userId)
+              .eq('journey_id', journeyId);
+        }
         await _client.from('mystery_journeys').delete().eq('id', journeyId);
       }
       rethrow;

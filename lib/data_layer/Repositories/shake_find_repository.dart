@@ -14,6 +14,7 @@ abstract interface class ShakeFindRepository {
   Future<Journey> requestHint(Journey journey);
   Future<Journey> revealRoute(Journey journey);
   Future<Journey> verifyArrival(Journey journey);
+  Future<Journey> simulateArrival(Journey journey, {bool testExplorer = false});
   Future<ArrivalCheckResult> checkArrivalNow(Journey journey);
   Future<void> cancelJourney();
   Future<List<NearbyGroupRoom>> findNearbyGroupRooms({
@@ -26,7 +27,15 @@ abstract interface class ShakeFindRepository {
   );
   Future<List<String>> getGroupMessages(String roomId);
   Future<List<String>> sendGroupMessage(String roomId, String message);
-  Future<GroupVoteOutcome> castGroupVote(Journey journey, GroupVoteType type);
+  Future<GroupVoteOutcome> castGroupVote(
+    Journey journey,
+    GroupVoteType type, {
+    bool simulateTestExplorer = false,
+  });
+  Future<GroupVoteOutcome> getGroupVoteStatus(
+    Journey journey,
+    GroupVoteType type,
+  );
   Future<List<JourneyMember>> refreshGroupMembers(String roomId);
   Future<List<JourneyMember>> addTestGroupMember(
     String roomId,

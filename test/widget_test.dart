@@ -304,6 +304,49 @@ void main() {
     expect(model.mystery.message, 'Waiting room closed.');
   });
 
+  testWidgets('Group votes persist once and Test Explorer reaches majority', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.createGroupRoom();
+    await model.mystery.addTestCompanion();
+    await model.mystery.useGroupSurpriseMe();
+    await model.mystery.startJourney();
+
+    final hostHint = await model.mystery.castGroupVote(
+      journey.GroupVoteType.hint,
+    );
+    expect(hostHint!.yesVotes, 1);
+    expect(hostHint.passed, isFalse);
+    expect(model.mystery.hintCount, 0);
+
+    final duplicateHint = await model.mystery.castGroupVote(
+      journey.GroupVoteType.hint,
+    );
+    expect(duplicateHint!.alreadyVoted, isTrue);
+    expect(duplicateHint.yesVotes, 1);
+
+    final testHint = await model.mystery.simulateTestExplorerVote(
+      journey.GroupVoteType.hint,
+    );
+    expect(testHint!.passed, isTrue);
+    expect(model.mystery.hintCount, 1);
+
+    final hostRoute = await model.mystery.castGroupVote(
+      journey.GroupVoteType.route,
+    );
+    expect(hostRoute!.yesVotes, 1);
+    expect(model.mystery.routeRevealed, isFalse);
+
+    final testRoute = await model.mystery.simulateTestExplorerVote(
+      journey.GroupVoteType.route,
+    );
+    expect(testRoute!.passed, isTrue);
+    expect(model.mystery.routeRevealed, isTrue);
+    expect(repository.voteCount, 5);
+  });
+
   testWidgets(
     'failed journey creation restores shake listening without sensor error',
     (tester) async {
@@ -357,6 +400,67 @@ void main() {
     expect(model.tab, MainTab.map);
   });
 
+  testWidgets('Solo arrival simulation completes once and awards XP once', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.solo);
+    await model.mystery.startJourney();
+
+    await model.mystery.simulateArrival();
+    expect(model.mystery.stage, MysteryStage.complete);
+    expect(model.mystery.revealedDestination?.id, 'destination-1');
+    expect(repository.profileXp, 700);
+    expect(repository.profileStreak, 4);
+
+    await model.mystery.simulateArrival();
+    expect(repository.profileXp, 700);
+    expect(repository.profileStreak, 4);
+  });
+
+  testWidgets('Group arrival simulation completes each participant safely', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.createGroupRoom();
+    await model.mystery.addTestCompanion();
+    await model.mystery.useGroupSurpriseMe();
+    await model.mystery.startJourney();
+
+    await model.mystery.simulateArrival(testExplorer: true);
+    expect(repository.profileXp, 600);
+    expect(repository.groupRoomClosed, isFalse);
+    expect(
+      model.mystery.members
+          .singleWhere((member) => member.displayName == 'Test Explorer')
+          .participantStatus,
+      'completed',
+    );
+
+    await model.mystery.simulateArrival();
+    expect(repository.profileXp, 700);
+    expect(repository.groupRoomClosed, isTrue);
+    expect(model.mystery.stage, MysteryStage.complete);
+  });
+
+  testWidgets('Joined testing room remains a non-host waiting member', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.joinGroupRoom('room-nearby');
+
+    expect(model.mystery.isHost, isFalse);
+    expect(model.mystery.stage, MysteryStage.groupWaiting);
+    await model.mystery.startJourney();
+    expect(repository.startCount, 0);
+    expect(
+      model.mystery.message,
+      'Only the host can discover the shared destination.',
+    );
+  });
+
   testWidgets('compact and standard phone widths render without overflow', (
     tester,
   ) async {
@@ -376,8 +480,12 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   int voteCount = 0;
   String? lastTestUsername;
   int arrivalCheckCount = 0;
+  int profileXp = 600;
+  int profileStreak = 3;
+  bool groupRoomClosed = false;
   Object? startError;
   VoidCallback? shakeCallback;
+  final Map<String, Set<String>> groupVotes = <String, Set<String>>{};
 
   journey.JourneyDestination get destination =>
       const journey.JourneyDestination(
@@ -399,7 +507,7 @@ class FakeShakeFindRepository implements ShakeFindRepository {
     ),
     journey.JourneyMember(
       userId: 'user-b',
-      displayName: 'Traveller B',
+      displayName: 'Test Explorer',
       role: 'member',
       status: 'waiting',
     ),
@@ -410,11 +518,11 @@ class FakeShakeFindRepository implements ShakeFindRepository {
 
   @override
   Future<journey.JourneyProfile> getCurrentProfile() async =>
-      const journey.JourneyProfile(
+      journey.JourneyProfile(
         userId: 'user-a',
         explorerLevel: 2,
-        xp: 600,
-        streakDays: 3,
+        xp: profileXp,
+        streakDays: profileStreak,
       );
 
   @override
@@ -461,6 +569,16 @@ class FakeShakeFindRepository implements ShakeFindRepository {
       groupRoomId: mode == journey.JourneyMode.group ? 'room-1' : null,
       members: mode == journey.JourneyMode.group
           ? twoMembers
+                .map(
+                  (member) => journey.JourneyMember(
+                    userId: member.userId,
+                    displayName: member.displayName,
+                    role: member.role,
+                    status: member.status,
+                    participantStatus: 'active',
+                  ),
+                )
+                .toList(growable: false)
           : const <journey.JourneyMember>[],
       isHost: mode == journey.JourneyMode.group,
     );
@@ -487,6 +605,59 @@ class FakeShakeFindRepository implements ShakeFindRepository {
 
   @override
   Future<journey.Journey> verifyArrival(journey.Journey value) async => value;
+
+  @override
+  Future<journey.Journey> simulateArrival(
+    journey.Journey value, {
+    bool testExplorer = false,
+  }) async {
+    if (testExplorer) {
+      final members = value.members
+          .map(
+            (member) => member.displayName == 'Test Explorer'
+                ? journey.JourneyMember(
+                    userId: member.userId,
+                    displayName: member.displayName,
+                    role: member.role,
+                    status: member.status,
+                    participantStatus: 'completed',
+                  )
+                : member,
+          )
+          .toList(growable: false);
+      groupRoomClosed = !members.any(
+        (member) => member.participantStatus == 'active',
+      );
+      active = value.copyWith(members: members);
+      return active!;
+    }
+    if (value.status == journey.JourneyStatus.completed) return value;
+    profileXp += 100;
+    profileStreak += 1;
+    final members = value.members
+        .map(
+          (member) => member.userId == 'user-a'
+              ? journey.JourneyMember(
+                  userId: member.userId,
+                  displayName: member.displayName,
+                  role: member.role,
+                  status: member.status,
+                  participantStatus: 'completed',
+                )
+              : member,
+        )
+        .toList(growable: false);
+    groupRoomClosed =
+        value.mode == journey.JourneyMode.group &&
+        !members.any((member) => member.participantStatus == 'active');
+    active = value.copyWith(
+      status: journey.JourneyStatus.completed,
+      distanceMeters: 0,
+      completedAt: DateTime.now(),
+      members: members,
+    );
+    return active!;
+  }
 
   @override
   Future<journey.ArrivalCheckResult> checkArrivalNow(
@@ -547,15 +718,65 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   @override
   Future<journey.GroupVoteOutcome> castGroupVote(
     journey.Journey value,
+    journey.GroupVoteType type, {
+    bool simulateTestExplorer = false,
+  }) async {
+    voteCount++;
+    final round = type == journey.GroupVoteType.hint
+        ? value.additionalHints.length + 1
+        : 1;
+    final key = '${type.name}:$round';
+    final voters = groupVotes.putIfAbsent(key, () => <String>{});
+    final voter = simulateTestExplorer ? 'user-b' : 'user-a';
+    final alreadyVoted = !voters.add(voter);
+    final passed = voters.length >= 2;
+    if (passed && type == journey.GroupVoteType.hint) {
+      final current = active ?? value;
+      if (current.additionalHints.length < round) {
+        active = current.copyWith(
+          additionalHints: <String>[
+            ...current.additionalHints,
+            'Group hint $round',
+          ],
+        );
+      }
+    } else if (passed && type == journey.GroupVoteType.route) {
+      active = (active ?? value).copyWith(
+        status: journey.JourneyStatus.routeRevealed,
+        exactRouteRevealed: true,
+        locationHint: destination.address,
+      );
+    }
+    return _fakeVoteOutcome(type, round, alreadyVoted: alreadyVoted);
+  }
+
+  @override
+  Future<journey.GroupVoteOutcome> getGroupVoteStatus(
+    journey.Journey value,
     journey.GroupVoteType type,
   ) async {
-    voteCount++;
+    final round = type == journey.GroupVoteType.hint
+        ? value.additionalHints.length + 1
+        : 1;
+    return _fakeVoteOutcome(type, round);
+  }
+
+  journey.GroupVoteOutcome _fakeVoteOutcome(
+    journey.GroupVoteType type,
+    int round, {
+    bool alreadyVoted = false,
+  }) {
+    final voters = groupVotes['${type.name}:$round'] ?? const <String>{};
     return journey.GroupVoteOutcome(
       type: type,
-      yesVotes: 2,
+      yesVotes: voters.length,
       requiredVotes: 2,
       memberCount: 2,
-      passed: true,
+      passed: voters.length >= 2,
+      voteRound: round,
+      currentUserVoted: voters.contains('user-a'),
+      testExplorerVoted: voters.contains('user-b'),
+      alreadyVoted: alreadyVoted,
     );
   }
 
@@ -574,8 +795,20 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   }
 
   @override
-  Future<journey.Journey> joinGroupRoom(String roomId) async =>
-      createGroupRoom();
+  Future<journey.Journey> joinGroupRoom(String roomId) async {
+    active = journey.Journey(
+      id: 'waiting:$roomId',
+      status: journey.JourneyStatus.idle,
+      mode: journey.JourneyMode.group,
+      clue: '',
+      locationHint: 'Waiting room',
+      distanceMeters: 0,
+      groupRoomId: roomId,
+      members: twoMembers,
+      isHost: false,
+    );
+    return active!;
+  }
 
   @override
   Future<void> leaveGroupRoom(String roomId) async => active = null;

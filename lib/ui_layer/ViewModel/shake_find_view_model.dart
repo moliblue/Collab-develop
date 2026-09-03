@@ -368,6 +368,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   String? _message;
   List<String> _messages = const <String>[];
   GroupVoteOutcome? _lastVote;
+  final Map<GroupVoteType, GroupVoteOutcome> _groupVotes =
+      <GroupVoteType, GroupVoteOutcome>{};
   Timer? _groupSyncTimer;
 
   app.MysteryStage get stage => _stage;
@@ -401,6 +403,22 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey?.members ?? const <JourneyMember>[];
   List<String> get messages => List<String>.unmodifiable(_messages);
   GroupVoteOutcome? get lastVote => _lastVote;
+  GroupVoteOutcome? voteStatus(GroupVoteType type) {
+    final outcome = _groupVotes[type];
+    final currentRound = type == GroupVoteType.hint ? hintCount + 1 : 1;
+    return outcome?.voteRound == currentRound ? outcome : null;
+  }
+
+  bool hasSubmittedVote(GroupVoteType type) =>
+      voteStatus(type)?.currentUserVoted == true;
+
+  bool hasTestExplorerVote(GroupVoteType type) =>
+      voteStatus(type)?.testExplorerVoted == true;
+  bool get hasActiveTestExplorer => members.any(
+    (member) =>
+        member.displayName.toLowerCase() == 'test explorer' &&
+        member.participantStatus == 'active',
+  );
   String get clue => _journey?.clue ?? '';
   List<String> get hints => _journey?.additionalHints ?? const <String>[];
   double get distanceMeters => _journey?.distanceMeters ?? 0;
@@ -859,6 +877,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
           useSavedPreferences: false,
         ),
       );
+      _groupVotes.clear();
       _stage = app.MysteryStage.active;
       _startGroupSync();
       _message = null;
@@ -904,6 +923,51 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   Future<void> finishJourney() => _monitorArrival();
 
+  Future<void> simulateArrival({bool testExplorer = false}) async {
+    final current = _journey;
+    if (!kDebugMode ||
+        current == null ||
+        current.id.startsWith('waiting:') ||
+        current.status == JourneyStatus.completed ||
+        current.status == JourneyStatus.cancelled ||
+        _loading) {
+      return;
+    }
+    if (testExplorer &&
+        (current.mode != JourneyMode.group ||
+            !isHost ||
+            !hasActiveTestExplorer)) {
+      _message =
+          'An active Test Explorer participant is required for this test.';
+      _notify();
+      return;
+    }
+    _loading = true;
+    _message = testExplorer
+        ? 'Simulating Test Explorer arrival…'
+        : 'Simulating your verified arrival…';
+    _notify();
+    try {
+      _journey = await _repository.simulateArrival(
+        current,
+        testExplorer: testExplorer,
+      );
+      if (testExplorer) {
+        _message = 'Test Explorer completed this Group Journey.';
+      } else {
+        _groupSyncTimer?.cancel();
+        _stage = app.MysteryStage.complete;
+        _profile = await _repository.getCurrentProfile();
+        _message = 'Arrival verified. Journey completed.';
+      }
+    } catch (error) {
+      _message = _friendlyError(error);
+    } finally {
+      _loading = false;
+      _notify();
+    }
+  }
+
   Future<void> testArrivalNow() async {
     final current = _journey;
     if (current == null || current.id.startsWith('waiting:') || _loading) {
@@ -947,6 +1011,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       await _repository.stopShakeDetection();
       await _repository.cancelJourney();
       _journey = null;
+      _groupVotes.clear();
       _stage = app.MysteryStage.home;
       _message = 'Journey cancelled.';
     } catch (error) {
@@ -973,7 +1038,10 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     }
   }
 
-  Future<GroupVoteOutcome?> castGroupVote(GroupVoteType type) async {
+  Future<GroupVoteOutcome?> castGroupVote(
+    GroupVoteType type, {
+    bool simulateTestExplorer = false,
+  }) async {
     final current = _journey;
     if (current == null || current.mode != JourneyMode.group || _loading) {
       return null;
@@ -988,7 +1056,12 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _message = null;
     _notify();
     try {
-      _lastVote = await _repository.castGroupVote(current, type);
+      _lastVote = await _repository.castGroupVote(
+        current,
+        type,
+        simulateTestExplorer: simulateTestExplorer,
+      );
+      _groupVotes[type] = _lastVote!;
       _message = _lastVote!.message;
       if (_lastVote!.passed) {
         final refreshed = await _repository.getActiveJourney();
@@ -1003,6 +1076,9 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _notify();
     }
   }
+
+  Future<GroupVoteOutcome?> simulateTestExplorerVote(GroupVoteType type) =>
+      castGroupVote(type, simulateTestExplorer: true);
 
   void _startGroupSync() {
     _groupSyncTimer?.cancel();
@@ -1034,6 +1110,18 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         }
         if (refreshed.members.length > 1) {
           _messages = await _repository.getGroupMessages(roomId);
+        }
+        if (!refreshed.id.startsWith('waiting:') &&
+            refreshed.status != JourneyStatus.completed &&
+            refreshed.status != JourneyStatus.cancelled) {
+          final voteStatuses =
+              await Future.wait<GroupVoteOutcome>(<Future<GroupVoteOutcome>>[
+                _repository.getGroupVoteStatus(refreshed, GroupVoteType.hint),
+                _repository.getGroupVoteStatus(refreshed, GroupVoteType.route),
+              ]);
+          for (final status in voteStatuses) {
+            _groupVotes[status.type] = status;
+          }
         }
         _notify();
       }

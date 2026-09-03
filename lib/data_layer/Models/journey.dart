@@ -18,6 +18,10 @@ class GroupVoteOutcome {
     required this.requiredVotes,
     required this.memberCount,
     required this.passed,
+    this.voteRound = 1,
+    this.currentUserVoted = false,
+    this.testExplorerVoted = false,
+    this.alreadyVoted = false,
   });
 
   final GroupVoteType type;
@@ -25,8 +29,14 @@ class GroupVoteOutcome {
   final int requiredVotes;
   final int memberCount;
   final bool passed;
+  final int voteRound;
+  final bool currentUserVoted;
+  final bool testExplorerVoted;
+  final bool alreadyVoted;
 
-  String get message => passed
+  String get message => alreadyVoted
+      ? 'Vote already submitted: $yesVotes/$requiredVotes Yes votes.'
+      : passed
       ? '${type == GroupVoteType.hint ? 'Hint' : 'Route'} vote passed: '
             '$yesVotes/$requiredVotes Yes votes.'
       : 'Vote recorded: $yesVotes/$requiredVotes Yes votes required.';
