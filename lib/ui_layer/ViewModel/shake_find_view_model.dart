@@ -363,10 +363,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   bool _groupPreferencesSet = false;
   List<NearbyGroupRoom> _nearbyRooms = const <NearbyGroupRoom>[];
   bool _monitoring = false;
+  bool _chatSending = false;
   bool _groupSyncing = false;
   bool _disposed = false;
   String? _message;
-  List<String> _messages = const <String>[];
+  List<GroupChatMessage> _messages = const <GroupChatMessage>[];
   GroupVoteOutcome? _lastVote;
   final Map<GroupVoteType, GroupVoteOutcome> _groupVotes =
       <GroupVoteType, GroupVoteOutcome>{};
@@ -389,6 +390,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey!.status != JourneyStatus.completed &&
       _journey!.status != JourneyStatus.cancelled;
   bool get scanning => _scanning;
+  bool get chatSending => _chatSending;
   bool get matched => _journey?.groupRoomId != null;
   List<NearbyGroupRoom> get nearbyRooms =>
       List<NearbyGroupRoom>.unmodifiable(_nearbyRooms);
@@ -406,7 +408,18 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       : _journey?.preferences.selectionMode ?? 'edited_preferences';
   List<JourneyMember> get members =>
       _journey?.members ?? const <JourneyMember>[];
-  List<String> get messages => List<String>.unmodifiable(_messages);
+  int get groupShakenCount =>
+      members.where((member) => member.hasShaken).length;
+  bool get currentUserArrived => members.any(
+    (member) =>
+        member.userId == _profile?.userId &&
+        member.participantStatus == 'completed',
+  );
+  bool get currentUserHasShaken => members.any(
+    (member) => member.userId == _profile?.userId && member.hasShaken,
+  );
+  List<GroupChatMessage> get messages =>
+      List<GroupChatMessage>.unmodifiable(_messages);
   GroupVoteOutcome? get lastVote => _lastVote;
   GroupVoteOutcome? voteStatus(GroupVoteType type) {
     final outcome = _groupVotes[type];
@@ -506,6 +519,10 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       remindUnfinishedJourney();
       return;
     }
+    _restoreExistingStage(value);
+  }
+
+  void _restoreExistingStage(app.MysteryStage value) {
     _stage = value;
     if (value == app.MysteryStage.shake) {
       _sensorUnavailable = false;
@@ -531,11 +548,24 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   void resumeJourney() {
     if (_journey == null) return;
-    setStage(
-      _journey!.id.startsWith('waiting:')
-          ? app.MysteryStage.groupWaiting
-          : app.MysteryStage.active,
+    final current = _journey!;
+    if (current.id.startsWith('waiting:')) {
+      _stage = app.MysteryStage.groupWaiting;
+      _message = 'Waiting room resumed. The host must start the Group Journey.';
+      _notify();
+      return;
+    }
+    final ownMember = members.where(
+      (member) => member.userId == _profile?.userId,
     );
+    final target =
+        current.mode == JourneyMode.group &&
+            ownMember.isNotEmpty &&
+            !ownMember.first.hasShaken
+        ? app.MysteryStage.shake
+        : app.MysteryStage.active;
+    _message = null;
+    _restoreExistingStage(target);
   }
 
   bool _blockNewJourneyWhileActive() {
@@ -621,12 +651,18 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   Future<void> _sendGroupMessage(String value) async {
     final roomId = _journey?.groupRoomId;
-    if (roomId == null || !groupChatUnlocked || _loading) return;
+    if (roomId == null || !groupChatUnlocked || _loading || _chatSending) {
+      return;
+    }
+    _chatSending = true;
+    _notify();
     try {
       _messages = await _repository.sendGroupMessage(roomId, value);
       _message = null;
     } catch (error) {
       _message = _friendlyError(error);
+    } finally {
+      _chatSending = false;
     }
     _notify();
   }
@@ -644,9 +680,13 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   Future<void> _listenForShake() async {
     final waitingForGroup = _journey?.id.startsWith('waiting:') == true;
+    final revealingSharedGroupJourney =
+        _stage == app.MysteryStage.shake &&
+        _journey?.mode == JourneyMode.group &&
+        !waitingForGroup;
     if (_listening ||
         _loading ||
-        (journeyActive && !waitingForGroup) ||
+        (journeyActive && !waitingForGroup && !revealingSharedGroupJourney) ||
         _disposed) {
       return;
     }
@@ -655,7 +695,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _notify();
     try {
       await _repository.startShakeDetection(
-        onShake: () => unawaited(startJourney()),
+        onShake: () => unawaited(_handleShake()),
         onError: (Object error) {
           _listening = false;
           _sensorUnavailable = true;
@@ -669,6 +709,33 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _message = 'Motion sensing is unavailable. Retry the sensor.';
       _notify();
     }
+  }
+
+  Future<void> _handleShake() async {
+    final current = _journey;
+    if (current?.mode == JourneyMode.group &&
+        current != null &&
+        !current.id.startsWith('waiting:')) {
+      if (_loading) return;
+      _loading = true;
+      _message = null;
+      _notify();
+      try {
+        final updated = await _repository.markGroupParticipantShaken(current);
+        _journey = current.copyWith(members: updated);
+        await _repository.stopShakeDetection();
+        _listening = false;
+        _stage = app.MysteryStage.active;
+        unawaited(_monitorArrival());
+      } catch (error) {
+        _message = _friendlyError(error);
+      } finally {
+        _loading = false;
+        _notify();
+      }
+      return;
+    }
+    await startJourney();
   }
 
   Future<void> retryShakeDetection() async {
@@ -883,7 +950,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _loading = true;
     _message = null;
     _notify();
-    var canStart = false;
+    var startShakeDetection = false;
     try {
       final currentMembers = await _repository.refreshGroupMembers(roomId);
       _journey = _journey?.copyWith(members: currentMembers);
@@ -893,9 +960,31 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       } else if (!_groupPreferencesSet) {
         _message = 'Set the group preferences before starting.';
       } else if (currentMembers.any((member) => !member.isReady)) {
-        _message = 'Everyone must be ready before starting.';
+        final count = currentMembers.where((member) => !member.isReady).length;
+        _message = count == 1
+            ? '1 traveller is not ready yet.'
+            : '$count travellers are not ready yet.';
       } else {
-        canStart = true;
+        _message = 'Starting the shared Group Journey…';
+        _notify();
+        final preferences = TravelPreferences(
+          categories: _categories,
+          radiusKm: _radius,
+          useSavedPreferences:
+              _journey?.preferences.useSavedPreferences ?? false,
+        );
+        _journey = await _repository.startJourney(
+          JourneyMode.group,
+          preferences,
+        );
+        _groupVotes.clear();
+        _groupPreferencesSet = true;
+        _ready = false;
+        _stage = app.MysteryStage.shake;
+        _sensorUnavailable = false;
+        _message = null;
+        _startGroupSync();
+        startShakeDetection = true;
       }
     } catch (error) {
       _message = _friendlyError(error);
@@ -903,7 +992,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _loading = false;
       _notify();
     }
-    if (canStart) setStage(app.MysteryStage.shake);
+    if (startShakeDetection) unawaited(_listenForShake());
   }
 
   Future<void> leaveWaitingRoom() async {
@@ -921,13 +1010,13 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _groupSyncTimer?.cancel();
       await _repository.leaveGroupRoom(roomId);
       _journey = null;
-      _messages = const <String>[];
+      _messages = const <GroupChatMessage>[];
       _nearbyRooms = const <NearbyGroupRoom>[];
       _groupPreferencesSet = false;
       _ready = false;
       _stage = app.MysteryStage.home;
       _message = hostWasLeaving
-          ? 'Waiting room closed.'
+          ? 'Group Room cancelled.'
           : 'You left the waiting room.';
     } catch (error) {
       _message = _friendlyError(error);
@@ -1004,6 +1093,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     final current = _journey;
     if (_monitoring ||
         current == null ||
+        (current.mode == JourneyMode.group && currentUserArrived) ||
         current.status == JourneyStatus.completed ||
         current.status == JourneyStatus.cancelled) {
       return;
@@ -1012,6 +1102,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     try {
       _journey = await _repository.verifyArrival(current);
       if (_journey?.status == JourneyStatus.completed) {
+        _groupSyncTimer?.cancel();
         _stage = app.MysteryStage.complete;
         _profile = await _repository.getCurrentProfile();
       }
@@ -1058,10 +1149,16 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       if (testExplorer) {
         _message = 'Test Explorer completed this Group Journey.';
       } else {
-        _groupSyncTimer?.cancel();
-        _stage = app.MysteryStage.complete;
         _profile = await _repository.getCurrentProfile();
-        _message = 'Arrival verified. Journey completed.';
+        if (_journey?.status == JourneyStatus.completed) {
+          _groupSyncTimer?.cancel();
+          _stage = app.MysteryStage.complete;
+          _message = 'Arrival verified. Group Journey completed.';
+        } else {
+          _stage = app.MysteryStage.active;
+          _message =
+              'Your arrival is verified. Waiting for the other travellers.';
+        }
       }
     } catch (error) {
       _message = _friendlyError(error);
@@ -1075,6 +1172,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     final current = _journey;
     if (current == null || current.id.startsWith('waiting:') || _loading) {
       _message = 'Start the Mystery Journey before testing arrival.';
+      _notify();
+      return;
+    }
+    if (current.mode == JourneyMode.group && currentUserArrived) {
+      _message = 'Your arrival is already verified.';
       _notify();
       return;
     }
@@ -1108,6 +1210,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   Future<void> cancelJourney() async {
     if (_loading) return;
+    final cancelledJourney = _journey;
     _loading = true;
     _notify();
     try {
@@ -1116,7 +1219,9 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey = null;
       _groupVotes.clear();
       _stage = app.MysteryStage.home;
-      _message = 'Journey cancelled.';
+      _message = cancelledJourney?.mode == JourneyMode.group
+          ? 'You left the Group Journey. Other travellers can continue.'
+          : 'Solo Mystery Journey cancelled.';
     } catch (error) {
       _message = _friendlyError(error);
     } finally {
@@ -1132,7 +1237,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _notify();
     try {
       _journey = await _repository.requestHint(current);
-      _message = 'New hint unlocked.';
+      _message = 'A new Mystery Hint has been unlocked.';
     } catch (error) {
       _message = _friendlyError(error);
     } finally {
@@ -1190,7 +1295,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     }
     unawaited(_syncGroupData());
     _groupSyncTimer = Timer.periodic(
-      const Duration(seconds: 5),
+      const Duration(seconds: 2),
       (_) => unawaited(_syncGroupData()),
     );
   }
@@ -1209,8 +1314,15 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         _groupPreferencesSet = refreshed.groupPreferencesSet;
         _categories = refreshed.preferences.categories.map(_uiCategory).toSet();
         _radius = refreshed.preferences.radiusKm.clamp(5, 50);
+        if (refreshed.status == JourneyStatus.completed) {
+          _groupSyncTimer?.cancel();
+          _stage = app.MysteryStage.complete;
+        }
         if (wasWaiting && !refreshed.id.startsWith('waiting:')) {
-          _stage = app.MysteryStage.active;
+          _stage = app.MysteryStage.shake;
+          _sensorUnavailable = false;
+          _message = null;
+          unawaited(_listenForShake());
         }
         if (refreshed.members.length > 1) {
           _messages = await _repository.getGroupMessages(roomId);
@@ -1227,6 +1339,15 @@ class MysteryJourneyViewModel extends ChangeNotifier {
             _groupVotes[status.type] = status;
           }
         }
+        _notify();
+      } else if (_journey?.id.startsWith('waiting:') == true) {
+        _groupSyncTimer?.cancel();
+        _journey = null;
+        _messages = const <GroupChatMessage>[];
+        _groupPreferencesSet = false;
+        _ready = false;
+        _stage = app.MysteryStage.home;
+        _message = 'The Group Room was cancelled by the Host.';
         _notify();
       }
     } catch (error) {

@@ -25,8 +25,11 @@ abstract interface class ShakeFindRepository {
     String roomId,
     TravelPreferences preferences,
   );
-  Future<List<String>> getGroupMessages(String roomId);
-  Future<List<String>> sendGroupMessage(String roomId, String message);
+  Future<List<GroupChatMessage>> getGroupMessages(String roomId);
+  Future<List<GroupChatMessage>> sendGroupMessage(
+    String roomId,
+    String message,
+  );
   Future<GroupVoteOutcome> castGroupVote(
     Journey journey,
     GroupVoteType type, {
@@ -37,6 +40,7 @@ abstract interface class ShakeFindRepository {
     GroupVoteType type,
   );
   Future<List<JourneyMember>> refreshGroupMembers(String roomId);
+  Future<List<JourneyMember>> markGroupParticipantShaken(Journey journey);
   Future<List<JourneyMember>> setGroupRoomReady(String roomId, bool isReady);
   Future<List<JourneyMember>> addTestGroupMember(
     String roomId,

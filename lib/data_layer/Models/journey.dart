@@ -34,12 +34,21 @@ class GroupVoteOutcome {
   final bool testExplorerVoted;
   final bool alreadyVoted;
 
-  String get message => alreadyVoted
-      ? 'Vote already submitted: $yesVotes/$requiredVotes Yes votes.'
-      : passed
-      ? '${type == GroupVoteType.hint ? 'Hint' : 'Route'} vote passed: '
-            '$yesVotes/$requiredVotes Yes votes.'
-      : 'Vote recorded: $yesVotes/$requiredVotes Yes votes required.';
+  String get message {
+    if (alreadyVoted) {
+      return 'Vote already submitted: $yesVotes/$requiredVotes Yes votes.';
+    }
+    if (passed) {
+      return type == GroupVoteType.hint
+          ? 'Group Hint approved. The next Hint has been unlocked for everyone.'
+          : 'Route Reveal approved. The exact Mystery Destination is now visible to the team.';
+    }
+    return type == GroupVoteType.hint
+        ? 'Group Hint vote recorded: $yesVotes/$requiredVotes Yes votes. '
+              '$requiredVotes Yes votes are required.'
+        : 'Route Reveal vote recorded: $yesVotes/$requiredVotes Yes votes. '
+              '$requiredVotes Yes votes are required.';
+  }
 }
 
 class ArrivalCheckResult {
@@ -140,6 +149,7 @@ class JourneyMember {
     required this.role,
     required this.status,
     this.participantStatus,
+    this.shakenAt,
     this.avatarUrl,
     this.isReady = false,
   });
@@ -148,9 +158,29 @@ class JourneyMember {
   final String role;
   final String status;
   final String? participantStatus;
+  final DateTime? shakenAt;
   final String? avatarUrl;
   final bool isReady;
   bool get isHost => role == 'host';
+  bool get hasShaken => shakenAt != null;
+}
+
+class GroupChatMessage {
+  const GroupChatMessage({
+    required this.id,
+    required this.userId,
+    required this.senderName,
+    required this.message,
+    required this.createdAt,
+    required this.isCurrentUser,
+  });
+
+  final String id;
+  final String userId;
+  final String senderName;
+  final String message;
+  final DateTime createdAt;
+  final bool isCurrentUser;
 }
 
 class NearbyGroupRoom {

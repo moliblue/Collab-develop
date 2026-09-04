@@ -32,9 +32,6 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   static const int completionXp = 100;
   static const String defaultTestingRoomId =
       '1bf4271d-2e49-4380-afc1-3d1bf75869ba';
-  static const String testExplorerProfileId =
-      '3f701fe7-dd8e-4c8c-b3a4-611799d411c0';
-
   final ShakeSensorService _sensorService;
   final SupabaseService _supabase;
   final LocationService _location;
@@ -107,6 +104,18 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         .eq('participant_status', 'active')
         .limit(2);
     if (rows.isEmpty) {
+      final cached = _activeJourney;
+      if (cached?.mode == JourneyMode.group &&
+          !cached!.id.startsWith('waiting:')) {
+        final refreshed = await _loadJourney(cached.id);
+        _activeJourney = refreshed;
+        return refreshed;
+      }
+      final activeGroup = await _loadActiveGroupRoomForParticipant(userId);
+      if (activeGroup != null) {
+        _activeJourney = activeGroup;
+        return activeGroup;
+      }
       _activeJourney = await _loadWaitingGroupRoom(userId);
       return _activeJourney;
     }
@@ -155,6 +164,12 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
           existing?.id.startsWith('waiting:') == true &&
           existing?.isHost == true;
       if (existing != null && !isWaitingHost) {
+        if (mode == JourneyMode.group &&
+            existing.mode == JourneyMode.group &&
+            existing.isHost &&
+            existing.groupRoomId != null) {
+          return existing;
+        }
         throw const JourneyDataException(
           'Resume or cancel your active journey before starting another.',
         );
@@ -658,7 +673,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   }
 
   @override
-  Future<List<String>> getGroupMessages(String roomId) async {
+  Future<List<GroupChatMessage>> getGroupMessages(String roomId) async {
     final userId = _supabase.requireCurrentUserId();
     final rows = await _client
         .from('group_chat_messages')
@@ -666,17 +681,46 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         .eq('room_id', roomId)
         .order('created_at')
         .limit(100);
+    final userIds = rows
+        .map((row) => row['user_id']?.toString())
+        .whereType<String>()
+        .toSet();
+    final senderNames = <String, String>{};
+    if (userIds.isNotEmpty) {
+      final profiles = await _client
+          .from('profiles')
+          .select('id, username')
+          .inFilter('id', userIds.toList(growable: false));
+      for (final profile in profiles) {
+        final profileId = profile['id']?.toString();
+        final username = profile['username']?.toString().trim();
+        if (profileId != null && username?.isNotEmpty == true) {
+          senderNames[profileId] = username!;
+        }
+      }
+    }
     return rows
-        .map(
-          (row) =>
-              '${row['user_id']?.toString() == userId ? 'You' : _shortId(row['user_id'].toString())}: '
-              '${row['message']}',
-        )
+        .map((row) {
+          final senderId = row['user_id'].toString();
+          return GroupChatMessage(
+            id: row['id'].toString(),
+            userId: senderId,
+            senderName: senderNames[senderId] ?? _shortId(senderId),
+            message: row['message']?.toString() ?? '',
+            createdAt:
+                DateTime.tryParse(row['created_at']?.toString() ?? '') ??
+                DateTime.fromMillisecondsSinceEpoch(0),
+            isCurrentUser: senderId == userId,
+          );
+        })
         .toList(growable: false);
   }
 
   @override
-  Future<List<String>> sendGroupMessage(String roomId, String message) async {
+  Future<List<GroupChatMessage>> sendGroupMessage(
+    String roomId,
+    String message,
+  ) async {
     final value = message.trim();
     if (value.isEmpty) return getGroupMessages(roomId);
     if (value.length > 500) {
@@ -758,6 +802,43 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   @override
   Future<List<JourneyMember>> refreshGroupMembers(String roomId) =>
       _loadGroupMembers(roomId);
+
+  @override
+  Future<List<JourneyMember>> markGroupParticipantShaken(
+    Journey journey,
+  ) async {
+    final roomId = journey.groupRoomId;
+    if (journey.mode != JourneyMode.group ||
+        roomId == null ||
+        journey.id.startsWith('waiting:')) {
+      throw StateError('An active shared group journey is required.');
+    }
+    final userId = _supabase.requireCurrentUserId();
+    final updatedRows = await _client
+        .from('journey_participants')
+        .update(<String, dynamic>{
+          'shaken_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('journey_id', journey.id)
+        .eq('user_id', userId)
+        .eq('participant_status', 'active')
+        .isFilter('shaken_at', null)
+        .select('id');
+    if (updatedRows.isEmpty) {
+      final participant = await _client
+          .from('journey_participants')
+          .select('shaken_at')
+          .eq('journey_id', journey.id)
+          .eq('user_id', userId)
+          .maybeSingle();
+      if (participant == null || participant['shaken_at'] == null) {
+        throw const JourneyDataException(
+          'Your shared journey participant could not be marked as shaken.',
+        );
+      }
+    }
+    return _loadGroupMembers(roomId);
+  }
 
   @override
   Future<List<JourneyMember>> setGroupRoomReady(
@@ -861,14 +942,22 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         .maybeSingle();
     final journeyId = room?['journey_id']?.toString();
     final participantStatuses = <String, String>{};
+    final participantShakeTimes = <String, DateTime>{};
     if (journeyId != null && journeyId.isNotEmpty) {
       final participants = await _client
           .from('journey_participants')
-          .select('user_id, participant_status')
+          .select('user_id, participant_status, shaken_at')
           .eq('journey_id', journeyId);
       for (final participant in participants) {
-        participantStatuses[participant['user_id'].toString()] =
+        final participantUserId = participant['user_id'].toString();
+        participantStatuses[participantUserId] =
             participant['participant_status']?.toString() ?? 'active';
+        final shakenAt = DateTime.tryParse(
+          participant['shaken_at']?.toString() ?? '',
+        );
+        if (shakenAt != null) {
+          participantShakeTimes[participantUserId] = shakenAt;
+        }
       }
     }
     final rows = await _client
@@ -889,16 +978,15 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       members.add(
         JourneyMember(
           userId: memberUserId,
-          displayName: memberUserId == testExplorerProfileId
-              ? 'Test Explorer'
+          displayName: username?.isNotEmpty == true
+              ? username!
               : fullName?.isNotEmpty == true
               ? fullName!
-              : username?.isNotEmpty == true
-              ? username!
               : _shortId(memberUserId),
           role: row['role']?.toString() ?? 'member',
           status: row['member_status']?.toString() ?? 'waiting',
           participantStatus: participantStatuses[memberUserId],
+          shakenAt: participantShakeTimes[memberUserId],
           avatarUrl: profile?['avatar_url']?.toString(),
           isReady: row['is_ready'] == true,
         ),
@@ -1242,6 +1330,38 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     return null;
   }
 
+  Future<Journey?> _loadActiveGroupRoomForParticipant(String userId) async {
+    final memberships = await _client
+        .from('group_room_members')
+        .select('room_id')
+        .eq('user_id', userId)
+        .neq('member_status', 'left');
+    for (final membership in memberships) {
+      final room = await _client
+          .from('group_rooms')
+          .select('journey_id')
+          .eq('id', membership['room_id'])
+          .eq('status', 'active')
+          .maybeSingle();
+      final journeyId = room?['journey_id']?.toString();
+      if (journeyId == null || journeyId.isEmpty) continue;
+      final participant = await _client
+          .from('journey_participants')
+          .select()
+          .eq('journey_id', journeyId)
+          .eq('user_id', userId)
+          .neq('participant_status', 'cancelled')
+          .maybeSingle();
+      if (participant != null) {
+        return _loadJourney(
+          journeyId,
+          participant: Map<String, dynamic>.from(participant),
+        );
+      }
+    }
+    return null;
+  }
+
   Future<Journey> _loadJourney(
     String journeyId, {
     Map<String, dynamic>? participant,
@@ -1309,7 +1429,14 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     }
     final participantStatus = participant['participant_status']?.toString();
     final exact = row['exact_route_revealed'] == true;
-    final status = participantStatus == 'completed'
+    final sharedJourneyCompleted = row['status']?.toString() == 'completed';
+    final status = mode == JourneyMode.group
+        ? sharedJourneyCompleted
+              ? JourneyStatus.completed
+              : exact
+              ? JourneyStatus.routeRevealed
+              : JourneyStatus.active
+        : participantStatus == 'completed'
         ? JourneyStatus.completed
         : participantStatus == 'cancelled'
         ? JourneyStatus.cancelled
