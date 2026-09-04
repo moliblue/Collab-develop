@@ -64,6 +64,35 @@ class ArrivalCheckResult {
   bool get isInsideArrivalRadius => hasReliableAccuracy && distanceMeters <= 50;
 }
 
+enum ArrivalVerificationState {
+  idle,
+  outsideRange,
+  waitingForAccuracy,
+  verifying,
+  interrupted,
+  verified,
+}
+
+class ArrivalVerificationUpdate {
+  const ArrivalVerificationUpdate({
+    required this.state,
+    this.secondsRemaining = 0,
+    this.distanceMeters,
+    this.accuracyMeters,
+  });
+
+  const ArrivalVerificationUpdate.idle()
+    : state = ArrivalVerificationState.idle,
+      secondsRemaining = 0,
+      distanceMeters = null,
+      accuracyMeters = null;
+
+  final ArrivalVerificationState state;
+  final int secondsRemaining;
+  final double? distanceMeters;
+  final double? accuracyMeters;
+}
+
 class TravelPreferences {
   const TravelPreferences({
     this.categories = const <String>{},
@@ -227,6 +256,7 @@ class Journey {
     this.destination,
     this.preferences = const TravelPreferences(),
     this.additionalHints = const <String>[],
+    this.totalHintCount = 3,
     this.exactRouteRevealed = false,
     this.groupRoomId,
     this.groupDeadline,
@@ -246,6 +276,7 @@ class Journey {
   final JourneyDestination? destination;
   final TravelPreferences preferences;
   final List<String> additionalHints;
+  final int totalHintCount;
   final bool exactRouteRevealed;
   final String? groupRoomId;
   final DateTime? groupDeadline;
@@ -256,6 +287,7 @@ class Journey {
 
   bool get destinationMayBeRevealed =>
       status == JourneyStatus.completed || exactRouteRevealed;
+  bool get hasHintsRemaining => additionalHints.length < totalHintCount;
 
   Journey copyWith({
     JourneyStatus? status,
@@ -264,6 +296,7 @@ class Journey {
     double? distanceMeters,
     TravelPreferences? preferences,
     List<String>? additionalHints,
+    int? totalHintCount,
     bool? exactRouteRevealed,
     List<JourneyMember>? members,
     bool? isHost,
@@ -280,6 +313,7 @@ class Journey {
     destination: destination,
     preferences: preferences ?? this.preferences,
     additionalHints: additionalHints ?? this.additionalHints,
+    totalHintCount: totalHintCount ?? this.totalHintCount,
     exactRouteRevealed: exactRouteRevealed ?? this.exactRouteRevealed,
     groupRoomId: groupRoomId,
     groupDeadline: groupDeadline,

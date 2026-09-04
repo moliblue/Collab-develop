@@ -121,7 +121,7 @@ class LocationService {
     yield* Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 2,
+        distanceFilter: 0,
       ),
     ).map(LocationReading.fromPosition);
   }

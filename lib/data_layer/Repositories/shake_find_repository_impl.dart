@@ -188,6 +188,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     final location = await _location.getFreshLocation();
     final destination = await _selectDestination(preferences, location);
     final clue = await _initialClue(destination.id);
+    final totalHintCount = await _additionalHintCount(destination.id);
     String? journeyId;
     try {
       final journeyRow = await _client
@@ -228,6 +229,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         ),
         destination: destination,
         preferences: preferences,
+        totalHintCount: totalHintCount,
       );
       _activeJourney = result;
       return result;
@@ -287,6 +289,15 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     return Map<String, dynamic>.from(rows.single);
   }
 
+  Future<int> _additionalHintCount(String destinationId) async {
+    final rows = await _client
+        .from('destination_clues')
+        .select('id')
+        .eq('destination_id', destinationId)
+        .eq('clue_type', 'additional');
+    return rows.length;
+  }
+
   Future<void> _saveJourneyCategories(
     String journeyId,
     Set<String> values,
@@ -331,7 +342,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       }
     }
     if (next == null) {
-      throw const JourneyDataException('No more hints are available.');
+      throw const JourneyDataException('All Mystery Hints have been unlocked.');
     }
     await _client.from('participant_hint_unlocks').insert(<String, dynamic>{
       'participant_id': participantId,
@@ -365,7 +376,10 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   }
 
   @override
-  Future<Journey> verifyArrival(Journey journey) async {
+  Future<Journey> verifyArrival(
+    Journey journey, {
+    void Function(ArrivalVerificationUpdate update)? onProgress,
+  }) async {
     final destination = journey.destination;
     if (destination == null) {
       throw const JourneyDataException('Journey destination is unavailable.');
@@ -378,6 +392,8 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     );
     DateTime? lastOutsideRecord;
     DateTime? poorAccuracySince;
+    var verificationStarted = false;
+    var interruptedByExit = false;
     await for (final reading in _location.watchLocation()) {
       final distance = _location.distanceBetween(
         reading,
@@ -394,6 +410,15 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         at: reading.timestamp,
       );
       if (decision.progress == ArrivalProgress.poorAccuracy) {
+        verificationStarted = false;
+        interruptedByExit = false;
+        onProgress?.call(
+          ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.waitingForAccuracy,
+            distanceMeters: distance,
+            accuracyMeters: reading.accuracy,
+          ),
+        );
         poorAccuracySince ??= reading.timestamp;
         if (reading.timestamp.difference(poorAccuracySince) >=
             const Duration(seconds: 30)) {
@@ -405,6 +430,17 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       }
       poorAccuracySince = null;
       if (decision.progress == ArrivalProgress.outsideRadius) {
+        if (verificationStarted) interruptedByExit = true;
+        verificationStarted = false;
+        onProgress?.call(
+          ArrivalVerificationUpdate(
+            state: interruptedByExit
+                ? ArrivalVerificationState.interrupted
+                : ArrivalVerificationState.outsideRange,
+            distanceMeters: distance,
+            accuracyMeters: reading.accuracy,
+          ),
+        );
         final now = DateTime.now();
         if (lastOutsideRecord == null ||
             now.difference(lastOutsideRecord) >= const Duration(seconds: 10)) {
@@ -418,7 +454,27 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         }
         continue;
       }
-      if (decision.progress != ArrivalProgress.verified) continue;
+      if (decision.progress != ArrivalProgress.verified) {
+        verificationStarted = true;
+        interruptedByExit = false;
+        onProgress?.call(
+          ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.verifying,
+            secondsRemaining: (decision.remaining.inMilliseconds / 1000).ceil(),
+            distanceMeters: distance,
+            accuracyMeters: reading.accuracy,
+          ),
+        );
+        continue;
+      }
+      onProgress?.call(
+        ArrivalVerificationUpdate(
+          state: ArrivalVerificationState.verified,
+          secondsRemaining: 0,
+          distanceMeters: distance,
+          accuracyMeters: reading.accuracy,
+        ),
+      );
       return _completeJourney(journey, reading, distance);
     }
     throw const JourneyDataException('Location monitoring ended unexpectedly.');
@@ -679,7 +735,8 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         .from('group_chat_messages')
         .select('id, user_id, message, created_at')
         .eq('room_id', roomId)
-        .order('created_at')
+        .order('created_at', ascending: true)
+        .order('id', ascending: true)
         .limit(100);
     final userIds = rows
         .map((row) => row['user_id']?.toString())
@@ -713,7 +770,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
             isCurrentUser: senderId == userId,
           );
         })
-        .toList(growable: false);
+        .toList(growable: false)
+      ..sort((left, right) {
+        final time = left.createdAt.compareTo(right.createdAt);
+        return time != 0 ? time : left.id.compareTo(right.id);
+      });
   }
 
   @override
@@ -746,6 +807,9 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       throw const JourneyDataException(
         'Group voting is only available in an active Group Journey.',
       );
+    }
+    if (type == GroupVoteType.hint && !journey.hasHintsRemaining) {
+      throw const JourneyDataException('All Mystery Hints have been unlocked.');
     }
     final response = await _client.rpc(
       'cast_group_action_vote',
@@ -1158,6 +1222,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     final location = await _location.getFreshLocation();
     final destination = await _selectDestination(preferences, location);
     final clue = await _initialClue(destination.id);
+    final totalHintCount = await _additionalHintCount(destination.id);
     final activatedAt = DateTime.now().toUtc();
     final deadline = activatedAt.add(const Duration(hours: 24));
     final waitingRoomExpiresAt = room['expires_at']?.toString();
@@ -1222,6 +1287,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         ),
         destination: destination,
         preferences: preferences,
+        totalHintCount: totalHintCount,
         groupRoomId: roomId,
         groupDeadline: deadline.toLocal(),
         members: members,
@@ -1388,6 +1454,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         .select()
         .eq('id', row['initial_clue_id'])
         .single();
+    final additionalClueRows = await _client
+        .from('destination_clues')
+        .select('id')
+        .eq('destination_id', row['destination_id'])
+        .eq('clue_type', 'additional');
     final categoryRows = await _client
         .from('journey_preference_categories')
         .select()
@@ -1461,6 +1532,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         useSavedPreferences: row['selection_mode'] == 'saved_preferences',
       ),
       additionalHints: hints,
+      totalHintCount: additionalClueRows.length,
       exactRouteRevealed: exact,
       groupRoomId: roomId,
       groupDeadline: deadline,

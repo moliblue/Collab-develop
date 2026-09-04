@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:findit_my/data_layer/Models/app_models.dart';
 import 'package:findit_my/data_layer/Models/journey.dart' as journey;
 import 'package:findit_my/data_layer/Repositories/shake_find_repository.dart';
@@ -77,6 +79,32 @@ void main() {
         const Duration(seconds: 10),
       );
     });
+
+    test('poor GPS accuracy resets dwell to zero', () {
+      final tracker = ArrivalDwellTracker();
+      final start = DateTime(2026);
+      tracker.evaluate(accuracyMeters: 8, distanceMeters: 20, at: start);
+      expect(
+        tracker
+            .evaluate(
+              accuracyMeters: 31,
+              distanceMeters: 20,
+              at: start.add(const Duration(seconds: 7)),
+            )
+            .progress,
+        ArrivalProgress.poorAccuracy,
+      );
+      expect(
+        tracker
+            .evaluate(
+              accuracyMeters: 8,
+              distanceMeters: 20,
+              at: start.add(const Duration(seconds: 8)),
+            )
+            .remaining,
+        const Duration(seconds: 10),
+      );
+    });
   });
 
   Future<(AppViewModel, FakeShakeFindRepository)> pumpApp(
@@ -130,6 +158,167 @@ void main() {
       expect(model.tab, tab);
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Arrival UI counts down, resets, and verifies', (tester) async {
+    final repository = FakeShakeFindRepository();
+    repository.active = journey.Journey(
+      id: 'journey-arrival',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A real database clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 70,
+      destination: repository.destination,
+    );
+    repository.arrivalMonitoringUpdates
+        .addAll(const <journey.ArrivalVerificationUpdate>[
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.outsideRange,
+            distanceMeters: 70,
+            accuracyMeters: 8,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.waitingForAccuracy,
+            distanceMeters: 40,
+            accuracyMeters: 35,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.verifying,
+            secondsRemaining: 10,
+            distanceMeters: 40,
+            accuracyMeters: 8,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.verifying,
+            secondsRemaining: 7,
+            distanceMeters: 40,
+            accuracyMeters: 8,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.interrupted,
+            distanceMeters: 55,
+            accuracyMeters: 8,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.verifying,
+            secondsRemaining: 10,
+            distanceMeters: 30,
+            accuracyMeters: 8,
+          ),
+          journey.ArrivalVerificationUpdate(
+            state: journey.ArrivalVerificationState.verified,
+            distanceMeters: 30,
+            accuracyMeters: 8,
+          ),
+        ]);
+    final (model, _) = await pumpApp(tester, repository: repository);
+
+    model.mystery.resumeJourney();
+    await tester.pump();
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.idle,
+    );
+    expect(find.text('Arrival not checked yet'), findsOneWidget);
+    expect(repository.arrivalCheckCount, 0);
+
+    unawaited(model.mystery.testArrivalNow());
+    await tester.pump();
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.outsideRange,
+    );
+    expect(find.text('Outside arrival range'), findsOneWidget);
+    expect(find.textContaining('70m from destination'), findsOneWidget);
+    expect(find.textContaining('remaining'), findsNothing);
+
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.waitingForAccuracy,
+    );
+    expect(find.text('Waiting for better GPS accuracy'), findsOneWidget);
+    expect(find.textContaining('GPS accuracy: 35m'), findsOneWidget);
+    expect(find.textContaining('Distance: 40m'), findsOneWidget);
+
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(find.text('Verifying arrival'), findsOneWidget);
+    expect(find.textContaining('10s remaining'), findsOneWidget);
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(find.textContaining('7s remaining'), findsOneWidget);
+
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.interrupted,
+    );
+    expect(find.text('Verification interrupted.'), findsOneWidget);
+    expect(find.textContaining('55m from destination'), findsOneWidget);
+
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(find.textContaining('10s remaining'), findsOneWidget);
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.verified,
+    );
+    await tester.pump(repository.arrivalUpdateDelay);
+    expect(model.mystery.stage, MysteryStage.complete);
+    expect(
+      find.byKey(const Key('generic_mystery_completion_visual')),
+      findsOneWidget,
+    );
+    expect(
+      find.image(const AssetImage('assets/sultan_abdul_samad.png')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Arrival countdown updates while the location is unchanged', (
+    tester,
+  ) async {
+    final repository = FakeShakeFindRepository();
+    repository.active = journey.Journey(
+      id: 'journey-standing-still',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A real database clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 21,
+      destination: repository.destination,
+    );
+    repository.arrivalUpdateDelay = const Duration(seconds: 12);
+    repository.arrivalMonitoringUpdates.add(
+      const journey.ArrivalVerificationUpdate(
+        state: journey.ArrivalVerificationState.verifying,
+        secondsRemaining: 10,
+        distanceMeters: 21,
+        accuracyMeters: 9,
+      ),
+    );
+    final (model, _) = await pumpApp(tester, repository: repository);
+
+    model.mystery.resumeJourney();
+    await tester.pump();
+    expect(find.text('Arrival not checked yet'), findsOneWidget);
+    expect(repository.arrivalCheckCount, 0);
+
+    unawaited(model.mystery.testArrivalNow());
+    await tester.pump();
+    expect(find.textContaining('10s remaining'), findsOneWidget);
+    expect(find.textContaining('Distance: 21m'), findsOneWidget);
+    expect(find.textContaining('GPS accuracy: 9m'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.textContaining('9s remaining'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.textContaining('7s remaining'), findsOneWidget);
+    expect(model.mystery.stage, MysteryStage.active);
+    await tester.pump(const Duration(seconds: 9));
+    await tester.pump();
   });
 
   testWidgets(
@@ -336,7 +525,11 @@ void main() {
     );
     await model.mystery.testArrivalNow();
     expect(repository.arrivalCheckCount, 1);
-    expect(model.mystery.message, contains('Inside the 50 m arrival zone'));
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.verifying,
+    );
+    expect(model.mystery.arrivalVerification.secondsRemaining, 10);
   });
 
   testWidgets('Test Explorer joins safely and host can close room', (
@@ -506,6 +699,12 @@ void main() {
     expect(model.mystery.journey!.id, 'shared-journey-1');
     expect(model.mystery.journey!.destination!.id, 'destination-1');
     expect(repository.startCount, 0);
+    expect(repository.arrivalCheckCount, 0);
+    expect(
+      model.mystery.arrivalVerification.state,
+      journey.ArrivalVerificationState.idle,
+    );
+    expect(find.text('Arrival not checked yet'), findsOneWidget);
   });
 
   testWidgets('Group chat aligns users and groups consecutive senders', (
@@ -516,6 +715,14 @@ void main() {
     await model.mystery.createGroupRoom();
     await model.mystery.addTestCompanion();
     repository.chatMessages.addAll(<journey.GroupChatMessage>[
+      journey.GroupChatMessage(
+        id: 'other-3',
+        userId: 'user-b',
+        senderName: 'test_explorer',
+        message: 'Okay',
+        createdAt: DateTime(2026, 1, 1, 0, 0, 3),
+        isCurrentUser: false,
+      ),
       journey.GroupChatMessage(
         id: 'other-1',
         userId: 'user-b',
@@ -540,16 +747,14 @@ void main() {
         createdAt: DateTime(2026, 1, 1, 0, 0, 2),
         isCurrentUser: true,
       ),
-      journey.GroupChatMessage(
-        id: 'other-3',
-        userId: 'user-b',
-        senderName: 'test_explorer',
-        message: 'Okay',
-        createdAt: DateTime(2026, 1, 1, 0, 0, 3),
-        isCurrentUser: false,
-      ),
     ]);
     await model.mystery.loadGroupMessages();
+    expect(model.mystery.messages.map((message) => message.message), <String>[
+      'Hi',
+      'Ready?',
+      'Yes',
+      'Okay',
+    ]);
     await tester.pump();
     await tester.drag(
       find.byKey(const PageStorageKey<String>('mystery-group-waiting')),
@@ -661,6 +866,82 @@ void main() {
     expect(testRoute!.passed, isTrue);
     expect(model.mystery.routeRevealed, isTrue);
     expect(repository.voteCount, 5);
+  });
+
+  testWidgets('Remote Group vote progress and approval synchronize', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.createGroupRoom();
+    await model.mystery.addTestCompanion();
+    await model.mystery.useGroupSurpriseMe();
+    await model.mystery.setReady(true);
+    await model.mystery.startJourney();
+
+    await model.mystery.castGroupVote(journey.GroupVoteType.hint);
+    await tester.pump();
+    expect(find.textContaining('Group Hint vote active'), findsOneWidget);
+    expect(find.textContaining('1/2 Yes votes'), findsOneWidget);
+
+    await repository.castGroupVote(
+      repository.active!,
+      journey.GroupVoteType.hint,
+      simulateTestExplorer: true,
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(model.mystery.groupVoteFeedback, contains('Group Hint approved'));
+    expect(find.textContaining('Group Hint approved'), findsOneWidget);
+  });
+
+  testWidgets('Exhausted Solo and Group hints cannot start another action', (
+    tester,
+  ) async {
+    final soloRepository = FakeShakeFindRepository();
+    soloRepository.active = journey.Journey(
+      id: 'solo-no-hints',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A real database clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 100,
+      destination: soloRepository.destination,
+      additionalHints: const <String>['One', 'Two', 'Three'],
+      totalHintCount: 3,
+    );
+    final (soloModel, _) = await pumpApp(tester, repository: soloRepository);
+    soloModel.mystery.resumeJourney();
+    await soloModel.mystery.unlockHint();
+    await tester.pump();
+    expect(soloModel.mystery.message, 'All Mystery Hints have been unlocked.');
+    expect(find.text('All Mystery Hints have been unlocked.'), findsWidgets);
+
+    final groupRepository = FakeShakeFindRepository();
+    groupRepository.active = journey.Journey(
+      id: 'group-no-hints',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.group,
+      clue: 'A shared clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 100,
+      destination: groupRepository.destination,
+      additionalHints: const <String>['One', 'Two', 'Three'],
+      totalHintCount: 3,
+      groupRoomId: 'room-1',
+      members: groupRepository.twoMembers,
+      isHost: true,
+    );
+    final groupModel = MysteryJourneyViewModel(groupRepository);
+    await groupModel.initialize();
+    final voteCount = groupRepository.voteCount;
+    final outcome = await groupModel.castGroupVote(journey.GroupVoteType.hint);
+    expect(outcome, isNull);
+    expect(groupRepository.voteCount, voteCount);
+    expect(groupModel.message, 'All Mystery Hints have been unlocked.');
+    groupModel.dispose();
   });
 
   testWidgets(
@@ -835,6 +1116,9 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   int groupShakeWriteCount = 0;
   final List<journey.GroupChatMessage> chatMessages =
       <journey.GroupChatMessage>[];
+  final List<journey.ArrivalVerificationUpdate> arrivalMonitoringUpdates =
+      <journey.ArrivalVerificationUpdate>[];
+  Duration arrivalUpdateDelay = const Duration(milliseconds: 20);
   Object? startError;
   VoidCallback? shakeCallback;
   final Map<String, Set<String>> groupVotes = <String, Set<String>>{};
@@ -958,7 +1242,28 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   }
 
   @override
-  Future<journey.Journey> verifyArrival(journey.Journey value) async => value;
+  Future<journey.Journey> verifyArrival(
+    journey.Journey value, {
+    void Function(journey.ArrivalVerificationUpdate update)? onProgress,
+  }) async {
+    for (final update in arrivalMonitoringUpdates) {
+      onProgress?.call(update);
+      await Future<void>.delayed(arrivalUpdateDelay);
+    }
+    if (arrivalMonitoringUpdates.isNotEmpty &&
+        arrivalMonitoringUpdates.last.state ==
+            journey.ArrivalVerificationState.verified) {
+      active = value.copyWith(
+        status: journey.JourneyStatus.completed,
+        distanceMeters:
+            arrivalMonitoringUpdates.last.distanceMeters ??
+            value.distanceMeters,
+        completedAt: DateTime(2026),
+      );
+      return active!;
+    }
+    return value;
+  }
 
   @override
   Future<journey.Journey> simulateArrival(
