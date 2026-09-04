@@ -247,23 +247,25 @@ class ModalTitle extends StatelessWidget {
   const ModalTitle({
     super.key,
     required this.title,
-    required this.icon,
+    this.icon,
     this.subtitle,
     this.onClose,
   });
   final String title;
-  final IconData icon;
+  final IconData? icon;
   final String? subtitle;
   final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) => Row(
     children: <Widget>[
-      CircleAvatar(
-        backgroundColor: AppColors.softBlue,
-        child: Icon(icon, color: AppColors.primary, size: 19),
-      ),
-      const SizedBox(width: 11),
+      if (icon != null) ...<Widget>[
+        CircleAvatar(
+          backgroundColor: AppColors.softBlue,
+          child: Icon(icon, color: AppColors.primary, size: 19),
+        ),
+        const SizedBox(width: 11),
+      ],
       Expanded(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +318,7 @@ class SheetBody extends StatelessWidget {
     ),
     child: SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,

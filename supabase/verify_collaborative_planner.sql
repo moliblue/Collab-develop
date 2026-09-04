@@ -1,0 +1,1 @@
+select 'travel_plans' object,to_regclass('public.travel_plans') is not null ready union all select 'plan_days',to_regclass('public.plan_days') is not null union all select 'itinerary_cards',to_regclass('public.itinerary_cards') is not null union all select 'plan_members',to_regclass('public.plan_members') is not null;

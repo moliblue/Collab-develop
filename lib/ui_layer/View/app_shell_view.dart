@@ -34,31 +34,22 @@ class _AppShellViewState extends State<AppShellView> {
       vm.map,
       vm.plan,
       vm.profile,
-      vm.auth,
     ]);
     return AnimatedBuilder(
       animation: merged,
-      builder: (BuildContext context, _) => vm.requiresAuthentication
-          ? PopScope(
-              canPop: false,
-              child: Scaffold(
-                key: const Key('authentication_gate'),
-                body: SafeArea(
-                  child: ProfileModuleView(
-                    viewModel: vm.profile,
-                    authViewModel: vm.auth,
-                    notify: vm.showToast,
-                  ),
-                ),
-              ),
-            )
-          : PopScope(
-              canPop: !vm.hasNestedScreen,
-              onPopInvokedWithResult: (bool didPop, Object? result) {
-                if (!didPop && vm.hasNestedScreen) vm.back();
-              },
-              child: Scaffold(
-                body: SafeArea(
+      builder: (BuildContext context, _) => PopScope(
+        canPop: !vm.hasNestedScreen,
+        onPopInvokedWithResult: (bool didPop, Object? result) {
+          if (!didPop && vm.hasNestedScreen) vm.back();
+        },
+        child: Scaffold(
+          backgroundColor: const Color(0xFFEAF2F7),
+          body: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: ColoredBox(
+                  color: AppColors.background,
                   child: Stack(
                     children: <Widget>[
                       Column(
@@ -94,6 +85,7 @@ class _AppShellViewState extends State<AppShellView> {
                                 PlanModuleView(
                                   viewModel: vm.plan,
                                   bookmarks: vm.discovery.bookmarks,
+                                  recommendations: vm.discovery.places,
                                   onDiscover: () =>
                                       vm.selectTab(MainTab.discover),
                                   onViewRoute: vm.showDayRoute,
@@ -117,6 +109,9 @@ class _AppShellViewState extends State<AppShellView> {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -124,10 +119,9 @@ class _AppShellViewState extends State<AppShellView> {
     context,
     SheetBody(
       children: <Widget>[
-        ModalTitle(
+        const ModalTitle(
           title: 'User Profile & Settings',
-          subtitle:
-              widget.viewModel.auth.currentEmail ?? 'Not currently signed in',
+          subtitle: 'Amberly · explorer@gmail.com',
           icon: Icons.person_rounded,
         ),
         const SizedBox(height: 10),
@@ -213,10 +207,13 @@ class _Header extends StatelessWidget {
     ),
     child: Row(
       children: <Widget>[
-        if (viewModel.hasNestedScreen && viewModel.tab != MainTab.map)
+        if ((viewModel.hasNestedScreen && viewModel.tab != MainTab.map) ||
+            viewModel.tab == MainTab.plan)
           IconButton(
             tooltip: 'Back',
-            onPressed: viewModel.back,
+            onPressed: viewModel.hasNestedScreen
+                ? viewModel.back
+                : () => viewModel.selectTab(MainTab.discover),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.elevated,
               side: const BorderSide(color: AppColors.border),
@@ -256,19 +253,6 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          if (viewModel.plan.hasConflict)
-            IconButton(
-              tooltip: 'Time conflict',
-              onPressed: () => viewModel.showToast(
-                'Open the itinerary conflict control to auto-adjust.',
-                AppColors.warning,
-              ),
-              icon: const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.warning,
-                size: 19,
-              ),
-            ),
           IconButton(
             tooltip: 'Export PDF',
             onPressed: () => viewModel.showToast(
