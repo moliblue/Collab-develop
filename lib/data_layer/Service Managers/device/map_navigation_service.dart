@@ -50,6 +50,26 @@ class MapNavigationService {
       FlutterCompass.events?.map((CompassEvent event) => event.heading);
 
   Future<RoadRoute> fetchDrivingRoute(List<LatLng> waypoints) async {
+    return _fetchOsrmRoute(
+      waypoints,
+      host: 'router.project-osrm.org',
+      routePathPrefix: '/route/v1/driving',
+    );
+  }
+
+  Future<RoadRoute> fetchWalkingRoute(List<LatLng> waypoints) async {
+    return _fetchOsrmRoute(
+      waypoints,
+      host: 'routing.openstreetmap.de',
+      routePathPrefix: '/routed-foot/route/v1/driving',
+    );
+  }
+
+  Future<RoadRoute> _fetchOsrmRoute(
+    List<LatLng> waypoints, {
+    required String host,
+    required String routePathPrefix,
+  }) async {
     if (waypoints.length < 2) {
       throw ArgumentError('At least two route points are required.');
     }
@@ -57,8 +77,8 @@ class MapNavigationService {
         .map((LatLng point) => '${point.longitude},${point.latitude}')
         .join(';');
     final uri = Uri.https(
-      'router.project-osrm.org',
-      '/route/v1/driving/$coordinates',
+      host,
+      '$routePathPrefix/$coordinates',
       <String, String>{
         'overview': 'full',
         'geometries': 'geojson',

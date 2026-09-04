@@ -26,7 +26,6 @@ class AuthRepository {
 
       debugPrint('Supabase authentication successful');
       debugPrint('Supabase currentUser.id: ${user.id}');
-      await _runDatabaseConnectionTest();
       return null;
     } on AuthException catch (error) {
       final message = error.message.toLowerCase();
@@ -40,15 +39,6 @@ class AuthRepository {
     } catch (error) {
       debugPrint('Supabase authentication connection error: $error');
       return 'Unable to connect to the authentication service.';
-    }
-  }
-
-  Future<void> _runDatabaseConnectionTest() async {
-    try {
-      final rowCount = await _service.testHeritageQuestsRead();
-      debugPrint('Supabase heritage_quests test successful: $rowCount rows');
-    } catch (error) {
-      debugPrint('Supabase heritage_quests test failed: $error');
     }
   }
 }

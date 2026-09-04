@@ -16,11 +16,6 @@ class SupabaseService {
     required String password,
   }) => _client.auth.signInWithPassword(email: email, password: password);
 
-  Future<int> testHeritageQuestsRead() async {
-    final rows = await _client.from('heritage_quests').select();
-    return rows.length;
-  }
-
   Future<Map<String, dynamic>?> getQuestCompletionByOsmId({
     required String userId,
     required String osmId,
