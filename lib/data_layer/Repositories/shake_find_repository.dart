@@ -13,7 +13,10 @@ abstract interface class ShakeFindRepository {
   Future<Journey> startJourney(JourneyMode mode, TravelPreferences preferences);
   Future<Journey> requestHint(Journey journey);
   Future<Journey> revealRoute(Journey journey);
-  Future<Journey> verifyArrival(Journey journey);
+  Future<Journey> verifyArrival(
+    Journey journey, {
+    void Function(ArrivalVerificationUpdate update)? onProgress,
+  });
   Future<Journey> simulateArrival(Journey journey, {bool testExplorer = false});
   Future<ArrivalCheckResult> checkArrivalNow(Journey journey);
   Future<void> cancelJourney();

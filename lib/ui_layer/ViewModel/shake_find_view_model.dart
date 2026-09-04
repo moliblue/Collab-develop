@@ -363,15 +363,19 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   bool _groupPreferencesSet = false;
   List<NearbyGroupRoom> _nearbyRooms = const <NearbyGroupRoom>[];
   bool _monitoring = false;
+  ArrivalVerificationUpdate _arrivalVerification =
+      const ArrivalVerificationUpdate.idle();
   bool _chatSending = false;
   bool _groupSyncing = false;
   bool _disposed = false;
   String? _message;
   List<GroupChatMessage> _messages = const <GroupChatMessage>[];
   GroupVoteOutcome? _lastVote;
+  String? _groupVoteFeedback;
   final Map<GroupVoteType, GroupVoteOutcome> _groupVotes =
       <GroupVoteType, GroupVoteOutcome>{};
   Timer? _groupSyncTimer;
+  Timer? _arrivalCountdownTimer;
 
   app.MysteryStage get stage => _stage;
   app.JourneyMode get mode => _mode;
@@ -390,17 +394,21 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey!.status != JourneyStatus.completed &&
       _journey!.status != JourneyStatus.cancelled;
   bool get scanning => _scanning;
+  ArrivalVerificationUpdate get arrivalVerification => _arrivalVerification;
   bool get chatSending => _chatSending;
   bool get matched => _journey?.groupRoomId != null;
   List<NearbyGroupRoom> get nearbyRooms =>
       List<NearbyGroupRoom>.unmodifiable(_nearbyRooms);
   int get roomMemberCount => _journey?.members.length ?? 0;
   bool get groupChatUnlocked => roomMemberCount > 1;
+  String? get currentUserId => _profile?.userId;
   bool get ready => _ready;
   bool get allRoomMembersReady =>
       members.isNotEmpty && members.every((member) => member.isReady);
   bool get groupPreferencesSet => _groupPreferencesSet;
   int get hintCount => _journey?.additionalHints.length ?? 0;
+  bool get hasHintsRemaining => _journey?.hasHintsRemaining ?? false;
+  String? get groupVoteFeedback => _groupVoteFeedback;
   bool get routeRevealed => _journey?.exactRouteRevealed ?? false;
   bool get isHost => _journey?.isHost ?? false;
   String get groupPreferenceMode => !_groupPreferencesSet
@@ -530,7 +538,14 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       unawaited(_listenForShake());
     } else if (value == app.MysteryStage.active && journeyActive) {
       _message = null;
-      unawaited(_monitorArrival());
+      if (currentUserArrived) {
+        _setArrivalVerification(
+          const ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.verified,
+          ),
+          notify: false,
+        );
+      }
     } else if (_listening) {
       unawaited(_repository.stopShakeDetection());
       _listening = false;
@@ -645,8 +660,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     setStage(app.MysteryStage.shake);
   }
 
-  void addMessage(String value) {
-    if (value.trim().isNotEmpty) unawaited(_sendGroupMessage(value));
+  Future<void> addMessage(String value) async {
+    if (value.trim().isNotEmpty) await _sendGroupMessage(value);
   }
 
   Future<void> _sendGroupMessage(String value) async {
@@ -657,7 +672,9 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _chatSending = true;
     _notify();
     try {
-      _messages = await _repository.sendGroupMessage(roomId, value);
+      _messages = _orderedMessages(
+        await _repository.sendGroupMessage(roomId, value),
+      );
       _message = null;
     } catch (error) {
       _message = _friendlyError(error);
@@ -671,7 +688,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     final roomId = _journey?.groupRoomId;
     if (roomId == null || !groupChatUnlocked) return;
     try {
-      _messages = await _repository.getGroupMessages(roomId);
+      _messages = _orderedMessages(await _repository.getGroupMessages(roomId));
     } catch (error) {
       _message = _friendlyError(error);
     }
@@ -726,7 +743,6 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         await _repository.stopShakeDetection();
         _listening = false;
         _stage = app.MysteryStage.active;
-        unawaited(_monitorArrival());
       } catch (error) {
         _message = _friendlyError(error);
       } finally {
@@ -904,7 +920,9 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey = _journey?.copyWith(members: values);
       _syncOwnReadyFromMembers();
       if (values.length > 1) {
-        _messages = await _repository.getGroupMessages(roomId);
+        _messages = _orderedMessages(
+          await _repository.getGroupMessages(roomId),
+        );
       }
       _notify();
     } catch (error) {
@@ -1069,11 +1087,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         ),
       );
       _groupVotes.clear();
+      _groupVoteFeedback = null;
       _stage = app.MysteryStage.active;
       _ready = false;
       _startGroupSync();
       _message = null;
-      unawaited(_monitorArrival());
     } catch (error, stackTrace) {
       debugPrint('Journey start failed: $error\n$stackTrace');
       _message = _friendlyError(error);
@@ -1100,7 +1118,20 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     }
     _monitoring = true;
     try {
-      _journey = await _repository.verifyArrival(current);
+      _journey = await _repository.verifyArrival(
+        current,
+        onProgress: (update) {
+          if (_disposed) return;
+          _setArrivalVerification(update, notify: false);
+          if (update.distanceMeters case final distance?) {
+            _journey = (_journey ?? current).copyWith(
+              status: JourneyStatus.verifying,
+              distanceMeters: distance,
+            );
+          }
+          _notify();
+        },
+      );
       if (_journey?.status == JourneyStatus.completed) {
         _groupSyncTimer?.cancel();
         _stage = app.MysteryStage.complete;
@@ -1155,6 +1186,12 @@ class MysteryJourneyViewModel extends ChangeNotifier {
           _stage = app.MysteryStage.complete;
           _message = 'Arrival verified. Group Journey completed.';
         } else {
+          _setArrivalVerification(
+            const ArrivalVerificationUpdate(
+              state: ArrivalVerificationState.verified,
+            ),
+            notify: false,
+          );
           _stage = app.MysteryStage.active;
           _message =
               'Your arrival is verified. Waiting for the other travellers.';
@@ -1187,19 +1224,38 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       final result = await _repository.checkArrivalNow(current);
       _journey = current.copyWith(distanceMeters: result.distanceMeters);
       if (!result.hasReliableAccuracy) {
-        _message =
-            'GPS accuracy is ${result.accuracyMeters.toStringAsFixed(0)} m. '
-            'Move to an open area; 30 m or better is required.';
+        _setArrivalVerification(
+          ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.waitingForAccuracy,
+            distanceMeters: result.distanceMeters,
+            accuracyMeters: result.accuracyMeters,
+          ),
+          notify: false,
+        );
+        _message = null;
       } else if (result.isInsideArrivalRadius) {
-        _message =
-            'You are ${result.distanceMeters.toStringAsFixed(0)} m away. '
-            'Inside the 50 m arrival zone; remain there for 10 seconds.';
-        if (!_monitoring) unawaited(_monitorArrival());
+        _setArrivalVerification(
+          ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.verifying,
+            secondsRemaining: 10,
+            distanceMeters: result.distanceMeters,
+            accuracyMeters: result.accuracyMeters,
+          ),
+          notify: false,
+        );
+        _message = null;
       } else {
-        _message =
-            'Not arrived yet: ${result.distanceMeters.toStringAsFixed(0)} m '
-            'away (GPS accuracy ${result.accuracyMeters.toStringAsFixed(0)} m).';
+        _setArrivalVerification(
+          ArrivalVerificationUpdate(
+            state: ArrivalVerificationState.outsideRange,
+            distanceMeters: result.distanceMeters,
+            accuracyMeters: result.accuracyMeters,
+          ),
+          notify: false,
+        );
+        _message = null;
       }
+      if (!_monitoring) unawaited(_monitorArrival());
     } catch (error) {
       _message = _friendlyError(error);
     } finally {
@@ -1218,6 +1274,10 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       await _repository.cancelJourney();
       _journey = null;
       _groupVotes.clear();
+      _setArrivalVerification(
+        const ArrivalVerificationUpdate.idle(),
+        notify: false,
+      );
       _stage = app.MysteryStage.home;
       _message = cancelledJourney?.mode == JourneyMode.group
           ? 'You left the Group Journey. Other travellers can continue.'
@@ -1233,6 +1293,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   Future<void> unlockHint() async {
     final current = _journey;
     if (current == null || _loading) return;
+    if (!current.hasHintsRemaining) {
+      _message = 'All Mystery Hints have been unlocked.';
+      _notify();
+      return;
+    }
     _loading = true;
     _notify();
     try {
@@ -1260,6 +1325,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _notify();
       return null;
     }
+    if (type == GroupVoteType.hint && !current.hasHintsRemaining) {
+      _message = 'All Mystery Hints have been unlocked.';
+      _notify();
+      return null;
+    }
     _loading = true;
     _message = null;
     _notify();
@@ -1270,7 +1340,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         simulateTestExplorer: simulateTestExplorer,
       );
       _groupVotes[type] = _lastVote!;
-      _message = _lastVote!.message;
+      _message = null;
+      _groupVoteFeedback = _lastVote!.message;
       if (_lastVote!.passed) {
         final refreshed = await _repository.getActiveJourney();
         if (refreshed != null) _journey = refreshed;
@@ -1309,6 +1380,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       final refreshed = await _repository.getActiveJourney();
       if (refreshed != null && refreshed.groupRoomId == roomId) {
         final wasWaiting = _journey?.id.startsWith('waiting:') == true;
+        final previousHintCount = _journey?.additionalHints.length ?? 0;
+        final routeWasRevealed = _journey?.exactRouteRevealed ?? false;
         _journey = refreshed;
         _syncOwnReadyFromMembers();
         _groupPreferencesSet = refreshed.groupPreferencesSet;
@@ -1325,16 +1398,29 @@ class MysteryJourneyViewModel extends ChangeNotifier {
           unawaited(_listenForShake());
         }
         if (refreshed.members.length > 1) {
-          _messages = await _repository.getGroupMessages(roomId);
+          _messages = _orderedMessages(
+            await _repository.getGroupMessages(roomId),
+          );
         }
         if (!refreshed.id.startsWith('waiting:') &&
             refreshed.status != JourneyStatus.completed &&
             refreshed.status != JourneyStatus.cancelled) {
-          final voteStatuses =
-              await Future.wait<GroupVoteOutcome>(<Future<GroupVoteOutcome>>[
-                _repository.getGroupVoteStatus(refreshed, GroupVoteType.hint),
-                _repository.getGroupVoteStatus(refreshed, GroupVoteType.route),
-              ]);
+          if (refreshed.additionalHints.length > previousHintCount) {
+            _groupVoteFeedback =
+                'Group Hint approved. The next Hint has been unlocked for everyone.';
+          } else if (!routeWasRevealed && refreshed.exactRouteRevealed) {
+            _groupVoteFeedback =
+                'Route Reveal approved. The exact Mystery Destination is now visible to the team.';
+          }
+          final requests = <Future<GroupVoteOutcome>>[
+            if (refreshed.hasHintsRemaining)
+              _repository.getGroupVoteStatus(refreshed, GroupVoteType.hint),
+            _repository.getGroupVoteStatus(refreshed, GroupVoteType.route),
+          ];
+          final voteStatuses = await Future.wait<GroupVoteOutcome>(requests);
+          if (!refreshed.hasHintsRemaining) {
+            _groupVotes.remove(GroupVoteType.hint);
+          }
           for (final status in voteStatuses) {
             _groupVotes[status.type] = status;
           }
@@ -1376,6 +1462,10 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   void resetForNewQuest() {
     if (journeyActive) return;
     _journey = null;
+    _setArrivalVerification(
+      const ArrivalVerificationUpdate.idle(),
+      notify: false,
+    );
     _stage = app.MysteryStage.home;
     _message = null;
     _notify();
@@ -1388,6 +1478,44 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     'art_streets' => 'Art & streets',
     _ => value,
   };
+
+  static List<GroupChatMessage> _orderedMessages(
+    List<GroupChatMessage> messages,
+  ) => List<GroupChatMessage>.of(messages)
+    ..sort((left, right) {
+      final time = left.createdAt.compareTo(right.createdAt);
+      return time != 0 ? time : left.id.compareTo(right.id);
+    });
+
+  void _setArrivalVerification(
+    ArrivalVerificationUpdate update, {
+    bool notify = true,
+  }) {
+    _arrivalVerification = update;
+    _arrivalCountdownTimer?.cancel();
+    _arrivalCountdownTimer = null;
+    if (update.state == ArrivalVerificationState.verifying) {
+      _arrivalCountdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (_disposed) return;
+        final remaining = (_arrivalVerification.secondsRemaining - 1).clamp(
+          0,
+          10,
+        );
+        _arrivalVerification = ArrivalVerificationUpdate(
+          state: ArrivalVerificationState.verifying,
+          secondsRemaining: remaining,
+          distanceMeters: _arrivalVerification.distanceMeters,
+          accuracyMeters: _arrivalVerification.accuracyMeters,
+        );
+        if (remaining == 0) {
+          _arrivalCountdownTimer?.cancel();
+          _arrivalCountdownTimer = null;
+        }
+        _notify();
+      });
+    }
+    if (notify) _notify();
+  }
 
   static String _friendlyError(Object error) {
     final value = error.toString();
@@ -1409,6 +1537,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _groupSyncTimer?.cancel();
+    _arrivalCountdownTimer?.cancel();
     unawaited(_repository.dispose());
     super.dispose();
   }
