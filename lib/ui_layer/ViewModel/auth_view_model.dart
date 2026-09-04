@@ -1,10 +1,19 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../data_layer/Service Managers/Remote Services/supabase_service.dart';
 
 class AuthViewModel extends ChangeNotifier {
+  AuthViewModel({SupabaseService? supabaseService})
+    : _supabase = supabaseService ?? const SupabaseService();
+
+  final SupabaseService _supabase;
   bool _busy = false;
   bool _recoverySent = false;
   bool get busy => _busy;
   bool get recoverySent => _recoverySent;
+  bool get isAuthenticated => _supabase.isAuthenticated;
+  String? get currentEmail => _supabase.currentUser?.email;
 
   Future<String?> login(String email, String password) async {
     final format = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -13,16 +22,12 @@ class AuthViewModel extends ChangeNotifier {
     }
     if (!format.hasMatch(email.trim())) return 'Invalid email format.';
     if (password.length < 8) return 'Password must be at least 8 characters.';
-    _busy = true;
-    notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    _busy = false;
-    notifyListeners();
-    if (email.trim().toLowerCase() != 'explorer@gmail.com' ||
-        password != 'Password123!') {
-      return 'Either email or password is incorrect.';
-    }
-    return null;
+    return _run(() async {
+      await _supabase.client.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
+    });
   }
 
   Future<String?> register({
@@ -40,7 +45,7 @@ class AuthViewModel extends ChangeNotifier {
       confirmation,
       phone,
       ic,
-    ].any((String value) => value.trim().isEmpty)) {
+    ].any((value) => value.trim().isEmpty)) {
       return 'Please fill in all required fields.';
     }
     if (name.trim().length < 3 || name.trim().length > 30) {
@@ -51,21 +56,55 @@ class AuthViewModel extends ChangeNotifier {
     }
     if (password.length < 8) return 'Password must be at least 8 characters.';
     if (password != confirmation) return 'Passwords do not match.';
-    _busy = true;
-    notifyListeners();
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    _busy = false;
-    notifyListeners();
-    return null;
+    return _run(() async {
+      final response = await _supabase.client.auth.signUp(
+        email: email.trim(),
+        password: password,
+        data: <String, dynamic>{
+          'display_name': name.trim(),
+          'phone': phone.trim(),
+          'ic': ic.trim(),
+        },
+      );
+      if (response.user == null) {
+        throw const AuthException('Account creation did not return a user.');
+      }
+    });
   }
 
-  String? recover(String email) {
+  Future<String?> recover(String email) async {
     if (!email.contains('@') || !email.contains('.')) {
       return 'Enter a valid registered email address.';
     }
-    _recoverySent = true;
+    final error = await _run(
+      () => _supabase.client.auth.resetPasswordForEmail(email.trim()),
+    );
+    if (error == null) {
+      _recoverySent = true;
+      notifyListeners();
+    }
+    return error;
+  }
+
+  Future<void> logout() async {
+    await _supabase.client.auth.signOut();
     notifyListeners();
-    return null;
+  }
+
+  Future<String?> _run(Future<void> Function() action) async {
+    _busy = true;
+    notifyListeners();
+    try {
+      await action();
+      return null;
+    } on AuthException catch (error) {
+      return error.message;
+    } catch (_) {
+      return 'Authentication service is unavailable. Please try again.';
+    } finally {
+      _busy = false;
+      notifyListeners();
+    }
   }
 
   void resetRecovery() {

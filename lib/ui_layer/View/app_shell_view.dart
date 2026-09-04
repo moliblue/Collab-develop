@@ -34,73 +34,89 @@ class _AppShellViewState extends State<AppShellView> {
       vm.map,
       vm.plan,
       vm.profile,
+      vm.auth,
     ]);
     return AnimatedBuilder(
       animation: merged,
-      builder: (BuildContext context, _) => PopScope(
-        canPop: !vm.hasNestedScreen,
-        onPopInvokedWithResult: (bool didPop, Object? result) {
-          if (!didPop && vm.hasNestedScreen) vm.back();
-        },
-        child: Scaffold(
-          body: SafeArea(
-            child: Stack(
-              children: <Widget>[
-                Column(
-                  children: <Widget>[
-                    _Header(
-                      viewModel: vm,
-                      onProfileSettings: () => _profileSettings(context),
-                    ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: vm.tab.index,
+      builder: (BuildContext context, _) => vm.requiresAuthentication
+          ? PopScope(
+              canPop: false,
+              child: Scaffold(
+                key: const Key('authentication_gate'),
+                body: SafeArea(
+                  child: ProfileModuleView(
+                    viewModel: vm.profile,
+                    authViewModel: vm.auth,
+                    notify: vm.showToast,
+                  ),
+                ),
+              ),
+            )
+          : PopScope(
+              canPop: !vm.hasNestedScreen,
+              onPopInvokedWithResult: (bool didPop, Object? result) {
+                if (!didPop && vm.hasNestedScreen) vm.back();
+              },
+              child: Scaffold(
+                body: SafeArea(
+                  child: Stack(
+                    children: <Widget>[
+                      Column(
                         children: <Widget>[
-                          DiscoverModuleView(
-                            viewModel: vm.discovery,
-                            onDirections: vm.showDirections,
-                            onAddToPlan: vm.addToPlan,
-                            notify: vm.showToast,
+                          _Header(
+                            viewModel: vm,
+                            onProfileSettings: () => _profileSettings(context),
                           ),
-                          MapModuleView(
-                            viewModel: vm.map,
-                            places: vm.discovery.places,
-                            active: vm.tab == MainTab.map,
-                            onBack: vm.back,
-                            onXpReward: vm.rewardXp,
-                            notify: vm.showToast,
+                          Expanded(
+                            child: IndexedStack(
+                              index: vm.tab.index,
+                              children: <Widget>[
+                                DiscoverModuleView(
+                                  viewModel: vm.discovery,
+                                  onDirections: vm.showDirections,
+                                  onAddToPlan: vm.addToPlan,
+                                  notify: vm.showToast,
+                                ),
+                                MapModuleView(
+                                  viewModel: vm.map,
+                                  places: vm.discovery.places,
+                                  active: vm.tab == MainTab.map,
+                                  onBack: vm.back,
+                                  onXpReward: vm.rewardXp,
+                                  notify: vm.showToast,
+                                ),
+                                MysteryJourneyView(
+                                  viewModel: vm.mystery,
+                                  onViewPassport: vm.openPassport,
+                                  onDirections: vm.showMysteryDirections,
+                                  notify: vm.showToast,
+                                ),
+                                PlanModuleView(
+                                  viewModel: vm.plan,
+                                  bookmarks: vm.discovery.bookmarks,
+                                  onDiscover: () =>
+                                      vm.selectTab(MainTab.discover),
+                                  onViewRoute: vm.showDayRoute,
+                                  notify: vm.showToast,
+                                ),
+                                ProfileModuleView(
+                                  viewModel: vm.profile,
+                                  authViewModel: vm.auth,
+                                  notify: vm.showToast,
+                                ),
+                              ],
+                            ),
                           ),
-                          MysteryJourneyView(
-                            viewModel: vm.mystery,
-                            onViewPassport: vm.openPassport,
-                            onDirections: vm.showMysteryDirections,
-                            notify: vm.showToast,
-                          ),
-                          PlanModuleView(
-                            viewModel: vm.plan,
-                            bookmarks: vm.discovery.bookmarks,
-                            onDiscover: () => vm.selectTab(MainTab.discover),
-                            onViewRoute: vm.showDayRoute,
-                            notify: vm.showToast,
-                          ),
-                          ProfileModuleView(
-                            viewModel: vm.profile,
-                            authViewModel: vm.auth,
-                            notify: vm.showToast,
-                          ),
+                          _BottomNavigation(viewModel: vm),
                         ],
                       ),
-                    ),
-                    _BottomNavigation(viewModel: vm),
-                  ],
+                      if (vm.toast != null)
+                        _Toast(data: vm.toast!, onDismiss: vm.dismissToast),
+                    ],
+                  ),
                 ),
-                if (vm.toast != null)
-                  _Toast(data: vm.toast!, onDismiss: vm.dismissToast),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -108,9 +124,10 @@ class _AppShellViewState extends State<AppShellView> {
     context,
     SheetBody(
       children: <Widget>[
-        const ModalTitle(
+        ModalTitle(
           title: 'User Profile & Settings',
-          subtitle: 'Amberly · explorer@gmail.com',
+          subtitle:
+              widget.viewModel.auth.currentEmail ?? 'Not currently signed in',
           icon: Icons.person_rounded,
         ),
         const SizedBox(height: 10),

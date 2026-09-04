@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
+import '../../data_layer/Repositories/shake_find_repository.dart';
+import '../../data_layer/Repositories/shake_find_repository_impl.dart';
+import '../../data_layer/Service Managers/device/shake_sensor_service.dart';
 import 'auth_view_model.dart';
 import 'collaborative_planning_view_model.dart';
 import 'discovery_view_model.dart';
@@ -20,13 +23,21 @@ class AppToastData {
 }
 
 class AppViewModel extends ChangeNotifier {
-  AppViewModel()
-    : mystery = MysteryJourneyViewModel(),
-      discovery = DiscoveryViewModel(),
-      map = MapQuestViewModel(),
-      plan = CollaborativePlanningViewModel(),
-      profile = ProfileViewModel(),
-      auth = AuthViewModel();
+  AppViewModel({
+    ShakeFindRepository? mysteryRepository,
+    AuthViewModel? authViewModel,
+  }) : mystery = MysteryJourneyViewModel(
+         mysteryRepository ?? ShakeFindRepositoryImpl(ShakeSensorService()),
+       ),
+       discovery = DiscoveryViewModel(),
+       map = MapQuestViewModel(),
+       plan = CollaborativePlanningViewModel(),
+       profile = ProfileViewModel(),
+       auth = authViewModel ?? AuthViewModel() {
+    mystery.addListener(_syncMysteryProfile);
+    auth.addListener(_handleAuthChanged);
+    if (requiresAuthentication) profile.setStage(ProfileStage.login);
+  }
 
   final MysteryJourneyViewModel mystery;
   final DiscoveryViewModel discovery;
@@ -41,6 +52,22 @@ class AppViewModel extends ChangeNotifier {
 
   MainTab get tab => _tab;
   AppToastData? get toast => _toast;
+  bool get requiresAuthentication => !auth.isAuthenticated;
+
+  void _handleAuthChanged() {
+    if (requiresAuthentication) {
+      if (profile.stage != ProfileStage.login &&
+          profile.stage != ProfileStage.register &&
+          profile.stage != ProfileStage.recover) {
+        profile.setStage(ProfileStage.login);
+      }
+    } else if (profile.stage == ProfileStage.login ||
+        profile.stage == ProfileStage.register ||
+        profile.stage == ProfileStage.recover) {
+      profile.authenticated();
+    }
+    notifyListeners();
+  }
 
   void selectTab(MainTab value) {
     if (value == MainTab.map && _tab != MainTab.map) _previousBeforeMap = _tab;
@@ -55,8 +82,29 @@ class AppViewModel extends ChangeNotifier {
   }
 
   void showMysteryDirections() {
-    final place = discovery.places.firstWhere(
-      (HeritagePlace p) => p.id == 'sultan',
+    final destination = mystery.revealedDestination;
+    if (destination == null) {
+      showToast(
+        'Confirm Reveal Exact Route before opening navigation.',
+        AppColors.warning,
+      );
+      return;
+    }
+    final place = HeritagePlace(
+      id: destination.id,
+      name: destination.name,
+      category: destination.category,
+      state: '',
+      shortDescription: destination.description,
+      description: destination.description,
+      image: destination.imageUrl ?? 'assets/sultan_abdul_samad.png',
+      distanceKm: mystery.distanceMeters / 1000,
+      rating: 0,
+      reviewsCount: 0,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+      address: destination.address,
+      hours: '',
     );
     showDirections(place);
   }
@@ -140,6 +188,16 @@ class AppViewModel extends ChangeNotifier {
     profile.rewardXp(amount);
   }
 
+  void _syncMysteryProfile() {
+    final value = mystery.profile;
+    if (value == null) return;
+    profile.applyJourneyProgress(
+      xp: value.xp,
+      explorerLevel: value.explorerLevel,
+      streakDays: value.streakDays,
+    );
+  }
+
   void showToast(String message, Color color) {
     _toastTimer?.cancel();
     _toast = AppToastData(message, color);
@@ -165,6 +223,8 @@ class AppViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _toastTimer?.cancel();
+    mystery.removeListener(_syncMysteryProfile);
+    auth.removeListener(_handleAuthChanged);
     mystery.dispose();
     discovery.dispose();
     map.dispose();

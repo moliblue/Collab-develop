@@ -4,7 +4,6 @@ enum MysteryStage {
   home,
   groupSetup,
   groupWaiting,
-  preferences,
   shake,
   active,
   verificationFailed,
