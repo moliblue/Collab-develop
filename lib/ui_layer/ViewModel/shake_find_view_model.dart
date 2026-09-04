@@ -359,7 +359,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   bool _listening = false;
   bool _sensorUnavailable = false;
   bool _scanning = false;
-  bool _ready = true;
+  bool _ready = false;
   bool _groupPreferencesSet = false;
   List<NearbyGroupRoom> _nearbyRooms = const <NearbyGroupRoom>[];
   bool _monitoring = false;
@@ -395,10 +395,15 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   int get roomMemberCount => _journey?.members.length ?? 0;
   bool get groupChatUnlocked => roomMemberCount > 1;
   bool get ready => _ready;
+  bool get allRoomMembersReady =>
+      members.isNotEmpty && members.every((member) => member.isReady);
   bool get groupPreferencesSet => _groupPreferencesSet;
   int get hintCount => _journey?.additionalHints.length ?? 0;
   bool get routeRevealed => _journey?.exactRouteRevealed ?? false;
   bool get isHost => _journey?.isHost ?? false;
+  String get groupPreferenceMode => !_groupPreferencesSet
+      ? 'not_set'
+      : _journey?.preferences.selectionMode ?? 'edited_preferences';
   List<JourneyMember> get members =>
       _journey?.members ?? const <JourneyMember>[];
   List<String> get messages => List<String>.unmodifiable(_messages);
@@ -453,6 +458,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         _categories = _journey!.preferences.categories.map(_uiCategory).toSet();
         _radius = _journey!.preferences.radiusKm.clamp(5, 50);
         _groupPreferencesSet = _journey!.groupPreferencesSet;
+        _syncOwnReadyFromMembers();
         _stage = app.MysteryStage.home;
         if (_journey!.mode == JourneyMode.group) _startGroupSync();
       }
@@ -479,11 +485,16 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         value == app.MysteryStage.shake &&
         _journey?.id.startsWith('waiting:') == true;
     if (startingCurrentGroupRoom &&
-        (!isHost || roomMemberCount < 2 || !_groupPreferencesSet)) {
+        (!isHost ||
+            roomMemberCount < 2 ||
+            !_groupPreferencesSet ||
+            !allRoomMembersReady)) {
       _message = !isHost
           ? 'Only the host can start the Group Journey.'
           : roomMemberCount < 2
           ? 'At least two travellers are required to start the Group Journey.'
+          : !allRoomMembersReady
+          ? 'Everyone must be ready before starting.'
           : 'Set the group preferences before starting the Group Journey.';
       _notify();
       return;
@@ -549,9 +560,34 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     _notify();
   }
 
-  void setReady(bool value) {
-    _ready = value;
+  Future<void> setReady(bool value) async {
+    final roomId = _journey?.groupRoomId;
+    if (_stage != app.MysteryStage.groupWaiting ||
+        roomId == null ||
+        _journey?.id.startsWith('waiting:') != true ||
+        _loading) {
+      return;
+    }
+    _loading = true;
+    _message = null;
     _notify();
+    try {
+      final updated = await _repository.setGroupRoomReady(roomId, value);
+      _journey = _journey?.copyWith(members: updated);
+      _syncOwnReadyFromMembers();
+    } catch (error) {
+      _message = _friendlyError(error);
+    } finally {
+      _loading = false;
+      _notify();
+    }
+  }
+
+  void _syncOwnReadyFromMembers() {
+    final userId = _profile?.userId;
+    _ready =
+        userId != null &&
+        members.any((member) => member.userId == userId && member.isReady);
   }
 
   void setGroupPreferences(bool value) {
@@ -670,6 +706,8 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey = await _repository.createGroupRoom();
       _mode = app.JourneyMode.group;
       _groupPreferencesSet = false;
+      _ready = false;
+      _syncOwnReadyFromMembers();
       _stage = app.MysteryStage.groupWaiting;
       _startGroupSync();
     } catch (error, stackTrace) {
@@ -693,6 +731,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _categories = _journey!.preferences.categories.map(_uiCategory).toSet();
       _radius = _journey!.preferences.radiusKm.clamp(5, 50);
       _groupPreferencesSet = _journey!.groupPreferencesSet;
+      _syncOwnReadyFromMembers();
       _stage = app.MysteryStage.groupWaiting;
       _startGroupSync();
     } catch (error) {
@@ -705,7 +744,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
 
   Future<void> saveGroupPreferences() async {
     final roomId = _journey?.groupRoomId;
-    if (roomId == null || !isHost || roomMemberCount < 2 || _loading) return;
+    if (roomId == null || !isHost || _loading) return;
     _loading = true;
     _message = null;
     _notify();
@@ -729,12 +768,38 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> useSavedGroupPreferences() async {
+    final roomId = _journey?.groupRoomId;
+    if (roomId == null || !isHost || _loading) return;
+    _loading = true;
+    _message = null;
+    _notify();
+    try {
+      final saved = await _repository.getSavedPreferences();
+      final preferences = saved.copyWith(useSavedPreferences: true);
+      await _repository.saveGroupRoomPreferences(roomId, preferences);
+      _categories = preferences.categories.map(_uiCategory).toSet();
+      _radius = preferences.radiusKm.clamp(5, 50);
+      _journey = _journey?.copyWith(
+        preferences: preferences,
+        groupPreferencesSet: true,
+      );
+      _groupPreferencesSet = true;
+      _message = 'Saved travel preferences applied to this room.';
+    } catch (error) {
+      _message = _friendlyError(error);
+    } finally {
+      _loading = false;
+      _notify();
+    }
+  }
+
   Future<void> useGroupSurpriseMe() async {
     final roomId = _journey?.groupRoomId;
-    if (roomId == null || !isHost || roomMemberCount < 2 || _loading) {
+    if (roomId == null || !isHost || _loading) {
       _message = !isHost
           ? 'Only the host can set Group Journey preferences.'
-          : 'At least two travellers are required before setting group preferences.';
+          : 'The room is not ready for preferences yet.';
       _notify();
       return;
     }
@@ -770,6 +835,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     try {
       final values = await _repository.refreshGroupMembers(roomId);
       _journey = _journey?.copyWith(members: values);
+      _syncOwnReadyFromMembers();
       if (values.length > 1) {
         _messages = await _repository.getGroupMessages(roomId);
       }
@@ -797,6 +863,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         testUsername,
       );
       _journey = _journey?.copyWith(members: members);
+      _syncOwnReadyFromMembers();
       _message = testUsername == testCompanionUsername
           ? 'Test Explorer joined this waiting room.'
           : 'A real test account was added to this waiting room.';
@@ -809,6 +876,35 @@ class MysteryJourneyViewModel extends ChangeNotifier {
   }
 
   Future<void> addTestCompanion() => addTestGroupMember(testCompanionUsername);
+
+  Future<void> beginGroupJourney() async {
+    final roomId = _journey?.groupRoomId;
+    if (_loading || roomId == null || !isHost) return;
+    _loading = true;
+    _message = null;
+    _notify();
+    var canStart = false;
+    try {
+      final currentMembers = await _repository.refreshGroupMembers(roomId);
+      _journey = _journey?.copyWith(members: currentMembers);
+      _syncOwnReadyFromMembers();
+      if (currentMembers.length < 2) {
+        _message = 'At least two travellers are required to start.';
+      } else if (!_groupPreferencesSet) {
+        _message = 'Set the group preferences before starting.';
+      } else if (currentMembers.any((member) => !member.isReady)) {
+        _message = 'Everyone must be ready before starting.';
+      } else {
+        canStart = true;
+      }
+    } catch (error) {
+      _message = _friendlyError(error);
+    } finally {
+      _loading = false;
+      _notify();
+    }
+    if (canStart) setStage(app.MysteryStage.shake);
+  }
 
   Future<void> leaveWaitingRoom() async {
     final roomId = _journey?.groupRoomId;
@@ -828,6 +924,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _messages = const <String>[];
       _nearbyRooms = const <NearbyGroupRoom>[];
       _groupPreferencesSet = false;
+      _ready = false;
       _stage = app.MysteryStage.home;
       _message = hostWasLeaving
           ? 'Waiting room closed.'
@@ -860,6 +957,11 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         _notify();
         return;
       }
+      if (!allRoomMembersReady) {
+        _message = 'Everyone must be ready before starting.';
+        _notify();
+        return;
+      }
     }
     _loading = true;
     _listening = false;
@@ -879,6 +981,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       );
       _groupVotes.clear();
       _stage = app.MysteryStage.active;
+      _ready = false;
       _startGroupSync();
       _message = null;
       unawaited(_monitorArrival());
@@ -1102,6 +1205,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       if (refreshed != null && refreshed.groupRoomId == roomId) {
         final wasWaiting = _journey?.id.startsWith('waiting:') == true;
         _journey = refreshed;
+        _syncOwnReadyFromMembers();
         _groupPreferencesSet = refreshed.groupPreferencesSet;
         _categories = refreshed.preferences.categories.map(_uiCategory).toSet();
         _radius = refreshed.preferences.radiusKm.clamp(5, 50);

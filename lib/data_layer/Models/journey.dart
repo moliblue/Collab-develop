@@ -140,12 +140,16 @@ class JourneyMember {
     required this.role,
     required this.status,
     this.participantStatus,
+    this.avatarUrl,
+    this.isReady = false,
   });
   final String userId;
   final String displayName;
   final String role;
   final String status;
   final String? participantStatus;
+  final String? avatarUrl;
+  final bool isReady;
   bool get isHost => role == 'host';
 }
 

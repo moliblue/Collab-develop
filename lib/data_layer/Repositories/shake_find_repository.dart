@@ -37,6 +37,7 @@ abstract interface class ShakeFindRepository {
     GroupVoteType type,
   );
   Future<List<JourneyMember>> refreshGroupMembers(String roomId);
+  Future<List<JourneyMember>> setGroupRoomReady(String roomId, bool isReady);
   Future<List<JourneyMember>> addTestGroupMember(
     String roomId,
     String testUsername,

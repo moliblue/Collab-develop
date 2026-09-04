@@ -474,7 +474,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ),
   );
 
-  Widget _memberTile(JourneyMember member, {Color color = AppColors.softBlue}) {
+  Widget _memberTile(
+    JourneyMember member, {
+    Color color = AppColors.softBlue,
+    bool showReadiness = false,
+  }) {
     final words = member.displayName.trim().split(RegExp(r'\s+'));
     final initials = words
         .take(2)
@@ -484,10 +488,15 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     return _TravellerTile(
       initials: initials.isEmpty ? '?' : initials,
       name: member.displayName,
-      status:
-          '${member.isHost ? 'Host · ' : ''}'
-          '${member.participantStatus ?? member.status}',
+      status: showReadiness
+          ? member.isReady
+                ? 'Ready'
+                : 'Not ready'
+          : member.participantStatus ?? member.status,
       color: color,
+      avatarUrl: member.avatarUrl,
+      isHost: member.isHost,
+      isReady: showReadiness ? member.isReady : null,
     );
   }
 
@@ -649,13 +658,21 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   );
 
   Widget _groupWaiting() => _scroll(<Widget>[
-    Eyebrow(
-      widget.viewModel.isHost ? 'Waiting room · You are host' : 'Waiting room',
-      color: AppColors.teal,
+    Row(
+      children: <Widget>[
+        const Expanded(
+          child: Eyebrow('Nearby travellers', color: AppColors.teal),
+        ),
+        AppChip(
+          label: '${widget.viewModel.roomMemberCount}/4',
+          selected: true,
+          selectedColor: AppColors.teal,
+        ),
+      ],
     ),
     const SizedBox(height: 4),
     SectionTitle(
-      '${widget.viewModel.roomMemberCount} travellers in the room',
+      widget.viewModel.isHost ? 'Your waiting room' : 'Group waiting room',
       subtitle: 'Room ID: ${widget.viewModel.journey?.groupRoomId ?? ''}',
     ),
     Align(
@@ -670,7 +687,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         ),
       ),
     ),
-    const SizedBox(height: 14),
+    const SizedBox(height: 10),
     AppCard(
       color: const Color(0xFFE9FAF4),
       borderColor: const Color(0xFFBFECDD),
@@ -679,17 +696,21 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ...widget.viewModel.members.indexed.expand(
             ((int, JourneyMember) item) => <Widget>[
               if (item.$1 > 0) const Divider(),
-              _memberTile(item.$2, color: Colors.white),
+              _memberTile(item.$2, color: Colors.white, showReadiness: true),
             ],
           ),
+          const Divider(),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text(
-              'I’m ready',
+              'I’m Ready',
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
             ),
+            subtitle: const Text('Let the host know you are ready to begin'),
             value: widget.viewModel.ready,
-            onChanged: widget.viewModel.setReady,
+            onChanged: widget.viewModel.loading
+                ? null
+                : (value) => unawaited(widget.viewModel.setReady(value)),
             activeThumbColor: AppColors.teal,
           ),
         ],
@@ -698,61 +719,105 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     const SizedBox(height: 14),
     AppCard(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.softBlue,
-              child: Icon(Icons.tune_rounded, color: AppColors.primary),
-            ),
-            title: const Text(
-              'Group preferences',
-              style: TextStyle(fontWeight: FontWeight.w900),
-            ),
-            subtitle: Text(
-              widget.viewModel.groupPreferencesSet
-                  ? '${widget.viewModel.categories.join(', ')} · ${widget.viewModel.radius.round()} km'
-                  : 'Host selects the group mood',
-            ),
-            trailing: TextButton(
-              onPressed:
-                  widget.viewModel.isHost &&
-                      widget.viewModel.roomMemberCount >= 2
-                  ? _editPreferencesSheet
-                  : null,
-              child: Text(
-                widget.viewModel.groupPreferencesSet ? 'Edit' : 'Set',
+          const Row(
+            children: <Widget>[
+              CircleAvatar(
+                backgroundColor: AppColors.softBlue,
+                child: Icon(Icons.tune_rounded, color: AppColors.primary),
               ),
-            ),
-          ),
-          if (widget.viewModel.groupChatUnlocked) ...<Widget>[
-            const Divider(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: widget.viewModel.groupChatUnlocked
-                    ? const Color(0xFFE9FAF4)
-                    : AppColors.elevated,
-                child: Icon(
-                  widget.viewModel.groupChatUnlocked
-                      ? Icons.chat_rounded
-                      : Icons.lock_rounded,
-                  color: widget.viewModel.groupChatUnlocked
-                      ? AppColors.teal
-                      : AppColors.muted,
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Journey Preferences',
+                  style: TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
-              title: Text(
-                widget.viewModel.groupChatUnlocked
-                    ? 'Group chat unlocked'
-                    : 'Group chat locked',
-                style: const TextStyle(fontWeight: FontWeight.w900),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (!widget.viewModel.groupPreferencesSet)
+            const Text(
+              'The host has not selected preferences yet.',
+              style: TextStyle(color: AppColors.textSecondary),
+            )
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                if (widget.viewModel.categories.isEmpty)
+                  const AppChip(label: 'Surprise Me', selected: true)
+                else
+                  ...widget.viewModel.categories.map(
+                    (category) => AppChip(label: category, selected: true),
+                  ),
+                AppChip(
+                  label: 'Within ${widget.viewModel.radius.round()} km',
+                  selected: true,
+                ),
+              ],
+            ),
+          if (widget.viewModel.isHost) ...<Widget>[
+            const SizedBox(height: 14),
+            const Text(
+              'Host selection mode',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: <Widget>[
+                AppChip(
+                  label: 'Use Saved',
+                  selected:
+                      widget.viewModel.groupPreferenceMode ==
+                      'saved_preferences',
+                  onTap: widget.viewModel.loading
+                      ? null
+                      : widget.viewModel.useSavedGroupPreferences,
+                ),
+                AppChip(
+                  label: 'Edit Now',
+                  selected:
+                      widget.viewModel.groupPreferenceMode ==
+                      'edited_preferences',
+                  onTap: widget.viewModel.loading
+                      ? null
+                      : _editPreferencesSheet,
+                ),
+                AppChip(
+                  label: 'Surprise Me',
+                  selected:
+                      widget.viewModel.groupPreferenceMode == 'surprise_me',
+                  onTap: widget.viewModel.loading
+                      ? null
+                      : widget.viewModel.useGroupSurpriseMe,
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    ),
+    if (widget.viewModel.groupChatUnlocked) ...<Widget>[
+      const SizedBox(height: 14),
+      AppCard(
+        child: Column(
+          children: <Widget>[
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE9FAF4),
+                child: Icon(Icons.chat_rounded, color: AppColors.teal),
               ),
-              subtitle: Text(
-                widget.viewModel.groupChatUnlocked
-                    ? '${widget.viewModel.roomMemberCount} people in this room'
-                    : 'Chat unlocks when another traveller joins',
+              title: const Text(
+                'Group Chat',
+                style: TextStyle(fontWeight: FontWeight.w900),
               ),
+              subtitle: Text('${widget.viewModel.roomMemberCount} people'),
               trailing: IconButton(
                 onPressed: () {
                   setState(() => _chatOpen = !_chatOpen);
@@ -763,93 +828,63 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                 icon: Icon(_chatOpen ? Icons.expand_less : Icons.expand_more),
               ),
             ),
-          ],
-          if (_chatOpen && widget.viewModel.groupChatUnlocked) ...<Widget>[
-            ...widget.viewModel.messages.map(
-              (String m) => Align(
-                alignment: m.startsWith('You:')
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: m.startsWith('You:')
-                        ? AppColors.primary
-                        : AppColors.elevated,
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: Text(
-                    m,
-                    style: TextStyle(
-                      color: m.startsWith('You:')
-                          ? Colors.white
-                          : AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
+            if (_chatOpen) ...<Widget>[
+              ...widget.viewModel.messages.map(
+                (String message) => Align(
+                  alignment: message.startsWith('You:')
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 7),
+                    child: Text(message, style: const TextStyle(fontSize: 11)),
                   ),
                 ),
               ),
-            ),
-            TextField(
-              controller: _chatController,
-              onSubmitted: _sendChat,
-              decoration: InputDecoration(
-                hintText: 'Share a clue guess…',
-                suffixIcon: IconButton(
-                  onPressed: () => _sendChat(_chatController.text),
-                  icon: const Icon(Icons.send_rounded),
-                  tooltip: 'Send message',
+              TextField(
+                controller: _chatController,
+                onSubmitted: _sendChat,
+                decoration: InputDecoration(
+                  hintText: 'Share a clue guess…',
+                  suffixIcon: IconButton(
+                    onPressed: () => _sendChat(_chatController.text),
+                    icon: const Icon(Icons.send_rounded),
+                    tooltip: 'Send message',
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
-      ),
-    ),
-    const SizedBox(height: 16),
-    FilledButton.icon(
-      onPressed:
-          widget.viewModel.ready &&
-              widget.viewModel.isHost &&
-              widget.viewModel.roomMemberCount >= 2 &&
-              widget.viewModel.groupPreferencesSet
-          ? () => widget.viewModel.setStage(MysteryStage.shake)
-          : null,
-      icon: const Icon(Icons.rocket_launch_rounded),
-      label: const Text('Start Group Journey'),
-    ),
-    const SizedBox(height: 8),
-    OutlinedButton.icon(
-      onPressed:
-          widget.viewModel.isHost && widget.viewModel.roomMemberCount >= 2
-          ? widget.viewModel.useGroupSurpriseMe
-          : null,
-      icon: const Icon(Icons.auto_awesome_rounded),
-      label: const Text('Surprise the group'),
-    ),
-    if (kDebugMode && widget.viewModel.isHost) ...<Widget>[
-      const SizedBox(height: 8),
-      OutlinedButton.icon(
-        key: const Key('add_test_group_member'),
-        onPressed:
-            widget.viewModel.loading || widget.viewModel.roomMemberCount >= 4
-            ? null
-            : widget.viewModel.addTestCompanion,
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('Add Test Explorer to Room'),
-      ),
-      const Padding(
-        padding: EdgeInsets.only(top: 6),
-        child: Text(
-          'Debug companion · Joins this room for the full Group Journey flow.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: AppColors.muted),
         ),
       ),
+    ],
+    const SizedBox(height: 16),
+    if (widget.viewModel.isHost)
+      FilledButton.icon(
+        key: const Key('start_group_journey'),
+        onPressed:
+            !widget.viewModel.loading &&
+                widget.viewModel.roomMemberCount >= 2 &&
+                widget.viewModel.groupPreferencesSet
+            ? widget.viewModel.beginGroupJourney
+            : null,
+        icon: const Icon(Icons.rocket_launch_rounded),
+        label: Text(
+          widget.viewModel.groupPreferenceMode == 'surprise_me'
+              ? 'Start Surprise Group Journey'
+              : 'Start Group Journey',
+        ),
+      )
+    else
+      const AppCard(
+        color: AppColors.softBlue,
+        child: Text(
+          'Waiting for the host to select preferences and start the journey.',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    if (kDebugMode && widget.viewModel.isHost) ...<Widget>[
+      const SizedBox(height: 12),
+      _developerTestingCard(includeAddTestExplorer: true),
     ],
   ], key: const PageStorageKey<String>('mystery-group-waiting'));
 
@@ -891,7 +926,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     const SizedBox(height: 34),
     Text(
       widget.viewModel.mode == JourneyMode.group
-          ? 'Ready to sync?'
+          ? 'Shake for your group mystery!'
           : 'Shake your phone!',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headlineLarge,
@@ -899,57 +934,11 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     const SizedBox(height: 8),
     Text(
       widget.viewModel.mode == JourneyMode.group
-          ? 'When everyone is ready, the host can trigger one shared reveal for the whole room.'
+          ? 'Shake your phone to reveal one shared mystery clue for the whole room.'
           : 'Shake your phone to generate your personalized mystery heritage clue.',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodyMedium,
     ),
-    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
-      const SizedBox(height: 20),
-      AppCard(
-        color: const Color(0xFFE9FAF4),
-        borderColor: const Color(0xFFBFECDD),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                const Expanded(
-                  child: Text(
-                    'Room ready check',
-                    style: TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                ),
-                AppChip(
-                  label: widget.viewModel.ready ? 'All synced' : 'Waiting',
-                  selected: widget.viewModel.ready,
-                  selectedColor: AppColors.teal,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-              title: const Text(
-                'You',
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-              subtitle: const Text('Tap to toggle your ready status'),
-              value: widget.viewModel.ready,
-              onChanged: widget.viewModel.setReady,
-              activeThumbColor: AppColors.teal,
-            ),
-            ...widget.viewModel.members.indexed.expand(
-              ((int, JourneyMember) item) => <Widget>[
-                if (item.$1 > 0) const Divider(),
-                _memberTile(item.$2, color: Colors.white),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ],
     const SizedBox(height: 26),
     AppCard(
       key: const Key('shake_sensor_status'),
@@ -1260,10 +1249,6 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ],
         ),
       ),
-    if (kDebugMode) ...<Widget>[
-      const SizedBox(height: 12),
-      _developerTestingCard(),
-    ],
     const SizedBox(height: 12),
     FilledButton.icon(
       key: const Key('test_real_arrival'),
@@ -1279,29 +1264,47 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       icon: const Icon(Icons.pause_circle_outline_rounded),
       label: const Text('Leave and continue later'),
     ),
-  ]);
+    if (kDebugMode) ...<Widget>[
+      const SizedBox(height: 12),
+      _developerTestingCard(),
+    ],
+  ], key: const PageStorageKey<String>('mystery-active'));
 
-  Widget _developerTestingCard() {
+  Widget _developerTestingCard({bool includeAddTestExplorer = false}) {
     final canSimulateTestExplorer =
         widget.viewModel.mode == JourneyMode.group &&
         widget.viewModel.isHost &&
         widget.viewModel.hasActiveTestExplorer;
     return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ExpansionTile(
+        key: PageStorageKey<String>(
+          includeAddTestExplorer
+              ? 'developer-testing-waiting'
+              : 'developer-testing-active',
+        ),
+        initiallyExpanded: false,
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: 4),
+        leading: const Icon(Icons.science_rounded, color: AppColors.primary),
+        title: const Text(
+          'Developer Testing',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         children: <Widget>[
-          const Row(
-            children: <Widget>[
-              Icon(Icons.science_rounded, color: AppColors.primary),
-              SizedBox(width: 8),
-              Text(
-                'Developer Testing',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-            ],
-          ),
-          if (canSimulateTestExplorer) ...<Widget>[
+          if (includeAddTestExplorer && widget.viewModel.isHost) ...<Widget>[
+            OutlinedButton.icon(
+              key: const Key('add_test_group_member'),
+              onPressed:
+                  widget.viewModel.loading ||
+                      widget.viewModel.roomMemberCount >= 4
+                  ? null
+                  : widget.viewModel.addTestCompanion,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Add Test Explorer to Room'),
+            ),
             const SizedBox(height: 8),
+          ],
+          if (canSimulateTestExplorer) ...<Widget>[
             OutlinedButton(
               key: const Key('simulate_test_explorer_hint_vote'),
               onPressed:
@@ -1330,16 +1333,17 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               icon: const Icon(Icons.person_pin_circle_rounded),
               label: const Text('Simulate Test Explorer Arrival'),
             ),
+            const SizedBox(height: 8),
           ],
-          const SizedBox(height: 8),
-          FilledButton.icon(
-            key: const Key('simulate_my_arrival'),
-            onPressed: widget.viewModel.loading
-                ? null
-                : widget.viewModel.simulateArrival,
-            icon: const Icon(Icons.my_location_rounded),
-            label: const Text('Simulate My Arrival'),
-          ),
+          if (!includeAddTestExplorer)
+            FilledButton.icon(
+              key: const Key('simulate_my_arrival'),
+              onPressed: widget.viewModel.loading
+                  ? null
+                  : widget.viewModel.simulateArrival,
+              icon: const Icon(Icons.my_location_rounded),
+              label: const Text('Simulate My Arrival'),
+            ),
         ],
       ),
     );
@@ -1691,25 +1695,46 @@ class _TravellerTile extends StatelessWidget {
     required this.name,
     required this.status,
     required this.color,
+    this.avatarUrl,
+    this.isHost = false,
+    this.isReady,
   });
   final String initials;
   final String name;
   final String status;
   final Color color;
+  final String? avatarUrl;
+  final bool isHost;
+  final bool? isReady;
   @override
   Widget build(BuildContext context) => ListTile(
     contentPadding: EdgeInsets.zero,
     dense: true,
-    leading: InitialsAvatar(initials, color: color),
-    title: Text(
-      name,
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+    leading: avatarUrl?.trim().isNotEmpty == true
+        ? CircleAvatar(backgroundImage: NetworkImage(avatarUrl!))
+        : InitialsAvatar(initials, color: color),
+    title: Row(
+      children: <Widget>[
+        Flexible(
+          child: Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+          ),
+        ),
+        if (isHost) ...<Widget>[
+          const SizedBox(width: 6),
+          const AppChip(label: 'Host', selected: true),
+        ],
+      ],
     ),
     subtitle: Text(status, style: const TextStyle(fontSize: 10)),
-    trailing: const Icon(
-      Icons.check_circle_rounded,
-      color: AppColors.teal,
-      size: 18,
-    ),
+    trailing: isReady == null
+        ? null
+        : Icon(
+            isReady! ? Icons.check_circle_rounded : Icons.schedule_rounded,
+            color: isReady! ? AppColors.teal : AppColors.muted,
+            size: 18,
+          ),
   );
 }

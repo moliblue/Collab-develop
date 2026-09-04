@@ -116,7 +116,7 @@ void main() {
   });
 
   testWidgets('shared shell switches all five primary modules', (tester) async {
-    final (model, _) = await pumpApp(tester);
+    final (model, repository) = await pumpApp(tester);
     const destinations = <(String, MainTab)>[
       ('tab_discover', MainTab.discover),
       ('tab_map', MainTab.map),
@@ -247,13 +247,28 @@ void main() {
 
     await model.mystery.addTestCompanion();
     expect(model.mystery.roomMemberCount, 2);
+    expect(find.byKey(const Key('add_test_group_member')), findsNothing);
     expect(
       repository.lastTestUsername,
       MysteryJourneyViewModel.testCompanionUsername,
     );
     await tester.pump();
-    expect(find.text('Group chat unlocked'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.expand_more));
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-group-waiting')),
+      const Offset(0, -500),
+    );
+    await tester.pump();
+    expect(find.text('Group Chat'), findsOneWidget);
+    final groupChatTile = find.ancestor(
+      of: find.text('Group Chat'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(
+      find.descendant(
+        of: groupChatTile,
+        matching: find.byIcon(Icons.expand_more),
+      ),
+    );
     await tester.pump();
     await tester.enterText(
       find.widgetWithText(TextField, 'Share a clue guess…'),
@@ -266,11 +281,54 @@ void main() {
     expect(find.text('You: Testing group chat'), findsOneWidget);
     await model.mystery.useGroupSurpriseMe();
     expect(model.mystery.stage, MysteryStage.groupWaiting);
+    await model.mystery.beginGroupJourney();
+    expect(model.mystery.stage, MysteryStage.groupWaiting);
+    expect(model.mystery.message, 'Everyone must be ready before starting.');
+    expect(repository.startCount, 0);
+
+    await model.mystery.setReady(true);
+    expect(model.mystery.allRoomMembersReady, isTrue);
+    await model.mystery.beginGroupJourney();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(model.mystery.stage, MysteryStage.shake);
+    expect(find.text('I’m Ready'), findsNothing);
+    expect(find.text('Room ready check'), findsNothing);
+
     await model.mystery.startJourney();
     await tester.pump(const Duration(milliseconds: 50));
     expect(repository.startCount, 1);
     expect(model.mystery.journey!.mode, journey.JourneyMode.group);
     expect(model.mystery.journey!.members.length, 2);
+    expect(find.text('I’m Ready'), findsNothing);
+    expect(find.text('Ready'), findsNothing);
+
+    final activeList = find.byKey(
+      const PageStorageKey<String>('mystery-active'),
+    );
+    final activeScrollable = find.descendant(
+      of: activeList,
+      matching: find.byType(Scrollable),
+    );
+    final activeScrollState = tester.state<ScrollableState>(
+      activeScrollable.first,
+    );
+    activeScrollState.position.jumpTo(
+      activeScrollState.position.maxScrollExtent,
+    );
+    await tester.pump();
+    expect(find.text('Developer Testing'), findsOneWidget);
+    expect(find.byKey(const Key('simulate_my_arrival')), findsNothing);
+    expect(
+      find.byKey(const Key('simulate_test_explorer_hint_vote')),
+      findsNothing,
+    );
+    await tester.tap(find.text('Developer Testing'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('simulate_my_arrival')), findsOneWidget);
+    expect(
+      find.byKey(const Key('simulate_test_explorer_hint_vote')),
+      findsOneWidget,
+    );
 
     await model.mystery.testArrivalNow();
     expect(repository.arrivalCheckCount, 1);
@@ -280,20 +338,44 @@ void main() {
   testWidgets('Test Explorer joins safely and host can close room', (
     tester,
   ) async {
-    final (model, _) = await pumpApp(tester);
+    final (model, repository) = await pumpApp(tester);
     model.mystery.setMode(JourneyMode.group);
     model.mystery.setStage(MysteryStage.groupSetup);
     await tester.pump(const Duration(milliseconds: 50));
     await tester.tap(find.text('Create New Waiting Room'));
     await tester.pump(const Duration(milliseconds: 50));
+    expect(find.text('I’m Ready'), findsOneWidget);
+    expect(find.byKey(const Key('add_test_group_member')), findsNothing);
 
-    await tester.ensureVisible(find.byKey(const Key('add_test_group_member')));
-    await tester.tap(find.byKey(const Key('add_test_group_member')));
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-group-waiting')),
+      const Offset(0, -900),
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.text('Developer Testing'));
+    await tester.tap(find.text('Developer Testing'));
+    await tester.pump(const Duration(milliseconds: 300));
+    final waitingList = find.byKey(
+      const PageStorageKey<String>('mystery-group-waiting'),
+    );
+    final waitingScrollable = find.descendant(
+      of: waitingList,
+      matching: find.byType(Scrollable),
+    );
+    final scrollState = tester.state<ScrollableState>(waitingScrollable);
+    scrollState.position.jumpTo(scrollState.position.maxScrollExtent);
+    await tester.pump();
+    final addTestExplorerButton = tester.widget<OutlinedButton>(
+      find.byKey(const Key('add_test_group_member')),
+    );
+    expect(addTestExplorerButton.onPressed, isNotNull);
+    addTestExplorerButton.onPressed!();
     await tester.pump(const Duration(milliseconds: 400));
     expect(tester.takeException(), isNull);
     expect(model.mystery.roomMemberCount, 2);
 
-    await tester.ensureVisible(find.byKey(const Key('leave_waiting_room')));
+    scrollState.position.jumpTo(0);
+    await tester.pump();
     await tester.tap(find.byKey(const Key('leave_waiting_room')));
     await tester.pump();
     expect(find.text('Close waiting room?'), findsOneWidget);
@@ -302,6 +384,43 @@ void main() {
     expect(model.mystery.stage, MysteryStage.home);
     expect(model.mystery.journey, isNull);
     expect(model.mystery.message, 'Waiting room closed.');
+    expect(repository.waitingRoomEnded, isTrue);
+    expect(repository.allMembershipsLeft, isTrue);
+  });
+
+  testWidgets('Leaving and rejoining the same waiting room is idempotent', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+
+    await model.mystery.joinGroupRoom('room-nearby');
+    expect(repository.membershipInsertCount, 1);
+    await model.mystery.leaveWaitingRoom();
+    expect(repository.membershipLeft, isTrue);
+
+    await model.mystery.joinGroupRoom('room-nearby');
+    expect(repository.membershipInsertCount, 1);
+    expect(repository.membershipLeft, isFalse);
+    expect(model.mystery.isHost, isFalse);
+  });
+
+  testWidgets('Active host leave keeps the shared journey available', (
+    tester,
+  ) async {
+    final (model, repository) = await pumpApp(tester);
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.createGroupRoom();
+    await model.mystery.addTestCompanion();
+    await model.mystery.useGroupSurpriseMe();
+    await model.mystery.setReady(true);
+    await model.mystery.startJourney();
+
+    await model.mystery.cancelJourney();
+    expect(repository.hostParticipantCancelled, isTrue);
+    expect(repository.membershipLeft, isTrue);
+    expect(repository.sharedJourneyStillActive, isTrue);
+    expect(repository.groupRoomClosed, isFalse);
   });
 
   testWidgets('Group votes persist once and Test Explorer reaches majority', (
@@ -312,6 +431,7 @@ void main() {
     await model.mystery.createGroupRoom();
     await model.mystery.addTestCompanion();
     await model.mystery.useGroupSurpriseMe();
+    await model.mystery.setReady(true);
     await model.mystery.startJourney();
 
     final hostHint = await model.mystery.castGroupVote(
@@ -426,6 +546,7 @@ void main() {
     await model.mystery.createGroupRoom();
     await model.mystery.addTestCompanion();
     await model.mystery.useGroupSurpriseMe();
+    await model.mystery.setReady(true);
     await model.mystery.startJourney();
 
     await model.mystery.simulateArrival(testExplorer: true);
@@ -483,6 +604,16 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   int profileXp = 600;
   int profileStreak = 3;
   bool groupRoomClosed = false;
+  bool membershipExists = false;
+  bool membershipLeft = false;
+  int membershipInsertCount = 0;
+  bool waitingRoomEnded = false;
+  bool allMembershipsLeft = false;
+  bool hostParticipantCancelled = false;
+  bool sharedJourneyStillActive = false;
+  bool hostReady = false;
+  bool companionReady = true;
+  bool groupHasCompanion = false;
   Object? startError;
   VoidCallback? shakeCallback;
   final Map<String, Set<String>> groupVotes = <String, Set<String>>{};
@@ -498,18 +629,20 @@ class FakeShakeFindRepository implements ShakeFindRepository {
         description: 'A test heritage story.',
       );
 
-  List<journey.JourneyMember> get twoMembers => const <journey.JourneyMember>[
+  List<journey.JourneyMember> get twoMembers => <journey.JourneyMember>[
     journey.JourneyMember(
       userId: 'user-a',
       displayName: 'Traveller A',
       role: 'host',
       status: 'waiting',
+      isReady: hostReady,
     ),
     journey.JourneyMember(
       userId: 'user-b',
       displayName: 'Test Explorer',
       role: 'member',
       status: 'waiting',
+      isReady: companionReady,
     ),
   ];
 
@@ -671,7 +804,15 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   }
 
   @override
-  Future<void> cancelJourney() async => active = null;
+  Future<void> cancelJourney() async {
+    final current = active;
+    if (current?.mode == journey.JourneyMode.group &&
+        current?.groupRoomId != null) {
+      await leaveGroupRoom(current!.groupRoomId!);
+      return;
+    }
+    active = null;
+  }
 
   @override
   Future<List<journey.NearbyGroupRoom>> findNearbyGroupRooms({
@@ -687,6 +828,10 @@ class FakeShakeFindRepository implements ShakeFindRepository {
 
   @override
   Future<journey.Journey> createGroupRoom() async {
+    membershipExists = true;
+    membershipLeft = false;
+    hostReady = false;
+    groupHasCompanion = false;
     active = journey.Journey(
       id: 'waiting:room-1',
       status: journey.JourneyStatus.idle,
@@ -783,7 +928,18 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   @override
   Future<List<journey.JourneyMember>> refreshGroupMembers(
     String roomId,
-  ) async => twoMembers;
+  ) async => groupHasCompanion
+      ? twoMembers
+      : <journey.JourneyMember>[twoMembers.first];
+
+  @override
+  Future<List<journey.JourneyMember>> setGroupRoomReady(
+    String roomId,
+    bool isReady,
+  ) async {
+    hostReady = isReady;
+    return refreshGroupMembers(roomId);
+  }
 
   @override
   Future<List<journey.JourneyMember>> addTestGroupMember(
@@ -791,11 +947,17 @@ class FakeShakeFindRepository implements ShakeFindRepository {
     String testUsername,
   ) async {
     lastTestUsername = testUsername;
+    groupHasCompanion = true;
     return twoMembers;
   }
 
   @override
   Future<journey.Journey> joinGroupRoom(String roomId) async {
+    if (active?.id == 'waiting:$roomId' && !membershipLeft) return active!;
+    if (!membershipExists) membershipInsertCount++;
+    membershipExists = true;
+    membershipLeft = false;
+    groupHasCompanion = true;
     active = journey.Journey(
       id: 'waiting:$roomId',
       status: journey.JourneyStatus.idle,
@@ -811,7 +973,23 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   }
 
   @override
-  Future<void> leaveGroupRoom(String roomId) async => active = null;
+  Future<void> leaveGroupRoom(String roomId) async {
+    final current = active;
+    membershipLeft = true;
+    if (current?.id.startsWith('waiting:') == true && current!.isHost) {
+      waitingRoomEnded = true;
+      allMembershipsLeft = true;
+    } else if (current?.mode == journey.JourneyMode.group &&
+        current?.status == journey.JourneyStatus.active &&
+        current?.isHost == true) {
+      hostParticipantCancelled = true;
+      sharedJourneyStillActive = current!.members.any(
+        (member) =>
+            member.userId != 'user-a' && member.participantStatus == 'active',
+      );
+    }
+    active = null;
+  }
 
   @override
   Future<void> expireGroupJourneyIfNeeded(journey.Journey value) async {}

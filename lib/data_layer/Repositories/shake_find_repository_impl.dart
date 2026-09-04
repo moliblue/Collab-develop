@@ -31,7 +31,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   static const Duration arrivalDwell = Duration(seconds: 10);
   static const int completionXp = 100;
   static const String defaultTestingRoomId =
-      'feaba709-0a28-4481-a22e-87c842990a3f';
+      '1bf4271d-2e49-4380-afc1-3d1bf75869ba';
   static const String testExplorerProfileId =
       '3f701fe7-dd8e-4c8c-b3a4-611799d411c0';
 
@@ -532,6 +532,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       _activeJourney = null;
       return;
     }
+    if (journey.mode == JourneyMode.group && journey.groupRoomId != null) {
+      await _leaveGroupRoom(journey.groupRoomId!);
+      _activeJourney = null;
+      return;
+    }
     final now = DateTime.now().toUtc().toIso8601String();
     await _client
         .from('journey_participants')
@@ -547,9 +552,6 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
           .update(<String, dynamic>{'status': 'cancelled'})
           .eq('id', journey.id)
           .eq('status', 'active');
-    } else if (journey.groupRoomId != null) {
-      await leaveGroupRoom(journey.groupRoomId!);
-      await _closeGroupIfFinished(journey);
     }
     _activeJourney = null;
   }
@@ -758,17 +760,36 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       _loadGroupMembers(roomId);
 
   @override
+  Future<List<JourneyMember>> setGroupRoomReady(
+    String roomId,
+    bool isReady,
+  ) async {
+    _supabase.requireCurrentUserId();
+    await _client.rpc(
+      'set_group_room_ready',
+      params: <String, dynamic>{'p_room_id': roomId, 'p_is_ready': isReady},
+    );
+    return _loadGroupMembers(roomId);
+  }
+
+  @override
   Future<List<JourneyMember>> addTestGroupMember(
     String roomId,
     String testUsername,
   ) async {
-    await _client.rpc(
+    final testUserId = await _client.rpc(
       'add_group_test_member',
       params: <String, dynamic>{
         'p_room_id': roomId,
         'p_test_username': testUsername.trim(),
       },
     );
+    await _client
+        .from('group_room_members')
+        .update(<String, dynamic>{'is_ready': true})
+        .eq('room_id', roomId)
+        .eq('user_id', testUserId.toString())
+        .neq('member_status', 'left');
     return _loadGroupMembers(roomId);
   }
 
@@ -808,6 +829,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         'user_id': userId,
         'role': 'host',
         'member_status': 'waiting',
+        'is_ready': false,
       });
     } catch (_) {
       await _client.from('group_rooms').delete().eq('id', roomId);
@@ -859,7 +881,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       final memberUserId = row['user_id'].toString();
       final profile = await _client
           .from('profiles')
-          .select('username, full_name')
+          .select('username, full_name, avatar_url')
           .eq('id', memberUserId)
           .maybeSingle();
       final fullName = profile?['full_name']?.toString().trim();
@@ -877,6 +899,8 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
           role: row['role']?.toString() ?? 'member',
           status: row['member_status']?.toString() ?? 'waiting',
           participantStatus: participantStatuses[memberUserId],
+          avatarUrl: profile?['avatar_url']?.toString(),
+          isReady: row['is_ready'] == true,
         ),
       );
     }
@@ -885,16 +909,40 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
 
   Future<Journey> _joinGroupRoom(String roomId) async {
     final userId = _supabase.requireCurrentUserId();
-    if (await getActiveJourney() != null) {
-      throw const JourneyDataException(
-        'Resume or leave your current journey room first.',
-      );
-    }
     final room = await _client
         .from('group_rooms')
         .select()
         .eq('id', roomId)
         .single();
+    final existingMembership = await _client
+        .from('group_room_members')
+        .select()
+        .eq('room_id', roomId)
+        .eq('user_id', userId)
+        .maybeSingle();
+    final existingStatus = existingMembership?['member_status']?.toString();
+    final journeyId = room['journey_id']?.toString();
+    if (room['status'] == 'active' &&
+        journeyId != null &&
+        existingMembership != null &&
+        existingStatus != 'left') {
+      final participant = await _client
+          .from('journey_participants')
+          .select()
+          .eq('journey_id', journeyId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      if (participant != null &&
+          participant['participant_status']?.toString() != 'cancelled') {
+        final resumed = await _loadJourney(
+          journeyId,
+          participant: Map<String, dynamic>.from(participant),
+        );
+        await expireGroupJourneyIfNeeded(resumed);
+        _activeJourney = resumed;
+        return resumed;
+      }
+    }
     if (room['status'] != 'waiting' || room['journey_id'] != null) {
       throw const JourneyDataException(
         'This room has started or is no longer available.',
@@ -903,6 +951,16 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     final expiresAt = DateTime.tryParse(room['expires_at']?.toString() ?? '');
     if (expiresAt != null && !expiresAt.isAfter(DateTime.now().toUtc())) {
       throw const JourneyDataException('This waiting room has expired.');
+    }
+    if (existingMembership != null && existingStatus != 'left') {
+      final resumed = await _waitingJourneyFromRoom(room, userId);
+      _activeJourney = resumed;
+      return resumed;
+    }
+    if (await getActiveJourney() != null) {
+      throw const JourneyDataException(
+        'Resume or leave your current journey room first.',
+      );
     }
     final members = await _loadGroupMembers(roomId);
     if (members.length >= 4) {
@@ -930,13 +988,39 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         'This room is no longer within the 1 km nearby area.',
       );
     }
-    await _client.from('group_room_members').insert(<String, dynamic>{
-      'room_id': roomId,
-      'user_id': userId,
-      'role': 'member',
-      'member_status': 'waiting',
-    });
-    final result = Journey(
+    if (existingMembership == null) {
+      await _client.from('group_room_members').insert(<String, dynamic>{
+        'room_id': roomId,
+        'user_id': userId,
+        'role': 'member',
+        'member_status': 'waiting',
+        'is_ready': false,
+      });
+    } else {
+      await _client
+          .from('group_room_members')
+          .update(<String, dynamic>{
+            'role': 'member',
+            'member_status': 'waiting',
+            'is_ready': false,
+            'left_at': null,
+            'joined_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', existingMembership['id'])
+          .eq('user_id', userId)
+          .eq('member_status', 'left');
+    }
+    final result = await _waitingJourneyFromRoom(room, userId);
+    _activeJourney = result;
+    return result;
+  }
+
+  Future<Journey> _waitingJourneyFromRoom(
+    Map<String, dynamic> room,
+    String userId,
+  ) async {
+    final roomId = room['id'].toString();
+    return Journey(
       id: 'waiting:$roomId',
       status: JourneyStatus.idle,
       mode: JourneyMode.group,
@@ -950,8 +1034,6 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       members: await _loadGroupMembers(roomId),
       isHost: room['host_user_id'].toString() == userId,
     );
-    _activeJourney = result;
-    return result;
   }
 
   Future<Journey> _startSharedGroupJourney(
@@ -980,6 +1062,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         'At least two travellers are required to start.',
       );
     }
+    if (members.any((member) => !member.isReady)) {
+      throw const JourneyDataException(
+        'Everyone must be ready before starting.',
+      );
+    }
     final location = await _location.getFreshLocation();
     final destination = await _selectDestination(preferences, location);
     final clue = await _initialClue(destination.id);
@@ -1003,24 +1090,15 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
           .select()
           .single();
       journeyId = row['id'].toString();
-      final roomRows = await _client
-          .from('group_rooms')
-          .update(<String, dynamic>{
-            'journey_id': journeyId,
-            'status': 'active',
-            'activated_at': activatedAt.toIso8601String(),
-            'expires_at': deadline.toIso8601String(),
-          })
-          .eq('id', roomId)
-          .eq('host_user_id', userId)
-          .eq('status', 'waiting')
-          .isFilter('journey_id', null)
-          .select('id');
-      if (roomRows.isEmpty) {
-        throw const JourneyDataException(
-          'The room state changed before discovery completed.',
-        );
-      }
+      await _client.rpc(
+        'activate_group_room',
+        params: <String, dynamic>{
+          'p_room_id': roomId,
+          'p_journey_id': journeyId,
+          'p_activated_at': activatedAt.toIso8601String(),
+          'p_expires_at': deadline.toIso8601String(),
+        },
+      );
       roomActivated = true;
       await _client
           .from('journey_participants')
@@ -1036,11 +1114,6 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
                 .toList(growable: false),
           );
       await _saveJourneyCategories(journeyId, preferences.categories);
-      await _client
-          .from('group_room_members')
-          .update(<String, dynamic>{'member_status': 'active'})
-          .eq('room_id', roomId)
-          .eq('member_status', 'waiting');
       final ownParticipant = await _client
           .from('journey_participants')
           .select('id, user_id')
@@ -1086,6 +1159,14 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
               .eq('id', roomId)
               .eq('host_user_id', userId)
               .eq('journey_id', journeyId);
+          await _client
+              .from('group_room_members')
+              .update(<String, dynamic>{
+                'member_status': 'waiting',
+                'is_ready': false,
+              })
+              .eq('room_id', roomId)
+              .eq('member_status', 'active');
         }
         await _client.from('mystery_journeys').delete().eq('id', journeyId);
       }
@@ -1094,64 +1175,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   }
 
   Future<void> _leaveGroupRoom(String roomId) async {
-    final userId = _supabase.requireCurrentUserId();
-    final room = await _client
-        .from('group_rooms')
-        .select()
-        .eq('id', roomId)
-        .single();
-    final hostIsLeaving = room['host_user_id'].toString() == userId;
-    if (hostIsLeaving) {
-      final journeyId = room['journey_id']?.toString();
-      if (journeyId != null) {
-        final now = DateTime.now().toUtc().toIso8601String();
-        await _client
-            .from('journey_participants')
-            .update(<String, dynamic>{
-              'participant_status': 'cancelled',
-              'cancelled_at': now,
-            })
-            .eq('journey_id', journeyId)
-            .eq('participant_status', 'active');
-        await _client
-            .from('mystery_journeys')
-            .update(<String, dynamic>{'status': 'cancelled'})
-            .eq('id', journeyId)
-            .eq('status', 'active');
-      }
-      await _client
-          .from('group_rooms')
-          .delete()
-          .eq('id', roomId)
-          .eq('host_user_id', userId);
-      _activeJourney = null;
-      return;
-    }
-    await _client
-        .from('group_room_members')
-        .update(<String, dynamic>{
-          'member_status': 'left',
-          'left_at': DateTime.now().toUtc().toIso8601String(),
-          'role': 'member',
-        })
-        .eq('room_id', roomId)
-        .eq('user_id', userId)
-        .neq('member_status', 'left');
-    final remaining = await _loadGroupMembers(roomId);
-    if (remaining.isEmpty) {
-      await _client
-          .from('group_rooms')
-          .update(<String, dynamic>{'status': 'cancelled'})
-          .eq('id', roomId);
-      final journeyId = room['journey_id']?.toString();
-      if (journeyId != null) {
-        await _client
-            .from('mystery_journeys')
-            .update(<String, dynamic>{'status': 'cancelled'})
-            .eq('id', journeyId)
-            .eq('status', 'active');
-      }
-    }
+    _supabase.requireCurrentUserId();
+    await _client.rpc(
+      'leave_group_room',
+      params: <String, dynamic>{'p_room_id': roomId},
+    );
     _activeJourney = null;
   }
 
@@ -1162,47 +1190,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         deadline.isAfter(DateTime.now())) {
       return;
     }
-    final now = DateTime.now().toUtc().toIso8601String();
-    await _client
-        .from('journey_participants')
-        .update(<String, dynamic>{
-          'participant_status': 'cancelled',
-          'cancelled_at': now,
-        })
-        .eq('journey_id', journey.id)
-        .eq('participant_status', 'active');
-    await _client
-        .from('mystery_journeys')
-        .update(<String, dynamic>{'status': 'cancelled'})
-        .eq('id', journey.id)
-        .eq('status', 'active');
     if (journey.groupRoomId != null) {
-      await _client
-          .from('group_rooms')
-          .update(<String, dynamic>{'status': 'expired'})
-          .eq('id', journey.groupRoomId!);
-    }
-  }
-
-  Future<void> _closeGroupIfFinished(Journey journey) async {
-    final active = await _client
-        .from('journey_participants')
-        .select('id')
-        .eq('journey_id', journey.id)
-        .eq('participant_status', 'active')
-        .limit(1);
-    if (active.isNotEmpty) return;
-    final now = DateTime.now().toUtc().toIso8601String();
-    await _client
-        .from('mystery_journeys')
-        .update(<String, dynamic>{'status': 'completed', 'completed_at': now})
-        .eq('id', journey.id)
-        .eq('status', 'active');
-    if (journey.groupRoomId != null) {
-      await _client
-          .from('group_rooms')
-          .update(<String, dynamic>{'status': 'closed'})
-          .eq('id', journey.groupRoomId!);
+      await _client.rpc(
+        'expire_group_room',
+        params: <String, dynamic>{'p_room_id': journey.groupRoomId},
+      );
     }
   }
 
@@ -1222,6 +1214,14 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       if (room == null ||
           room['status'] != 'waiting' ||
           room['journey_id'] != null) {
+        continue;
+      }
+      final expiresAt = DateTime.tryParse(room['expires_at']?.toString() ?? '');
+      if (expiresAt != null && !expiresAt.isAfter(DateTime.now().toUtc())) {
+        await _client.rpc(
+          'expire_group_room',
+          params: <String, dynamic>{'p_room_id': roomId},
+        );
         continue;
       }
       return Journey(
