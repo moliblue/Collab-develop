@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -43,6 +45,7 @@ class _MapModuleViewState extends State<MapModuleView> {
   bool _routeLoading = false;
   bool _guidanceMode = false;
   LatLng? _userPosition;
+  LatLng? _demoPosition;
   LatLng? _routedFrom;
   double _heading = 0;
   double _routeDistanceMeters = 0;
@@ -465,9 +468,9 @@ class _MapModuleViewState extends State<MapModuleView> {
                 MarkerLayer(
                   rotate: true,
                   markers: <Marker>[
-                    if (_userPosition != null)
+                    if ((_demoPosition ?? _userPosition) != null)
                       Marker(
-                        point: _userPosition!,
+                        point: (_demoPosition ?? _userPosition)!,
                         width: 64,
                         height: 64,
                         child: ValueListenableBuilder<double>(
@@ -779,7 +782,15 @@ class _MapModuleViewState extends State<MapModuleView> {
             _LocationSheet(
               place: vm.selected!,
               vm: vm,
-              onReward: widget.onXpReward,
+              currentPosition: () => _demoPosition ?? _userPosition,
+              demoPositionEnabled: _demoPosition != null,
+              onMoveToPin: () => setState(
+                () => _demoPosition = LatLng(
+                  vm.selected!.latitude,
+                  vm.selected!.longitude,
+                ),
+              ),
+              onResetDemoPosition: () => setState(() => _demoPosition = null),
               notify: widget.notify,
             ),
         ],
@@ -1213,12 +1224,18 @@ class _LocationSheet extends StatelessWidget {
   const _LocationSheet({
     required this.place,
     required this.vm,
-    required this.onReward,
+    required this.currentPosition,
+    required this.demoPositionEnabled,
+    required this.onMoveToPin,
+    required this.onResetDemoPosition,
     required this.notify,
   });
   final HeritagePlace place;
   final MapQuestViewModel vm;
-  final ValueChanged<int> onReward;
+  final LatLng? Function() currentPosition;
+  final bool demoPositionEnabled;
+  final VoidCallback onMoveToPin;
+  final VoidCallback onResetDemoPosition;
   final void Function(String, Color) notify;
   @override
   Widget build(BuildContext context) => Positioned.fill(
@@ -1337,10 +1354,10 @@ class _LocationSheet extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 12),
-                        AppCard(
+                        const AppCard(
                           color: AppColors.softBlue,
-                          borderColor: const Color(0xFFD4E2FF),
-                          child: const Column(
+                          borderColor: Color(0xFFD4E2FF),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Row(
@@ -1358,16 +1375,16 @@ class _LocationSheet extends StatelessWidget {
                                     ),
                                   ),
                                   Spacer(),
-                                  AppChip(label: '+250 XP', selected: true),
+                                  AppChip(label: '+100 XP', selected: true),
                                 ],
                               ),
                               SizedBox(height: 7),
                               Text(
-                                'Capture a heritage detail',
+                                'Heritage location quest',
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               Text(
-                                'Reach the location, capture an original photo and share your reflection.',
+                                'Upload a photo of this heritage location.',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: AppColors.textSecondary,
@@ -1390,21 +1407,32 @@ class _LocationSheet extends StatelessWidget {
                           label: const Text('Heritage Memo'),
                         ),
                         const SizedBox(height: 8),
+                        TextButton.icon(
+                          key: const Key('toggle_demo_gps'),
+                          onPressed: demoPositionEnabled
+                              ? onResetDemoPosition
+                              : onMoveToPin,
+                          icon: Icon(
+                            demoPositionEnabled
+                                ? Icons.gps_off_rounded
+                                : Icons.location_searching_rounded,
+                          ),
+                          label: Text(
+                            demoPositionEnabled
+                                ? 'Reset Demo GPS'
+                                : 'Move to Pin (Demo)',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         OutlinedButton.icon(
-                          onPressed: vm.isCompleted(place.id)
+                          onPressed: vm.questLoading
                               ? null
-                              : () {
-                                  if (!vm.gpsNearby) {
-                                    _rangeDialog(context);
-                                  } else {
-                                    _quest(context);
-                                  }
-                                },
+                              : () => _joinQuest(context),
                           icon: const Icon(Icons.workspace_premium_rounded),
                           label: Text(
-                            vm.isCompleted(place.id)
-                                ? 'Picture Quest Completed'
-                                : 'Join Picture Quest',
+                            vm.questLoading
+                                ? 'Checking Quest…'
+                                : 'Join Heritage Quest',
                           ),
                         ),
                       ],
@@ -1479,63 +1507,115 @@ class _LocationSheet extends StatelessWidget {
     ),
   );
 
-  Future<void> _rangeDialog(BuildContext context) => showDialog<void>(
-    context: context,
-    builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-      icon: const Icon(
-        Icons.location_searching_rounded,
-        color: AppColors.warning,
-        size: 38,
-      ),
-      title: const Text('Join within 500m'),
-      content: const Text(
-        'This picture quest uses local demo GPS. Move the demo position near this spot to continue.',
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Later'),
+  Future<void> _showQuestMessage(BuildContext context, String message) =>
+      showDialog<void>(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+          icon: const Icon(
+            Icons.location_searching_rounded,
+            color: AppColors.warning,
+            size: 38,
+          ),
+          title: const Text('Heritage Quest'),
+          content: Text(message),
+          actions: <Widget>[
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
         ),
-        FilledButton(
-          onPressed: () {
-            vm.simulateNear();
-            Navigator.pop(context);
-            notify(
-              'GPS moved to this heritage spot for testing.',
-              AppColors.teal,
-            );
-          },
-          child: const Text('Move GPS (Demo)'),
-        ),
-      ],
-    ),
-  );
+      );
+
+  Future<void> _joinQuest(BuildContext context) async {
+    final travellerPosition = currentPosition();
+    if (travellerPosition == null) {
+      await _showQuestMessage(
+        context,
+        'Current location is unavailable. Please enable location services and try again.',
+      );
+      return;
+    }
+
+    final distanceMeters = const Distance().as(
+      LengthUnit.Meter,
+      travellerPosition,
+      LatLng(place.latitude, place.longitude),
+    );
+    if (distanceMeters > 500) {
+      await _showQuestMessage(
+        context,
+        'You must be within 500 metres of this heritage location to join the quest.',
+      );
+      return;
+    }
+
+    final result = await vm.prepareQuest(place);
+    if (!context.mounted) return;
+    switch (result.status) {
+      case QuestJoinStatus.ready:
+        await _quest(context);
+        return;
+      case QuestJoinStatus.unavailable:
+        await _showQuestMessage(
+          context,
+          'Heritage quest is unavailable for this location.',
+        );
+        return;
+      case QuestJoinStatus.alreadyCompleted:
+        await _showQuestMessage(
+          context,
+          'You have already completed this heritage quest.',
+        );
+        return;
+      case QuestJoinStatus.authenticationRequired:
+        await _showQuestMessage(
+          context,
+          'Please sign in to join a heritage quest.',
+        );
+        return;
+      case QuestJoinStatus.failed:
+        await _showQuestMessage(
+          context,
+          'Heritage quest data is currently unavailable. Please try again later.',
+        );
+        return;
+      case QuestJoinStatus.busy:
+        return;
+    }
+  }
 
   Future<void> _quest(BuildContext context) => showAppSheet<void>(
     context,
-    _QuestForm(
-      place: place,
-      onComplete: () {
-        vm.completeQuest(place);
-        onReward(250);
-        notify('Picture quest completed · +250 XP!', AppColors.teal);
-      },
-    ),
+    _QuestForm(place: place, vm: vm, notify: notify),
   );
 }
 
 class _QuestForm extends StatefulWidget {
-  const _QuestForm({required this.place, required this.onComplete});
+  const _QuestForm({
+    required this.place,
+    required this.vm,
+    required this.notify,
+  });
+
   final HeritagePlace place;
-  final VoidCallback onComplete;
+  final MapQuestViewModel vm;
+  final void Function(String, Color) notify;
   @override
   State<_QuestForm> createState() => _QuestFormState();
 }
 
 class _QuestFormState extends State<_QuestForm> {
-  bool photo = false;
   final caption = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _photoBytes;
+  String? _photoExtension;
+  bool _selectingPhoto = false;
+  bool _submitting = false;
+
   @override
   void dispose() {
     caption.dispose();
@@ -1545,14 +1625,25 @@ class _QuestFormState extends State<_QuestForm> {
   @override
   Widget build(BuildContext context) => SheetBody(
     children: <Widget>[
-      const ModalTitle(
+      ModalTitle(
         title: 'Capture local heritage',
-        subtitle: 'Picture Quest · +250 XP',
+        subtitle:
+            '${widget.place.name} · +${MapQuestViewModel.pictureQuestXp} XP',
         icon: Icons.camera_alt_rounded,
       ),
       const SizedBox(height: 12),
+      AppCard(
+        color: AppColors.softBlue,
+        borderColor: const Color(0xFFD4E2FF),
+        child: const Text(
+          MapQuestViewModel.pictureQuestInstructions,
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      const SizedBox(height: 12),
       InkWell(
-        onTap: () => setState(() => photo = true),
+        onTap: _selectingPhoto || _submitting ? null : _pickPhoto,
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           height: 210,
           decoration: BoxDecoration(
@@ -1560,27 +1651,40 @@ class _QuestFormState extends State<_QuestForm> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFFC4B5FD), width: 2),
           ),
-          child: photo
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: _PlaceImage(place: widget.place),
-                )
-              : const Column(
+          clipBehavior: Clip.antiAlias,
+          child: _photoBytes == null
+              ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Icon(
-                      Icons.add_a_photo_rounded,
-                      color: Color(0xFF7C3AED),
-                      size: 42,
-                    ),
-                    SizedBox(height: 8),
+                    if (_selectingPhoto)
+                      const CircularProgressIndicator()
+                    else
+                      const Icon(
+                        Icons.add_a_photo_rounded,
+                        color: Color(0xFF7C3AED),
+                        size: 42,
+                      ),
+                    const SizedBox(height: 8),
                     Text(
-                      'Take or upload a photo',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                      _selectingPhoto
+                          ? 'Opening gallery…'
+                          : 'Choose a photo from Gallery',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
-                    Text(
-                      'Tap for deterministic demo capture',
+                    const Text(
+                      'JPG, JPEG, PNG or WEBP',
                       style: TextStyle(fontSize: 9, color: AppColors.muted),
+                    ),
+                  ],
+                )
+              : Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.memory(_photoBytes!, fit: BoxFit.cover),
+                    const Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: AppChip(label: 'Tap to change', selected: true),
                     ),
                   ],
                 ),
@@ -1596,15 +1700,106 @@ class _QuestFormState extends State<_QuestForm> {
       ),
       const SizedBox(height: 8),
       FilledButton.icon(
-        onPressed: photo
-            ? () {
-                Navigator.pop(context);
-                widget.onComplete();
-              }
-            : null,
+        onPressed: _submitting ? null : _submit,
         icon: const Icon(Icons.camera_alt_rounded),
-        label: const Text('Submit Picture & Claim XP'),
+        label: Text(
+          _submitting
+              ? 'Submitting…'
+              : 'Submit Picture · +${MapQuestViewModel.pictureQuestXp} XP',
+        ),
       ),
     ],
   );
+
+  Future<void> _pickPhoto() async {
+    setState(() => _selectingPhoto = true);
+    try {
+      final photo = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (photo == null || !mounted) return;
+      final extension = _supportedExtension(photo.name);
+      if (extension == null) {
+        _showMessage('Please select a JPG, JPEG, PNG or WEBP image.');
+        return;
+      }
+      final bytes = await photo.readAsBytes();
+      if (!mounted) return;
+      if (bytes.isEmpty) {
+        _showMessage('Unable to read the selected photo. Please try again.');
+        return;
+      }
+      setState(() {
+        _photoBytes = bytes;
+        _photoExtension = extension;
+      });
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Unable to select a photo. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _selectingPhoto = false);
+    }
+  }
+
+  String? _supportedExtension(String filename) {
+    final match = RegExp(r'[.]([^.]+)$').firstMatch(filename.toLowerCase());
+    final extension = match?.group(1);
+    return switch (extension) {
+      'jpg' || 'jpeg' || 'png' || 'webp' => extension,
+      _ => null,
+    };
+  }
+
+  Future<void> _submit() async {
+    final photoBytes = _photoBytes;
+    final extension = _photoExtension;
+    if (photoBytes == null || extension == null) {
+      _showMessage('Please upload a photo before submitting the quest.');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    final trimmedCaption = caption.text.trim();
+    final result = await widget.vm.submitPictureQuest(
+      place: widget.place,
+      photoBytes: photoBytes,
+      extension: extension,
+      caption: trimmedCaption.isEmpty ? null : trimmedCaption,
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    switch (result.status) {
+      case QuestSubmissionStatus.completed:
+        Navigator.pop(context);
+        widget.notify(
+          'Quest completed successfully. Experience Points (XP) have been awarded.',
+          AppColors.teal,
+        );
+        return;
+      case QuestSubmissionStatus.alreadyCompleted:
+        Navigator.pop(context);
+        widget.notify(
+          'You have already completed this heritage quest.',
+          AppColors.primary,
+        );
+        return;
+      case QuestSubmissionStatus.uploadFailed:
+        _showMessage('Photo upload failed. Please try again.');
+        return;
+      case QuestSubmissionStatus.authenticationRequired:
+        _showMessage('Please sign in to join a heritage quest.');
+        return;
+      case QuestSubmissionStatus.failed:
+        _showMessage('Quest submission failed. Please try again.');
+        return;
+      case QuestSubmissionStatus.busy:
+        return;
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 }
