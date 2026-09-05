@@ -73,26 +73,24 @@ class MapNavigationService {
     if (waypoints.length < 2) {
       throw ArgumentError('At least two route points are required.');
     }
-    final coordinates = waypoints
+    final coordinatePath = waypoints
         .map((LatLng point) => '${point.longitude},${point.latitude}')
         .join(';');
     final uri = Uri.https(
       host,
-      '$routePathPrefix/$coordinates',
+      '$routePathPrefix/$coordinatePath',
       <String, String>{
         'overview': 'full',
         'geometries': 'geojson',
         'steps': 'false',
       },
     );
-    final response = await http
-        .get(uri)
-        .timeout(const Duration(seconds: 12));
+    final response = await http.get(uri).timeout(const Duration(seconds: 12));
     if (response.statusCode != 200) {
       throw StateError('Routing service returned ${response.statusCode}.');
     }
-    final payload = jsonDecode(utf8.decode(response.bodyBytes))
-        as Map<String, dynamic>;
+    final payload =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     final routes = payload['routes'] as List<dynamic>?;
     if (payload['code'] != 'Ok' || routes == null || routes.isEmpty) {
       throw const FormatException('No road route was returned.');

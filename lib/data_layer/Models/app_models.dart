@@ -90,6 +90,9 @@ class ActivityItem {
     required this.longitude,
     this.notes = '',
     this.transit = '',
+    this.routeDistanceMeters,
+    this.routeDurationSeconds,
+    this.routeGeometry = const <List<double>>[],
   });
   final String id;
   String time;
@@ -100,6 +103,9 @@ class ActivityItem {
   String transit;
   double latitude;
   double longitude;
+  double? routeDistanceMeters;
+  double? routeDurationSeconds;
+  List<List<double>> routeGeometry;
 }
 
 class PlanDay {
@@ -120,8 +126,10 @@ class Traveller {
     required this.name,
     required this.initials,
     required this.role,
+    this.userId,
     this.online = true,
   });
+  final String? userId;
   final String name;
   final String initials;
   String role;

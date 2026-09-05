@@ -33,19 +33,25 @@ class SupabasePlannerService {
   }
 
   Future<String> _activeAccessToken(String? fallback) async {
-    final auth = Supabase.instance.client.auth;
-    var session = auth.currentSession;
-    if (session == null) {
-      session = (await auth.signInAnonymously()).session;
-    }
-    if (session == null) return fallback ?? anonKey;
+    try {
+      final auth = Supabase.instance.client.auth;
+      var session = auth.currentSession;
+      if (session == null) {
+        session = (await auth.signInAnonymously()).session;
+      }
+      if (session == null) return fallback ?? anonKey;
 
-    final expiresAt = session.expiresAt;
-    final refreshBefore = DateTime.now().millisecondsSinceEpoch ~/ 1000 + 60;
-    if (expiresAt != null && expiresAt <= refreshBefore) {
-      session = (await auth.refreshSession()).session ?? session;
+      final expiresAt = session.expiresAt;
+      final refreshBefore = DateTime.now().millisecondsSinceEpoch ~/ 1000 + 60;
+      if (expiresAt != null && expiresAt <= refreshBefore) {
+        session = (await auth.refreshSession()).session ?? session;
+      }
+      return session.accessToken;
+    } on AssertionError {
+      // Unit tests and standalone service clients may provide an explicit
+      // token without initializing the global Supabase Flutter singleton.
+      return fallback ?? anonKey;
     }
-    return session.accessToken;
   }
 
   Future<List<Map<String, dynamic>>> select(
