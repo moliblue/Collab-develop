@@ -24,12 +24,14 @@ class MapModuleView extends StatefulWidget {
     required this.active,
     required this.onBack,
     required this.onXpReward,
+    required this.onAddToPlan,
     required this.notify,
   });
   final MapQuestViewModel viewModel;
   final bool active;
   final VoidCallback onBack;
   final ValueChanged<int> onXpReward;
+  final ValueChanged<HeritagePlace> onAddToPlan;
   final void Function(String, Color) notify;
   @override
   State<MapModuleView> createState() => _MapModuleViewState();
@@ -574,6 +576,7 @@ class _MapModuleViewState extends State<MapModuleView> {
       vm: widget.viewModel,
       currentPosition: _effectiveUserPosition,
       notify: widget.notify,
+      onXpReward: widget.onXpReward,
     );
   }
 
@@ -1036,6 +1039,8 @@ class _MapModuleViewState extends State<MapModuleView> {
               vm: vm,
               currentPosition: () => _effectiveUserPosition,
               notify: widget.notify,
+              onAddToPlan: widget.onAddToPlan,
+              onXpReward: widget.onXpReward,
             ),
         ],
       );
@@ -1613,18 +1618,24 @@ class _PlaceImage extends StatelessWidget {
   final HeritagePlace place;
 
   @override
-  Widget build(BuildContext context) => place.image.isEmpty
-      ? const ColoredBox(
-          color: AppColors.softBlue,
-          child: Center(
-            child: Icon(
-              Icons.museum_rounded,
-              size: 54,
-              color: AppColors.primary,
-            ),
-          ),
-        )
-      : Image.asset(place.image, fit: BoxFit.cover);
+  Widget build(BuildContext context) {
+    const fallback = ColoredBox(
+      color: AppColors.softBlue,
+      child: Center(
+        child: Icon(Icons.museum_rounded, size: 54, color: AppColors.primary),
+      ),
+    );
+    if (place.image.isEmpty) return fallback;
+    if (place.image.startsWith('http://') ||
+        place.image.startsWith('https://')) {
+      return Image.network(
+        place.image,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fallback,
+      );
+    }
+    return Image.asset(place.image, fit: BoxFit.cover);
+  }
 }
 
 class _LocationSheet extends StatelessWidget {
@@ -1633,11 +1644,15 @@ class _LocationSheet extends StatelessWidget {
     required this.vm,
     required this.currentPosition,
     required this.notify,
+    required this.onAddToPlan,
+    required this.onXpReward,
   });
   final HeritagePlace place;
   final MapQuestViewModel vm;
   final LatLng? Function() currentPosition;
   final void Function(String, Color) notify;
+  final ValueChanged<HeritagePlace> onAddToPlan;
+  final ValueChanged<int> onXpReward;
   @override
   Widget build(BuildContext context) => Positioned.fill(
     child: Material(
@@ -1802,6 +1817,12 @@ class _LocationSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
+                          onPressed: () => onAddToPlan(place),
+                          icon: const Icon(Icons.add_task_rounded),
+                          label: const Text('Add to Plan'),
+                        ),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
                           onPressed: vm.questLoading
                               ? null
                               : () => _joinQuest(context),
@@ -1830,6 +1851,7 @@ class _LocationSheet extends StatelessWidget {
     vm: vm,
     currentPosition: currentPosition(),
     notify: notify,
+    onXpReward: onXpReward,
   );
 }
 
@@ -1860,6 +1882,7 @@ Future<void> _joinHeritageQuest({
   required MapQuestViewModel vm,
   required LatLng? currentPosition,
   required void Function(String, Color) notify,
+  required ValueChanged<int> onXpReward,
 }) async {
   if (currentPosition == null) {
     await _showQuestMessage(
@@ -1888,7 +1911,12 @@ Future<void> _joinHeritageQuest({
     case QuestJoinStatus.ready:
       await showAppSheet<void>(
         context,
-        _QuestForm(place: place, vm: vm, notify: notify),
+        _QuestForm(
+          place: place,
+          vm: vm,
+          notify: notify,
+          onXpReward: onXpReward,
+        ),
       );
       return;
     case QuestJoinStatus.unavailable:
@@ -1925,11 +1953,13 @@ class _QuestForm extends StatefulWidget {
     required this.place,
     required this.vm,
     required this.notify,
+    required this.onXpReward,
   });
 
   final HeritagePlace place;
   final MapQuestViewModel vm;
   final void Function(String, Color) notify;
+  final ValueChanged<int> onXpReward;
   @override
   State<_QuestForm> createState() => _QuestFormState();
 }
@@ -2096,6 +2126,7 @@ class _QuestFormState extends State<_QuestForm> {
 
     switch (result.status) {
       case QuestSubmissionStatus.completed:
+        widget.onXpReward(result.xpAwarded);
         Navigator.pop(context);
         widget.notify(
           'Quest completed successfully. Experience Points (XP) have been awarded.',

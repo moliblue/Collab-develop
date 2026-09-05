@@ -11,20 +11,23 @@ class SupabaseSession {
 class SupabasePlannerService {
   SupabasePlannerService({String? url, String? anonKey, http.Client? client})
     : url = url ?? const String.fromEnvironment('SUPABASE_URL'),
-      anonKey = anonKey ?? const String.fromEnvironment('SUPABASE_ANON_KEY'),
+      anonKey =
+          anonKey ??
+          const String.fromEnvironment(
+            'SUPABASE_PUBLISHABLE_KEY',
+            defaultValue: String.fromEnvironment('SUPABASE_ANON_KEY'),
+          ),
       _client = client ?? http.Client();
   final String url;
   final String anonKey;
   final http.Client _client;
   bool get isConfigured => url.startsWith('https://') && anonKey.isNotEmpty;
 
-  Future<SupabaseSession> signInAnonymously() async {
+  Future<SupabaseSession> authenticatedSession() async {
     if (!isConfigured) throw StateError('Supabase is not configured.');
-    final client = Supabase.instance.client;
-    var session = client.auth.currentSession;
-    session ??= (await client.auth.signInAnonymously()).session;
+    final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      throw StateError('Supabase did not return an anonymous session.');
+      throw StateError('Please sign in before using Collaborative Planner.');
     }
     return SupabaseSession(
       accessToken: session.accessToken,
@@ -36,9 +39,6 @@ class SupabasePlannerService {
     try {
       final auth = Supabase.instance.client.auth;
       var session = auth.currentSession;
-      if (session == null) {
-        session = (await auth.signInAnonymously()).session;
-      }
       if (session == null) return fallback ?? anonKey;
 
       final expiresAt = session.expiresAt;
@@ -50,6 +50,8 @@ class SupabasePlannerService {
     } on AssertionError {
       // Unit tests and standalone service clients may provide an explicit
       // token without initializing the global Supabase Flutter singleton.
+      return fallback ?? anonKey;
+    } on StateError {
       return fallback ?? anonKey;
     }
   }
@@ -142,7 +144,8 @@ class SupabasePlannerService {
   }) async {
     if (!isConfigured) {
       throw StateError(
-        'Supabase is not configured. Supply SUPABASE_URL and SUPABASE_ANON_KEY with --dart-define.',
+        'Supabase is not configured. Supply SUPABASE_URL and '
+        'SUPABASE_PUBLISHABLE_KEY with --dart-define.',
       );
     }
     final uri = Uri.parse(

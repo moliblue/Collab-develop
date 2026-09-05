@@ -94,12 +94,14 @@ class _AppShellViewState extends State<AppShellView> {
                                         active: vm.tab == MainTab.map,
                                         onBack: vm.back,
                                         onXpReward: vm.rewardXp,
+                                        onAddToPlan: vm.addToPlan,
                                         notify: vm.showToast,
                                       ),
                                       MysteryJourneyView(
                                         viewModel: vm.mystery,
                                         onViewPassport: vm.openPassport,
                                         onDirections: vm.showMysteryDirections,
+                                        onAddToPlan: vm.addMysteryToPlan,
                                         notify: vm.showToast,
                                       ),
                                       PlanModuleView(

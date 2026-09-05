@@ -996,6 +996,7 @@ void main() {
 
     expect(model.mystery.routeRevealed, isTrue);
     expect(model.map.directionTarget?.id, 'destination-1');
+    expect(model.map.directionTarget?.image, isEmpty);
     expect(model.tab, MainTab.map);
   });
 
@@ -1007,8 +1008,13 @@ void main() {
     await model.mystery.startJourney();
 
     await model.mystery.simulateArrival();
+    await tester.pump();
     expect(model.mystery.stage, MysteryStage.complete);
     expect(model.mystery.revealedDestination?.id, 'destination-1');
+    expect(
+      find.byKey(const Key('add_mystery_destination_to_plan')),
+      findsOneWidget,
+    );
     expect(repository.profileXp, 700);
     expect(repository.profileStreak, 4);
 

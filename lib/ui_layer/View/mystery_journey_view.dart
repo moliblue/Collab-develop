@@ -21,12 +21,14 @@ class MysteryJourneyView extends StatefulWidget {
     required this.viewModel,
     required this.onViewPassport,
     required this.onDirections,
+    required this.onAddToPlan,
     required this.notify,
   });
 
   final MysteryJourneyViewModel viewModel;
   final VoidCallback onViewPassport;
   final VoidCallback onDirections;
+  final VoidCallback onAddToPlan;
   final void Function(String, Color) notify;
 
   @override
@@ -1962,6 +1964,13 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       ),
     ),
     const SizedBox(height: 16),
+    OutlinedButton.icon(
+      key: const Key('add_mystery_destination_to_plan'),
+      onPressed: widget.onAddToPlan,
+      icon: const Icon(Icons.add_task_rounded),
+      label: const Text('Add to Plan'),
+    ),
+    const SizedBox(height: 9),
     Row(
       children: <Widget>[
         Expanded(
