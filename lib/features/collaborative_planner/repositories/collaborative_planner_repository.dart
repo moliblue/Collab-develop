@@ -40,7 +40,7 @@ class CollaborativePlannerRepository {
               '&order=name.asc&limit=8',
           accessToken: (await authenticate())?.accessToken,
         );
-        final catalogue = rows.map((row) => OsmPlace(
+        final catalogueCandidates = rows.map((row) => OsmPlace(
           name: '${row['name']}',
           displayName: '${row['address']}'.trim().isEmpty
               ? '${row['name']}'
@@ -51,6 +51,14 @@ class CollaborativePlannerRepository {
           ),
           type: '${row['category']}',
         )).toList();
+        final catalogueByKey = <String, OsmPlace>{};
+        for (final place in catalogueCandidates) {
+          final key = '${place.name.trim().toLowerCase()}|'
+              '${place.point.latitude.toStringAsFixed(4)}|'
+              '${place.point.longitude.toStringAsFixed(4)}';
+          catalogueByKey.putIfAbsent(key, () => place);
+        }
+        final catalogue = catalogueByKey.values.toList();
         if (catalogue.isNotEmpty) return catalogue;
       } catch (_) {
         // Fall through to Nominatim when the catalogue is unavailable.

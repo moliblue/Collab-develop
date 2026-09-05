@@ -68,10 +68,20 @@ class HeritageCatalogService {
         .gte('longitude', longitude - longitudeDelta)
         .lte('longitude', longitude + longitudeDelta)
         .limit(250);
-    final places = rows
+    final candidates = rows
         .map((row) => _fromRow(Map<String, dynamic>.from(row), latitude, longitude))
         .where((place) => place.distanceKm <= radiusKm)
         .toList();
+    final unique = <String, HeritagePlace>{};
+    for (final place in candidates) {
+      final key = '${place.name.trim().toLowerCase()}|'
+          '${place.latitude.toStringAsFixed(4)}|${place.longitude.toStringAsFixed(4)}';
+      final current = unique[key];
+      if (current == null || place.description.length > current.description.length) {
+        unique[key] = place;
+      }
+    }
+    final places = unique.values.toList();
     places.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
     return places;
   }
