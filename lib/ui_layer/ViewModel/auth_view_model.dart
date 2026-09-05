@@ -170,7 +170,7 @@ class AuthViewModel extends ChangeNotifier {
     const configured = String.fromEnvironment('AUTH_REDIRECT_URL');
     if (configured.isNotEmpty) return configured;
     if (kIsWeb) return '${Uri.base.origin}/';
-    return 'com.finditmy.findit_my://login-callback/';
+    return 'finditmy://login-callback/';
   }
 
   Future<void> _finishEmailConfirmation() async {

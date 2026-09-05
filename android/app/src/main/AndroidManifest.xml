@@ -34,7 +34,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="com.finditmy.findit_my"
+                    android:scheme="finditmy"
                     android:host="login-callback" />
             </intent-filter>
         </activity>
