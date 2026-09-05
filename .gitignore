@@ -24,6 +24,7 @@ migrate_working_dir/
 #.vscode/
 
 # Flutter/Dart/Pub related
+.codex_tmp/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
@@ -48,3 +49,4 @@ app.*.map.json
 #supabase
 supabase.env.json
 supabase.local.env.json
+.pub-cache/

@@ -11,7 +11,15 @@ enum MysteryStage {
   complete,
 }
 
-enum ProfileStage { dashboard, badges, login, register, recover }
+enum ProfileStage {
+  dashboard,
+  badges,
+  passport,
+  login,
+  register,
+  verifyEmail,
+  recover,
+}
 
 class Review {
   Review({
@@ -114,17 +122,37 @@ class Traveller {
 
 class BadgeData {
   const BadgeData({
+    this.id = '',
     required this.title,
     required this.description,
     required this.rarity,
     required this.xp,
     required this.unlocked,
     required this.icon,
+    this.progress = 0,
+    this.requirementValue = 1,
+    this.unlockedAt,
   });
+  final String id;
   final String title;
   final String description;
   final String rarity;
   final int xp;
   final bool unlocked;
   final int icon;
+  final int progress;
+  final int requirementValue;
+  final DateTime? unlockedAt;
+}
+
+class PassportStampData {
+  const PassportStampData({
+    required this.id,
+    required this.destinationName,
+    required this.earnedAt,
+  });
+
+  final String id;
+  final String destinationName;
+  final DateTime earnedAt;
 }

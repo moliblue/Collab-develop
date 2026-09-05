@@ -44,10 +44,16 @@ class _AppShellViewState extends State<AppShellView> {
               child: Scaffold(
                 key: const Key('authentication_gate'),
                 body: SafeArea(
-                  child: ProfileModuleView(
-                    viewModel: vm.profile,
-                    authViewModel: vm.auth,
-                    notify: vm.showToast,
+                  child: Stack(
+                    children: <Widget>[
+                      ProfileModuleView(
+                        viewModel: vm.profile,
+                        authViewModel: vm.auth,
+                        notify: vm.showToast,
+                      ),
+                      if (vm.toast != null)
+                        _Toast(data: vm.toast!, onDismiss: vm.dismissToast),
+                    ],
                   ),
                 ),
               ),
@@ -65,7 +71,7 @@ class _AppShellViewState extends State<AppShellView> {
                         children: <Widget>[
                           _Header(
                             viewModel: vm,
-                            onProfileSettings: () => _profileSettings(context),
+                            onProfileTap: vm.openProfile,
                           ),
                           Expanded(
                             child: IndexedStack(
@@ -119,91 +125,12 @@ class _AppShellViewState extends State<AppShellView> {
             ),
     );
   }
-
-  Future<void> _profileSettings(BuildContext context) => showAppSheet<void>(
-    context,
-    SheetBody(
-      children: <Widget>[
-        ModalTitle(
-          title: 'User Profile & Settings',
-          subtitle:
-              widget.viewModel.auth.currentEmail ?? 'Not currently signed in',
-          icon: Icons.person_rounded,
-        ),
-        const SizedBox(height: 10),
-        const Center(
-          child: InitialsAvatar('AM', radius: 40, color: AppColors.softBlue),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Amberly',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-        const Text(
-          'Role: Admin',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: AppColors.primary),
-        ),
-        const SizedBox(height: 20),
-        const Divider(),
-        const SizedBox(height: 8),
-        const Text(
-          'Development tools',
-          style: TextStyle(
-            color: AppColors.muted,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () {
-            Navigator.pop(context);
-            _resetConfirmation(context);
-          },
-          icon: const Icon(Icons.restart_alt_rounded),
-          label: const Text('Reset Demo Data'),
-        ),
-        const SizedBox(height: 8),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
-        ),
-      ],
-    ),
-  );
-
-  Future<void> _resetConfirmation(BuildContext context) async {
-    final yes = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-        icon: const Icon(Icons.restart_alt_rounded, color: AppColors.warning),
-        title: const Text('Reset demo data?'),
-        content: const Text(
-          'Bookmarks, itinerary changes and active Mystery progress will return to the prototype defaults.',
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-    if (yes == true) widget.viewModel.resetDemo();
-  }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.viewModel, required this.onProfileSettings});
+  const _Header({required this.viewModel, required this.onProfileTap});
   final AppViewModel viewModel;
-  final VoidCallback onProfileSettings;
+  final VoidCallback onProfileTap;
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
@@ -305,13 +232,14 @@ class _Header extends StatelessWidget {
           ),
         ],
         IconButton(
-          tooltip: 'Profile settings',
-          onPressed: onProfileSettings,
+          tooltip: 'Open profile',
+          onPressed: onProfileTap,
           style: IconButton.styleFrom(backgroundColor: AppColors.elevated),
-          icon: const InitialsAvatar(
-            'AM',
+          icon: InitialsAvatar(
+            viewModel.profile.initials,
             radius: 14,
             color: AppColors.softBlue,
+            imageUrl: viewModel.profile.avatarUrl,
           ),
         ),
       ],
