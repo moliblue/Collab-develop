@@ -1,4 +1,12 @@
+import 'dart:ui' as ui;
+
+import 'package:file_saver/file_saver.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
@@ -22,12 +30,18 @@ class ProfileModuleView extends StatelessWidget {
     animation: Listenable.merge(<Listenable>[viewModel, authViewModel]),
     builder: (BuildContext context, _) => switch (viewModel.stage) {
       ProfileStage.badges => _BadgesView(viewModel: viewModel, notify: notify),
+      ProfileStage.passport => _PassportView(viewModel: viewModel),
       ProfileStage.login => _LoginView(
         profile: viewModel,
         auth: authViewModel,
         notify: notify,
       ),
       ProfileStage.register => _RegisterView(
+        profile: viewModel,
+        auth: authViewModel,
+        notify: notify,
+      ),
+      ProfileStage.verifyEmail => _VerifyEmailView(
         profile: viewModel,
         auth: authViewModel,
         notify: notify,
@@ -60,22 +74,18 @@ class _Dashboard extends StatelessWidget {
     key: const PageStorageKey<String>('profile-dashboard'),
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
     children: <Widget>[
-      Row(
-        children: <Widget>[
-          const Expanded(
-            child: SectionTitle('Profile', subtitle: 'Your travel profile'),
+      if (viewModel.error != null) ...<Widget>[
+        AppCard(
+          color: const Color(0xFFFFEEEE),
+          borderColor: AppColors.danger,
+          child: Text(
+            viewModel.error!,
+            style: const TextStyle(color: AppColors.danger, fontSize: 11),
           ),
-          IconButton(
-            tooltip: 'Edit profile',
-            onPressed: () => _editProfile(context),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
-              side: const BorderSide(color: AppColors.border),
-            ),
-            icon: const Icon(Icons.edit_rounded, size: 18),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+      ],
+      const SectionTitle('Profile', subtitle: 'Your travel profile'),
       const SizedBox(height: 13),
       AppCard(
         radius: AppTokens.cardRadius,
@@ -107,10 +117,11 @@ class _Dashboard extends StatelessWidget {
               children: <Widget>[
                 Stack(
                   children: <Widget>[
-                    const InitialsAvatar(
-                      'AM',
+                    InitialsAvatar(
+                      viewModel.initials,
                       radius: 40,
                       color: AppColors.softBlue,
+                      imageUrl: viewModel.avatarUrl,
                     ),
                     Positioned(
                       right: 0,
@@ -201,26 +212,29 @@ class _Dashboard extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Next level: Cultural Heritage Master',
-                        style: TextStyle(
+                        'Next level: ${viewModel.nextLevelTitle}',
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
                       Text(
-                        'Keep exploring to unlock your next badge',
-                        style: TextStyle(fontSize: 9, color: AppColors.muted),
+                        '${viewModel.xpToNextLevel} XP to reach Level ${viewModel.nextLevel}',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: AppColors.muted,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Text(
-                  '${((viewModel.xp / 2000) * 100).round()}%',
+                  '${viewModel.levelProgressPercent}%',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 10,
@@ -233,7 +247,7 @@ class _Dashboard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: LinearProgressIndicator(
-                value: viewModel.xp / 2000,
+                value: viewModel.levelProgress,
                 minHeight: 9,
                 backgroundColor: AppColors.elevated,
               ),
@@ -256,11 +270,22 @@ class _Dashboard extends StatelessWidget {
             const Divider(height: 1),
             _action(
               Icons.workspace_premium_rounded,
-              'Travel badges',
-              'Milestones, certificate and rewards',
+              'Achievements & badges',
+              'Challenges, progress and rewards',
               AppColors.warning,
               () => viewModel.setStage(ProfileStage.badges),
               key: const Key('open_badges'),
+            ),
+            const Divider(height: 1),
+            _action(
+              Icons.auto_stories_rounded,
+              'Passport stamps',
+              viewModel.passportStamps.isEmpty
+                  ? 'Your verified destination collection'
+                  : '${viewModel.passportStamps.length} recent stamps',
+              AppColors.primaryDark,
+              () => viewModel.setStage(ProfileStage.passport),
+              key: const Key('open_passport'),
             ),
             const Divider(height: 1),
             _action(
@@ -333,42 +358,45 @@ class _Dashboard extends StatelessWidget {
       context,
       SheetBody(
         children: <Widget>[
-          const ModalTitle(
+          ModalTitle(
             title: 'Edit Profile & Avatar',
-            subtitle: 'Local demo profile',
+            subtitle: authViewModel.currentEmail ?? 'ExploreMY account',
             icon: Icons.edit_rounded,
           ),
           const SizedBox(height: 10),
-          const Center(
+          Center(
             child: Stack(
               children: <Widget>[
-                InitialsAvatar('AM', radius: 42, color: AppColors.softBlue),
+                InitialsAvatar(
+                  viewModel.initials,
+                  radius: 42,
+                  color: AppColors.softBlue,
+                  imageUrl: viewModel.avatarUrl,
+                ),
                 Positioned(
                   right: 0,
                   bottom: 0,
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: AppColors.primary,
-                    child: Icon(
-                      Icons.camera_alt_rounded,
-                      size: 15,
-                      color: Colors.white,
+                  child: Material(
+                    color: AppColors.primary,
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: viewModel.loading
+                          ? null
+                          : () => _pickAvatar(context),
+                      child: const Padding(
+                        padding: EdgeInsets.all(7),
+                        child: Icon(
+                          Icons.camera_alt_rounded,
+                          size: 15,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const <Widget>[
-              InitialsAvatar('AM', radius: 18, color: Color(0xFFDDEEFF)),
-              SizedBox(width: 7),
-              InitialsAvatar('EX', radius: 18, color: Color(0xFFE9FAF4)),
-              SizedBox(width: 7),
-              InitialsAvatar('MY', radius: 18, color: Color(0xFFFFF1DB)),
-            ],
           ),
           const SizedBox(height: 12),
           TextField(
@@ -386,22 +414,140 @@ class _Dashboard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () {
-              final error = viewModel.updateProfile(name.text, bio.text);
-              if (error != null) {
-                notify(error, AppColors.danger);
-                return;
-              }
-              Navigator.pop(context);
-              notify('Profile & avatar updated successfully!', AppColors.teal);
-            },
+            onPressed: viewModel.loading
+                ? null
+                : () async {
+                    final error = await viewModel.updateProfile(
+                      name.text,
+                      bio.text,
+                    );
+                    if (!context.mounted) return;
+                    if (error != null) {
+                      notify(error, AppColors.danger);
+                      return;
+                    }
+                    Navigator.pop(context);
+                    notify(
+                      ProfileViewModel.profileUpdatedMessage,
+                      AppColors.teal,
+                    );
+                  },
             child: const Text('Save Profile'),
           ),
         ],
       ),
     );
-    name.dispose();
-    bio.dispose();
+  }
+
+  Future<void> _pickAvatar(BuildContext context) async {
+    final action = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Choose profile photo'),
+        content: Text(
+          kIsWeb
+              ? 'Choose a JPG or PNG image smaller than 5MB.'
+              : 'Take a new photo or choose one from your device.',
+        ),
+        actions: <Widget>[
+          if (!kIsWeb)
+            TextButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, 'camera'),
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('Camera'),
+            ),
+          TextButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, 'gallery'),
+            icon: const Icon(Icons.photo_library_outlined),
+            label: Text(kIsWeb ? 'Choose photo' : 'Gallery'),
+          ),
+          if (viewModel.avatarUrl != null)
+            TextButton.icon(
+              onPressed: () => Navigator.pop(dialogContext, 'remove'),
+              icon: const Icon(Icons.delete_outline_rounded),
+              label: const Text('Remove photo'),
+            ),
+        ],
+      ),
+    );
+    if (action == null || !context.mounted) return;
+    if (action == 'remove') {
+      await _removeAvatar(context);
+      return;
+    }
+
+    try {
+      final image = await ImagePicker().pickImage(
+        source: action == 'camera' ? ImageSource.camera : ImageSource.gallery,
+      );
+      if (image == null) return;
+      final bytes = await image.readAsBytes();
+      if (!context.mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext dialogContext) => AlertDialog(
+          title: const Text('Use this profile photo?'),
+          content: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.memory(bytes, height: 220, fit: BoxFit.cover),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Use Photo'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !context.mounted) return;
+      final error = await viewModel.uploadAvatar(
+        bytes: bytes,
+        fileName: image.name,
+      );
+      if (!context.mounted) return;
+      if (error != null) {
+        notify(error, AppColors.danger);
+        return;
+      }
+      Navigator.pop(context);
+      notify(ProfileViewModel.profileUpdatedMessage, AppColors.teal);
+    } catch (error) {
+      if (!context.mounted) return;
+      notify('Could not open the selected photo: $error', AppColors.danger);
+    }
+  }
+
+  Future<void> _removeAvatar(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Remove profile photo?'),
+        content: const Text('Your initials will be shown instead.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final error = await viewModel.removeAvatar();
+    if (!context.mounted) return;
+    if (error != null) {
+      notify(error, AppColors.danger);
+      return;
+    }
+    Navigator.pop(context);
+    notify(ProfileViewModel.profileUpdatedMessage, AppColors.teal);
   }
 
   Future<void> _language(BuildContext context) => showAppSheet<void>(
@@ -482,6 +628,259 @@ class _Dashboard extends StatelessWidget {
   }
 }
 
+class _PassportView extends StatelessWidget {
+  const _PassportView({required this.viewModel});
+
+  final ProfileViewModel viewModel;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    key: const PageStorageKey<String>('passport-stamps'),
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+    children: <Widget>[
+      const SectionTitle(
+        'Passport Stamps',
+        subtitle: 'Your latest verified Malaysian destinations',
+      ),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: AppColors.mysteryGradient,
+          borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+          boxShadow: const <BoxShadow>[
+            BoxShadow(
+              color: Color(0x24173D66),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .16),
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: const Color(0x88FFFFFF)),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                viewModel.initials,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 13),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    viewModel.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  const Text(
+                    'EXPLOREMY · DIGITAL HERITAGE PASSPORT',
+                    style: TextStyle(
+                      color: Color(0xD9FFFFFF),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: .7,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '${viewModel.passportStamps.length}/5',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+      const Eyebrow('Latest 5 stamps'),
+      const SizedBox(height: 8),
+      if (viewModel.passportStamps.isEmpty)
+        const AppCard(
+          key: Key('empty_passport'),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 25),
+            child: Column(
+              children: <Widget>[
+                Icon(
+                  Icons.location_off_rounded,
+                  size: 38,
+                  color: AppColors.muted,
+                ),
+                SizedBox(height: 9),
+                Text(
+                  'No passport stamps yet',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Complete a verified Mystery Journey to earn your first destination stamp.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+      else
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final columns = constraints.maxWidth >= 900
+                ? 5
+                : constraints.maxWidth >= 560
+                ? 3
+                : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: viewModel.passportStamps.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: columns == 2 ? .86 : .9,
+              ),
+              itemBuilder: (BuildContext context, int index) =>
+                  _PassportStampCard(
+                    stamp: viewModel.passportStamps[index],
+                    index: index,
+                  ),
+            );
+          },
+        ),
+      const SizedBox(height: 12),
+      const Text(
+        'Only your five most recent destination stamps are shown here.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 10, color: AppColors.muted),
+      ),
+    ],
+  );
+}
+
+class _PassportStampCard extends StatelessWidget {
+  const _PassportStampCard({required this.stamp, required this.index});
+
+  final PassportStampData stamp;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    const sealColors = <List<Color>>[
+      <Color>[AppColors.primaryDark, AppColors.primary],
+      <Color>[AppColors.tealDark, AppColors.teal],
+      <Color>[Color(0xFF6A43B8), Color(0xFF8C6BE8)],
+      <Color>[Color(0xFFC77A0A), AppColors.warning],
+      <Color>[Color(0xFF155F7A), Color(0xFF33A6C8)],
+    ];
+    final colors = sealColors[index % sealColors.length];
+    final local = stamp.earnedAt.toLocal();
+    final date =
+        '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year}';
+
+    return AppCard(
+      padding: const EdgeInsets.all(13),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Container(
+            width: 78,
+            height: 78,
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: colors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: colors.last.withValues(alpha: .35),
+                width: 4,
+              ),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: colors.last.withValues(alpha: .25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xCCFFFFFF), width: 2),
+              ),
+              child: const Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Icon(
+                    Icons.location_on_rounded,
+                    color: Colors.white,
+                    size: 31,
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 7,
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: Color(0xFFFFDE78),
+                      size: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 11),
+          Text(
+            stamp.destinationName,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            date,
+            style: const TextStyle(
+              fontSize: 9,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _BadgesView extends StatelessWidget {
   const _BadgesView({required this.viewModel, required this.notify});
   final ProfileViewModel viewModel;
@@ -490,20 +889,9 @@ class _BadgesView extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
     children: <Widget>[
-      Row(
-        children: <Widget>[
-          IconButton(
-            tooltip: 'Back to profile',
-            onPressed: () => viewModel.setStage(ProfileStage.dashboard),
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          const Expanded(
-            child: SectionTitle(
-              'Travel Badges',
-              subtitle: 'Your digital heritage passport',
-            ),
-          ),
-        ],
+      const SectionTitle(
+        'Achievements & Badges',
+        subtitle: 'Complete challenges and earn rewards',
       ),
       const SizedBox(height: 12),
       Container(
@@ -527,25 +915,25 @@ class _BadgesView extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const <Widget>[
+                children: <Widget>[
                   Text(
-                    '3 badges unlocked',
-                    style: TextStyle(
+                    '${viewModel.visibleBadges.where((b) => b.unlocked).length} badges shown',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Keep discovering Malaysia’s stories.',
                     style: TextStyle(color: Color(0xDDFFFFFF), fontSize: 10),
                   ),
                 ],
               ),
             ),
-            const Text(
-              '1 locked',
-              style: TextStyle(
+            Text(
+              '${viewModel.visibleBadges.where((b) => !b.unlocked).length} locked',
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
@@ -569,101 +957,120 @@ class _BadgesView extends StatelessWidget {
       ),
       const SizedBox(height: 7),
       DropdownButtonFormField<String>(
-        initialValue: 'All Categories',
+        initialValue: viewModel.badgeCategory,
         decoration: const InputDecoration(
           prefixIcon: Icon(Icons.filter_alt_rounded),
           labelText: 'Category',
         ),
-        items:
-            <String>[
-                  'All Categories',
-                  'Legendary',
-                  'Recent',
-                  'Explore',
-                  'Milestone',
-                  'Heritage',
-                ]
-                .map(
-                  (String s) =>
-                      DropdownMenuItem<String>(value: s, child: Text(s)),
-                )
-                .toList(),
-        onChanged: (_) {},
+        items: <String>['All Categories', 'Common', 'Rare', 'Epic', 'Legendary']
+            .map(
+              (String s) => DropdownMenuItem<String>(value: s, child: Text(s)),
+            )
+            .toList(),
+        onChanged: (String? value) {
+          if (value != null) viewModel.setBadgeCategory(value);
+        },
       ),
       const SizedBox(height: 12),
-      ...viewModel.visibleBadges.map(
-        (BadgeData b) => Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: AppCard(
-            onTap: () => _badgeDetail(context, b),
-            color: b.unlocked ? Colors.white : AppColors.elevated,
-            child: Row(
+      if (viewModel.visibleBadges.isEmpty)
+        const AppCard(
+          key: Key('empty_achievements'),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 22),
+            child: Column(
               children: <Widget>[
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: b.unlocked
-                      ? AppColors.softBlue
-                      : const Color(0xFFE2E7EB),
-                  child: Icon(
-                    b.unlocked
-                        ? Icons.workspace_premium_rounded
-                        : Icons.lock_rounded,
-                    color: b.unlocked ? AppColors.primary : AppColors.muted,
-                    size: 27,
-                  ),
+                Icon(
+                  Icons.filter_alt_off_rounded,
+                  color: AppColors.muted,
+                  size: 34,
                 ),
-                const SizedBox(width: 11),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              b.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          AppChip(
-                            label: b.rarity,
-                            selected: b.unlocked,
-                            selectedColor: b.rarity == 'Legendary'
-                                ? AppColors.warning
-                                : AppColors.primary,
-                          ),
-                        ],
-                      ),
-                      Text(
-                        b.description,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        b.unlocked
-                            ? 'Unlocked · +${b.xp} XP'
-                            : '0 / 1 progress · ${b.xp} XP',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          color: b.unlocked
-                              ? AppColors.tealDark
-                              : AppColors.muted,
-                        ),
-                      ),
-                    ],
+                SizedBox(height: 9),
+                Text(
+                  ProfileViewModel.noAchievementsMessage,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
           ),
+        )
+      else
+        ...viewModel.visibleBadges.map(
+          (BadgeData b) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppCard(
+              onTap: () => _badgeDetail(context, b),
+              color: b.unlocked ? Colors.white : AppColors.elevated,
+              child: Row(
+                children: <Widget>[
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: b.unlocked
+                        ? AppColors.softBlue
+                        : const Color(0xFFE2E7EB),
+                    child: Icon(
+                      b.unlocked
+                          ? Icons.workspace_premium_rounded
+                          : Icons.lock_rounded,
+                      color: b.unlocked ? AppColors.primary : AppColors.muted,
+                      size: 27,
+                    ),
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                b.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            AppChip(
+                              label: b.rarity,
+                              selected: b.unlocked,
+                              selectedColor: b.rarity == 'Legendary'
+                                  ? AppColors.warning
+                                  : AppColors.primary,
+                            ),
+                          ],
+                        ),
+                        Text(
+                          b.description,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          b.unlocked
+                              ? 'Unlocked · +${b.xp} XP'
+                              : '${b.progress} / ${b.requirementValue} progress · ${b.xp} XP',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: b.unlocked
+                                ? AppColors.tealDark
+                                : AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
     ],
   );
 
@@ -716,18 +1123,36 @@ class _BadgesView extends StatelessWidget {
                   color: AppColors.textSecondary,
                 ),
               ),
+              if (b.unlocked) ...<Widget>[
+                const SizedBox(height: 4),
+                Text(
+                  'Unlocked ${_formatUnlockDate(b.unlockedAt)}',
+                  style: const TextStyle(fontSize: 9, color: AppColors.muted),
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: 12),
         if (b.unlocked)
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(context);
-              _share(context, b);
-            },
-            icon: const Icon(Icons.share_rounded),
-            label: const Text('Share Achievement'),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showBadgeCard(context, b, saveOnly: true),
+                  icon: const Icon(Icons.download_rounded),
+                  label: const Text('Save Image'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => _showBadgeCard(context, b),
+                  icon: const Icon(Icons.share_rounded),
+                  label: const Text('Share Badge'),
+                ),
+              ),
+            ],
           )
         else
           const OutlinedButton(onPressed: null, child: Text('Badge Locked')),
@@ -735,57 +1160,231 @@ class _BadgesView extends StatelessWidget {
     ),
   );
 
-  Future<void> _share(BuildContext context, BadgeData b) => showDialog<void>(
-    context: context,
-    builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF152231),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      icon: const Icon(
-        Icons.auto_awesome_rounded,
-        color: AppColors.warning,
-        size: 36,
-      ),
-      title: Text(b.title, style: const TextStyle(color: Colors.white)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          const CircleAvatar(
-            radius: 38,
-            backgroundColor: Color(0x332F80ED),
-            child: Icon(
-              Icons.workspace_premium_rounded,
-              color: AppColors.primary,
-              size: 42,
+  Future<void> _showBadgeCard(
+    BuildContext context,
+    BadgeData b, {
+    bool saveOnly = false,
+  }) async {
+    final cardKey = GlobalKey();
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFFEEF4FA),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: Text(saveOnly ? 'Save badge image' : 'Share achievement badge'),
+        content: SingleChildScrollView(
+          child: RepaintBoundary(
+            key: cardKey,
+            child: _ShareableBadgeCard(
+              badge: b,
+              travellerName: viewModel.name,
+              unlockDate: _formatUnlockDate(b.unlockedAt),
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            b.description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFFCDD7E0)),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Awarded to ${viewModel.name} · +${b.xp} XP',
-            style: const TextStyle(
-              color: AppColors.warning,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
+          if (saveOnly)
+            FilledButton.icon(
+              onPressed: () => _saveBadgeImage(cardKey, b),
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Save Image'),
+            )
+          else
+            Builder(
+              builder: (BuildContext buttonContext) => FilledButton.icon(
+                onPressed: () => _shareBadgeImage(cardKey, buttonContext, b),
+                icon: const Icon(Icons.share_rounded),
+                label: const Text('Share Badge'),
+              ),
             ),
-          ),
         ],
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close'),
+    );
+  }
+
+  Future<Uint8List> _generateBadgeImage(GlobalKey cardKey) async {
+    await WidgetsBinding.instance.endOfFrame;
+    final boundary = cardKey.currentContext?.findRenderObject();
+    if (boundary is! RenderRepaintBoundary) {
+      throw StateError('Badge image is not ready yet.');
+    }
+    final image = await boundary.toImage(pixelRatio: 3);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) throw StateError('Could not generate the badge image.');
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  }
+
+  Future<void> _shareBadgeImage(
+    GlobalKey cardKey,
+    BuildContext buttonContext,
+    BadgeData b,
+  ) async {
+    try {
+      final bytes = await _generateBadgeImage(cardKey);
+      if (!buttonContext.mounted) return;
+      final box = buttonContext.findRenderObject() as RenderBox?;
+      notify('Achievement badge ready to share!', AppColors.teal);
+      await SharePlus.instance.share(
+        ShareParams(
+          files: <XFile>[XFile.fromData(bytes, mimeType: 'image/png')],
+          fileNameOverrides: <String>['${_badgeFileName(b)}.png'],
+          title: 'ExploreMY Achievement',
+          text: 'I unlocked ${b.title} in ExploreMY!',
+          sharePositionOrigin: box == null
+              ? null
+              : box.localToGlobal(Offset.zero) & box.size,
+          downloadFallbackEnabled: true,
         ),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-            notify('Badge card saved and ready to share.', AppColors.teal);
-          },
-          child: const Text('Save / Share'),
+      );
+    } catch (error) {
+      notify('Could not share achievement badge: $error', AppColors.danger);
+    }
+  }
+
+  Future<void> _saveBadgeImage(GlobalKey cardKey, BadgeData b) async {
+    try {
+      final bytes = await _generateBadgeImage(cardKey);
+      await FileSaver.instance.saveAs(
+        name: _badgeFileName(b),
+        bytes: bytes,
+        fileExtension: 'png',
+        mimeType: MimeType.png,
+      );
+      notify('Achievement badge image saved successfully.', AppColors.teal);
+    } catch (error) {
+      notify('Could not save achievement badge: $error', AppColors.danger);
+    }
+  }
+
+  String _badgeFileName(BadgeData b) =>
+      'exploremy_${b.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_').replaceAll(RegExp(r'^_|_$'), '')}';
+
+  String _formatUnlockDate(DateTime? value) {
+    if (value == null) return 'recently';
+    final local = value.toLocal();
+    final day = local.day.toString().padLeft(2, '0');
+    final month = local.month.toString().padLeft(2, '0');
+    return '$day/$month/${local.year}';
+  }
+}
+
+class _ShareableBadgeCard extends StatelessWidget {
+  const _ShareableBadgeCard({
+    required this.badge,
+    required this.travellerName,
+    required this.unlockDate,
+  });
+
+  final BadgeData badge;
+  final String travellerName;
+  final String unlockDate;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 340,
+    padding: const EdgeInsets.all(28),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: <Color>[Color(0xFF102E50), Color(0xFF1E5791)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(26),
+      border: Border.all(color: const Color(0xFFFFD36A), width: 2),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(Icons.explore_rounded, color: Colors.white, size: 25),
+            SizedBox(width: 8),
+            Text(
+              'ExploreMY',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Container(
+          width: 106,
+          height: 106,
+          decoration: const BoxDecoration(
+            color: Color(0x22FFFFFF),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.workspace_premium_rounded,
+            color: Color(0xFFFFD36A),
+            size: 65,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          badge.title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 25,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          badge.description,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFFD6E2EE), height: 1.35),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0x18FFFFFF),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Column(
+            children: <Widget>[
+              Text(
+                'Awarded to $travellerName',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'Unlocked $unlockDate  ·  +${badge.xp} XP',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFFFFD36A),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          badge.rarity.toUpperCase(),
+          style: const TextStyle(
+            color: Color(0xFFFFD36A),
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
         ),
       ],
     ),
@@ -806,8 +1405,11 @@ class _LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<_LoginView> {
+  final formKey = GlobalKey<FormState>();
   final email = TextEditingController();
   final password = TextEditingController();
+  bool submitted = false;
+  String? loginError;
   @override
   void dispose() {
     email.dispose();
@@ -872,79 +1474,133 @@ class _LoginViewState extends State<_LoginView> {
       ),
       const SizedBox(height: 20),
       AppCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            TextField(
-              key: const Key('login_email'),
-              controller: email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email Address *',
-                prefixIcon: Icon(Icons.mail_outline_rounded),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              key: const Key('login_password'),
-              controller: password,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password *',
-                prefixIcon: Icon(Icons.lock_outline_rounded),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => widget.profile.setStage(ProfileStage.recover),
-                child: const Text('Forgot Password?'),
-              ),
-            ),
-            FilledButton.icon(
-              key: const Key('login_submit'),
-              onPressed: widget.auth.busy ? null : _login,
-              icon: widget.auth.busy
-                  ? const SizedBox.square(
-                      dimension: 17,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.login_rounded),
-              label: const Text('Sign In'),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: <Widget>[
-                const Text(
-                  'Don’t have an account? ',
-                  style: TextStyle(fontSize: 10, color: AppColors.muted),
+        child: Form(
+          key: formKey,
+          autovalidateMode: submitted
+              ? AutovalidateMode.always
+              : AutovalidateMode.onUserInteraction,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextFormField(
+                key: const Key('login_email'),
+                controller: email,
+                onChanged: (_) {
+                  if (loginError != null) setState(() => loginError = null);
+                },
+                keyboardType: TextInputType.emailAddress,
+                validator: (String? value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Email is required.';
+                  }
+                  if (!AuthViewModel.isValidEmail(value)) {
+                    return 'Use a valid email such as user@domain.com.';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Email Address *',
+                  prefixIcon: Icon(Icons.mail_outline_rounded),
                 ),
-                TextButton(
-                  key: const Key('open_register'),
-                  onPressed: () =>
-                      widget.profile.setStage(ProfileStage.register),
-                  child: const Text('Register Now'),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                key: const Key('login_password'),
+                controller: password,
+                onChanged: (_) {
+                  if (loginError != null) setState(() => loginError = null);
+                },
+                obscureText: true,
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password is required.';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Password *',
+                  prefixIcon: Icon(Icons.lock_outline_rounded),
+                ),
+              ),
+              if (loginError != null) ...<Widget>[
+                const SizedBox(height: 10),
+                Semantics(
+                  liveRegion: true,
+                  child: Container(
+                    key: const Key('login_error'),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFEEEE),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.danger),
+                    ),
+                    child: Text(
+                      loginError!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ],
-            ),
-          ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () =>
+                      widget.profile.setStage(ProfileStage.recover),
+                  child: const Text('Forgot Password?'),
+                ),
+              ),
+              FilledButton.icon(
+                key: const Key('login_submit'),
+                onPressed: widget.auth.busy ? null : _login,
+                icon: widget.auth.busy
+                    ? const SizedBox.square(
+                        dimension: 17,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.login_rounded),
+                label: const Text('Sign In'),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: <Widget>[
+                  const Text(
+                    'Don’t have an account? ',
+                    style: TextStyle(fontSize: 10, color: AppColors.muted),
+                  ),
+                  TextButton(
+                    key: const Key('open_register'),
+                    onPressed: () =>
+                        widget.profile.setStage(ProfileStage.register),
+                    child: const Text('Register Now'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ],
   );
   Future<void> _login() async {
+    setState(() => submitted = true);
+    if (!(formKey.currentState?.validate() ?? false)) return;
     final error = await widget.auth.login(email.text, password.text);
     if (!mounted) return;
     if (error != null) {
+      setState(() => loginError = error);
       widget.notify(error, AppColors.danger);
     } else {
-      widget.profile.authenticated();
-      widget.notify('Login successful. Welcome back!', AppColors.teal);
+      setState(() => loginError = null);
+      widget.notify(AuthViewModel.loginSuccessMessage, AppColors.teal);
     }
   }
 }
@@ -963,15 +1619,22 @@ class _RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<_RegisterView> {
+  final formKey = GlobalKey<FormState>();
   final fields = List<TextEditingController>.generate(
     6,
     (_) => TextEditingController(),
   );
+  final birthday = TextEditingController();
+  DateTime? selectedBirthday;
+  String? lastError;
+  bool submitted = false;
+
   @override
   void dispose() {
     for (final c in fields) {
       c.dispose();
     }
+    birthday.dispose();
     super.dispose();
   }
 
@@ -1007,44 +1670,85 @@ class _RegisterViewState extends State<_RegisterView> {
             const Expanded(
               child: SectionTitle(
                 'Create New Account',
-                subtitle: 'Local demo registration',
+                subtitle: 'Register your ExploreMY account',
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
         AppCard(
-          child: Column(
-            children: <Widget>[
-              for (var i = 0; i < fields.length; i++) ...<Widget>[
-                TextField(
-                  key: i == 0 ? const Key('register_name') : null,
-                  controller: fields[i],
-                  obscureText: i == 2 || i == 3,
-                  keyboardType: i == 1
-                      ? TextInputType.emailAddress
-                      : TextInputType.text,
-                  decoration: InputDecoration(
-                    labelText: labels[i],
-                    prefixIcon: Icon(icons[i]),
+          child: Form(
+            key: formKey,
+            autovalidateMode: submitted
+                ? AutovalidateMode.always
+                : AutovalidateMode.onUserInteraction,
+            child: Column(
+              children: <Widget>[
+                for (var i = 0; i < fields.length; i++) ...<Widget>[
+                  TextFormField(
+                    key: i == 0 ? const Key('register_name') : null,
+                    controller: fields[i],
+                    obscureText: i == 2 || i == 3,
+                    keyboardType: switch (i) {
+                      1 => TextInputType.emailAddress,
+                      4 => TextInputType.phone,
+                      5 => TextInputType.number,
+                      _ => TextInputType.text,
+                    },
+                    inputFormatters: i == 4 || i == 5
+                        ? <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(i == 4 ? 11 : 12),
+                          ]
+                        : null,
+                    validator: (String? value) =>
+                        _registrationFieldError(i, value ?? ''),
+                    onChanged: (_) {
+                      if (lastError ==
+                          AuthViewModel.duplicateRegistrationMessage) {
+                        setState(() => lastError = null);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: labels[i],
+                      prefixIcon: Icon(icons[i]),
+                      hintText: i == 5 ? 'e.g. 050704101234' : null,
+                      helperText: i == 2
+                          ? '8+ characters with an uppercase letter and symbol'
+                          : i == 4
+                          ? '10–11 digits without spaces or dashes'
+                          : i == 5
+                          ? 'Enter 12 digits without dashes'
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                ],
+                TextFormField(
+                  key: const Key('register_birthday'),
+                  controller: birthday,
+                  readOnly: true,
+                  onTap: _selectBirthday,
+                  validator: (_) => selectedBirthday == null
+                      ? 'Please select your birthday.'
+                      : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Birthday *',
+                    hintText: 'DD/MM/YYYY',
+                    helperText: 'Tap to select your date of birth',
+                    prefixIcon: Icon(Icons.cake_outlined),
+                    suffixIcon: Icon(Icons.calendar_month_outlined),
                   ),
                 ),
-                const SizedBox(height: 9),
-              ],
-              const TextField(
-                decoration: InputDecoration(
-                  labelText: 'Birthday',
-                  prefixIcon: Icon(Icons.cake_outlined),
+                const SizedBox(height: 13),
+                FilledButton.icon(
+                  key: const Key('register_submit'),
+                  onPressed: widget.auth.busy ? null : _register,
+                  icon: const Icon(Icons.person_add_rounded),
+                  label: const Text('Complete Registration'),
                 ),
-              ),
-              const SizedBox(height: 13),
-              FilledButton.icon(
-                key: const Key('register_submit'),
-                onPressed: widget.auth.busy ? null : _register,
-                icon: const Icon(Icons.person_add_rounded),
-                label: const Text('Complete Registration'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -1052,6 +1756,11 @@ class _RegisterViewState extends State<_RegisterView> {
   }
 
   Future<void> _register() async {
+    setState(() {
+      submitted = true;
+      lastError = null;
+    });
+    formKey.currentState?.validate();
     final error = await widget.auth.register(
       name: fields[0].text,
       email: fields[1].text,
@@ -1059,22 +1768,146 @@ class _RegisterViewState extends State<_RegisterView> {
       confirmation: fields[3].text,
       phone: fields[4].text,
       ic: fields[5].text,
+      birthday: selectedBirthday,
     );
     if (!mounted) return;
     if (error != null) {
+      setState(() => lastError = error);
+      formKey.currentState?.validate();
       widget.notify(error, AppColors.danger);
     } else {
       if (widget.auth.isAuthenticated) {
-        widget.profile.authenticated(name: fields[0].text);
-        widget.notify('Account registered successfully!', AppColors.teal);
+        widget.notify(AuthViewModel.registrationSuccessMessage, AppColors.teal);
       } else {
-        widget.profile.setStage(ProfileStage.login);
-        widget.notify(
-          'Registration received. Confirm your email, then sign in.',
-          AppColors.teal,
-        );
+        widget.profile.setStage(ProfileStage.verifyEmail);
+        widget.notify(AuthViewModel.registrationSuccessMessage, AppColors.teal);
       }
     }
+  }
+
+  String? _registrationFieldError(int index, String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return '${_registrationFieldName(index)} is required.';
+    if (index == 0 && (trimmed.length < 3 || trimmed.length > 30)) {
+      return 'Display name must contain 3–30 characters.';
+    }
+    if (index == 1 && !AuthViewModel.isValidEmail(trimmed)) {
+      return 'Use a valid email such as user@domain.com.';
+    }
+    if (index == 2 && !AuthViewModel.isValidPassword(value)) {
+      return 'Use 8+ characters with an uppercase letter and symbol.';
+    }
+    if (index == 3 && value != fields[2].text) {
+      return 'Passwords do not match.';
+    }
+    if (index == 4 && !AuthViewModel.isValidPhone(trimmed)) {
+      return 'Phone number must contain 10–11 digits.';
+    }
+    if (index == 5 && !AuthViewModel.isValidIc(trimmed)) {
+      return 'IC number must contain exactly 12 digits.';
+    }
+    if ((index == 1 || index == 5) &&
+        lastError == AuthViewModel.duplicateRegistrationMessage) {
+      return index == 1
+          ? 'Email may already be registered.'
+          : 'IC may already be registered.';
+    }
+    return null;
+  }
+
+  String _registrationFieldName(int index) => const <String>[
+    'Display name',
+    'Email',
+    'Password',
+    'Confirm password',
+    'Phone number',
+    'IC number',
+  ][index];
+
+  Future<void> _selectBirthday() async {
+    final now = DateTime.now();
+    final selected = await showDatePicker(
+      context: context,
+      initialDate:
+          selectedBirthday ?? DateTime(now.year - 18, now.month, now.day),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(now.year, now.month, now.day),
+      helpText: 'Select your birthday',
+    );
+    if (selected == null || !mounted) return;
+
+    setState(() {
+      selectedBirthday = selected;
+      final day = selected.day.toString().padLeft(2, '0');
+      final month = selected.month.toString().padLeft(2, '0');
+      birthday.text = '$day/$month/${selected.year}';
+    });
+  }
+}
+
+class _VerifyEmailView extends StatelessWidget {
+  const _VerifyEmailView({
+    required this.profile,
+    required this.auth,
+    required this.notify,
+  });
+  final ProfileViewModel profile;
+  final AuthViewModel auth;
+  final void Function(String, Color) notify;
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.fromLTRB(20, 42, 20, 28),
+    children: <Widget>[
+      const Icon(
+        Icons.mark_email_unread_rounded,
+        size: 64,
+        color: AppColors.primary,
+      ),
+      const SizedBox(height: 14),
+      Text(
+        'Verify your email',
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.headlineMedium,
+      ),
+      const SizedBox(height: 6),
+      Text(
+        'We sent a confirmation link to\n${auth.pendingVerificationEmail ?? 'your email'}.\n\nOpen the link, then return here and sign in.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: AppColors.textSecondary),
+      ),
+      const SizedBox(height: 20),
+      AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            FilledButton.icon(
+              onPressed: auth.busy ? null : () => _resend(context),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Resend confirmation email'),
+            ),
+            TextButton(
+              onPressed: auth.busy
+                  ? null
+                  : () {
+                      auth.cancelVerification();
+                      profile.setStage(ProfileStage.login);
+                    },
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+
+  Future<void> _resend(BuildContext context) async {
+    final error = await auth.resendVerificationEmail();
+    if (!context.mounted) return;
+    notify(
+      error ?? 'A new confirmation email was sent.',
+      error == null ? AppColors.teal : AppColors.danger,
+    );
   }
 }
 
@@ -1092,7 +1925,9 @@ class _RecoverView extends StatefulWidget {
 }
 
 class _RecoverViewState extends State<_RecoverView> {
+  final formKey = GlobalKey<FormState>();
   final email = TextEditingController();
+  bool submitted = false;
   @override
   void dispose() {
     email.dispose();
@@ -1158,41 +1993,59 @@ class _RecoverViewState extends State<_RecoverView> {
                   ),
                 ],
               )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  const Text(
-                    'Enter your registered email address to receive a local demo reset confirmation.',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
+            : Form(
+                key: formKey,
+                autovalidateMode: submitted
+                    ? AutovalidateMode.always
+                    : AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    const Text(
+                      'Enter your registered email address to receive a password reset link.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: email,
-                    decoration: const InputDecoration(
-                      labelText: 'Registered Email *',
-                      prefixIcon: Icon(Icons.mail_outline_rounded),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: email,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (String? value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Email is required.';
+                        }
+                        if (!AuthViewModel.isValidEmail(value)) {
+                          return 'Use a valid email such as user@domain.com.';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Registered Email *',
+                        prefixIcon: Icon(Icons.mail_outline_rounded),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: () async {
-                      final error = await widget.auth.recover(email.text);
-                      if (!context.mounted) return;
-                      if (error != null) {
-                        widget.notify(error, AppColors.danger);
-                      } else {
-                        widget.notify(
-                          'Password reset link sent.',
-                          AppColors.teal,
-                        );
-                      }
-                    },
-                    child: const Text('Send Password Reset Link'),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () async {
+                        setState(() => submitted = true);
+                        formKey.currentState?.validate();
+                        final error = await widget.auth.recover(email.text);
+                        if (!context.mounted) return;
+                        if (error != null) {
+                          widget.notify(error, AppColors.danger);
+                        } else {
+                          widget.notify(
+                            AuthViewModel.resetSentMessage,
+                            AppColors.teal,
+                          );
+                        }
+                      },
+                      child: const Text('Send Password Reset Link'),
+                    ),
+                  ],
+                ),
               ),
       ),
     ],

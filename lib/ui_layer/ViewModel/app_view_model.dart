@@ -36,7 +36,11 @@ class AppViewModel extends ChangeNotifier {
        auth = authViewModel ?? AuthViewModel() {
     mystery.addListener(_syncMysteryProfile);
     auth.addListener(_handleAuthChanged);
-    if (requiresAuthentication) profile.setStage(ProfileStage.login);
+    if (requiresAuthentication) {
+      profile.setStage(ProfileStage.login);
+    } else {
+      unawaited(profile.loadProfile());
+    }
   }
 
   final MysteryJourneyViewModel mystery;
@@ -58,11 +62,13 @@ class AppViewModel extends ChangeNotifier {
     if (requiresAuthentication) {
       if (profile.stage != ProfileStage.login &&
           profile.stage != ProfileStage.register &&
+          profile.stage != ProfileStage.verifyEmail &&
           profile.stage != ProfileStage.recover) {
         profile.setStage(ProfileStage.login);
       }
     } else if (profile.stage == ProfileStage.login ||
         profile.stage == ProfileStage.register ||
+        profile.stage == ProfileStage.verifyEmail ||
         profile.stage == ProfileStage.recover) {
       profile.authenticated();
     }
@@ -72,6 +78,9 @@ class AppViewModel extends ChangeNotifier {
   void selectTab(MainTab value) {
     if (value == MainTab.map && _tab != MainTab.map) _previousBeforeMap = _tab;
     _tab = value;
+    if (value == MainTab.profile && !requiresAuthentication) {
+      unawaited(_refreshProfile());
+    }
     notifyListeners();
   }
 
@@ -160,7 +169,8 @@ class AppViewModel extends ChangeNotifier {
         }
         return;
       case MainTab.profile:
-        if (profile.stage == ProfileStage.badges) {
+        if (profile.stage == ProfileStage.badges ||
+            profile.stage == ProfileStage.passport) {
           profile.setStage(ProfileStage.dashboard);
         } else {
           selectTab(MainTab.mystery);
@@ -180,8 +190,19 @@ class AppViewModel extends ChangeNotifier {
   };
 
   void openPassport() {
-    profile.setStage(ProfileStage.badges);
+    profile.setStage(ProfileStage.passport);
     selectTab(MainTab.profile);
+  }
+
+  void openProfile() {
+    profile.setStage(ProfileStage.dashboard);
+    selectTab(MainTab.profile);
+  }
+
+  Future<void> _refreshProfile() async {
+    await profile.loadProfile();
+    final unlockMessage = profile.takeAchievementUnlockMessage();
+    if (unlockMessage != null) showToast(unlockMessage, AppColors.warning);
   }
 
   void rewardXp(int amount) {

@@ -9,6 +9,13 @@ import 'ui_layer/ViewModel/app_view_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Supabase returns to the web app with a one-time PKCE code after the user
+  // confirms a signup email. Remember that before Supabase consumes the URL.
+  final openedFromEmailConfirmation =
+      kIsWeb &&
+      (Uri.base.queryParameters.containsKey('code') ||
+          Uri.base.fragment.contains('type=signup'));
+
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter framework error: ${details.exceptionAsString()}');
@@ -35,6 +42,12 @@ Future<void> main() async {
     url: supabaseUrl,
     publishableKey: supabasePublishableKey,
   );
+
+  // Email confirmation proves ownership of the address; the use case still
+  // requires the user to enter their credentials on the login screen.
+  if (openedFromEmailConfirmation) {
+    await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+  }
 
   runApp(const FindItMyApp());
 }

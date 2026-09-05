@@ -223,24 +223,40 @@ class InitialsAvatar extends StatelessWidget {
     super.key,
     this.radius = 20,
     this.color = AppColors.softBlue,
+    this.imageUrl,
   });
   final String initials;
   final double radius;
   final Color color;
+  final String? imageUrl;
 
   @override
-  Widget build(BuildContext context) => CircleAvatar(
-    radius: radius,
-    backgroundColor: color,
-    child: Text(
+  Widget build(BuildContext context) {
+    final fallback = Text(
       initials,
       style: TextStyle(
         color: AppColors.textPrimary,
         fontSize: radius * .48,
         fontWeight: FontWeight.w700,
       ),
-    ),
-  );
+    );
+    final url = imageUrl?.trim();
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: color,
+      child: url == null || url.isEmpty
+          ? fallback
+          : ClipOval(
+              child: Image.network(
+                url,
+                width: radius * 2,
+                height: radius * 2,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => fallback,
+              ),
+            ),
+    );
+  }
 }
 
 class ModalTitle extends StatelessWidget {
