@@ -263,6 +263,7 @@ class Journey {
     this.members = const <JourneyMember>[],
     this.isHost = false,
     this.groupPreferencesSet = false,
+    this.isRevisit = false,
     this.completedAt,
   });
 
@@ -283,6 +284,7 @@ class Journey {
   final List<JourneyMember> members;
   final bool isHost;
   final bool groupPreferencesSet;
+  final bool isRevisit;
   final DateTime? completedAt;
 
   bool get destinationMayBeRevealed =>
@@ -301,6 +303,7 @@ class Journey {
     List<JourneyMember>? members,
     bool? isHost,
     bool? groupPreferencesSet,
+    bool? isRevisit,
     DateTime? completedAt,
   }) => Journey(
     id: id,
@@ -320,6 +323,7 @@ class Journey {
     members: members ?? this.members,
     isHost: isHost ?? this.isHost,
     groupPreferencesSet: groupPreferencesSet ?? this.groupPreferencesSet,
+    isRevisit: isRevisit ?? this.isRevisit,
     completedAt: completedAt ?? this.completedAt,
   );
 }

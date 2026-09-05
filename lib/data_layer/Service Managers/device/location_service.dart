@@ -1,6 +1,14 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
-enum LocationFailureReason { servicesDisabled, denied, deniedForever }
+enum LocationFailureReason {
+  servicesDisabled,
+  denied,
+  deniedForever,
+  unavailable,
+}
 
 class LocationServiceException implements Exception {
   const LocationServiceException(this.reason, this.message);
@@ -80,15 +88,25 @@ class LocationService {
   const LocationService();
 
   Future<void> ensurePermission() async {
-    if (!await Geolocator.isLocationServiceEnabled()) {
+    final servicesEnabled = await Geolocator.isLocationServiceEnabled();
+    if (kDebugMode) {
+      debugPrint('Location services enabled: $servicesEnabled');
+    }
+    if (!servicesEnabled) {
       throw const LocationServiceException(
         LocationFailureReason.servicesDisabled,
         'Location services are disabled. Turn on GPS and try again.',
       );
     }
     var permission = await Geolocator.checkPermission();
+    if (kDebugMode) {
+      debugPrint('Location permission before request: $permission');
+    }
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      if (kDebugMode) {
+        debugPrint('Location permission after request: $permission');
+      }
     }
     if (permission == LocationPermission.deniedForever) {
       throw const LocationServiceException(
@@ -107,13 +125,20 @@ class LocationService {
 
   Future<LocationReading> getFreshLocation() async {
     await ensurePermission();
-    final value = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        timeLimit: Duration(seconds: 20),
-      ),
-    );
-    return LocationReading.fromPosition(value);
+    try {
+      final value = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.bestForNavigation,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+      return LocationReading.fromPosition(value);
+    } on TimeoutException {
+      throw const LocationServiceException(
+        LocationFailureReason.unavailable,
+        'Unable to detect your current location. Move to an open area and try again.',
+      );
+    }
   }
 
   Stream<LocationReading> watchLocation() async* {

@@ -1530,6 +1530,21 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       return 'You appear to be offline. Your journey is saved. Check your '
           'connection, then tap Resume to restart arrival monitoring.';
     }
+    if (value.contains('JWT expired') ||
+        value.contains('PGRST301') ||
+        value.contains('Invalid JWT') ||
+        value.contains('User from sub claim in JWT does not exist') ||
+        value.contains('group_rooms_host_user_id_fkey') ||
+        value.contains('401')) {
+      return 'Your sign-in session is no longer valid. Sign out, then sign in '
+          'again before creating or joining a Group Room.';
+    }
+    if (value.contains('TimeoutException') ||
+        value.contains('timed out') ||
+        value.contains('Unable to get current location')) {
+      return 'Unable to detect your current location. Enable location services, '
+          'move to an open area, then try again.';
+    }
     return value.replaceFirst('JourneyDataException: ', '');
   }
 

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:findit_my/data_layer/Models/app_models.dart';
 import 'package:findit_my/data_layer/Models/journey.dart' as journey;
+import 'package:findit_my/data_layer/Repositories/map_quest_repository.dart';
 import 'package:findit_my/data_layer/Repositories/shake_find_repository.dart';
+import 'package:findit_my/data_layer/Repositories/shake_find_repository_impl.dart';
 import 'package:findit_my/data_layer/Service Managers/Remote Services/supabase_service.dart';
 import 'package:findit_my/data_layer/Service Managers/device/location_service.dart';
 import 'package:findit_my/main.dart';
 import 'package:findit_my/ui_layer/ViewModel/app_view_model.dart';
 import 'package:findit_my/ui_layer/ViewModel/auth_view_model.dart';
+import 'package:findit_my/ui_layer/ViewModel/map_quest_view_model.dart';
 import 'package:findit_my/ui_layer/ViewModel/shake_find_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -109,6 +112,131 @@ void main() {
     });
   });
 
+  group('Mystery replayability', () {
+    const destinations = <journey.JourneyDestination>[
+      journey.JourneyDestination(
+        id: 'a',
+        name: 'A',
+        category: 'culture',
+        latitude: 3,
+        longitude: 101,
+        address: 'A',
+        description: 'A',
+      ),
+      journey.JourneyDestination(
+        id: 'b',
+        name: 'B',
+        category: 'history',
+        latitude: 3.1,
+        longitude: 101.1,
+        address: 'B',
+        description: 'B',
+      ),
+      journey.JourneyDestination(
+        id: 'c',
+        name: 'C',
+        category: 'culture',
+        latitude: 3.2,
+        longitude: 101.2,
+        address: 'C',
+        description: 'C',
+      ),
+    ];
+
+    test('prioritizes destinations never completed by the user', () {
+      final pool = mysteryDestinationSelectionPool(
+        destinations,
+        completedDestinationIds: const <String>{'a', 'b'},
+        recentDestinationIds: const <String>{'a'},
+      );
+      expect(pool.map((value) => value.id), <String>['c']);
+    });
+
+    test('falls back to older visits before recent destinations', () {
+      final pool = mysteryDestinationSelectionPool(
+        destinations,
+        completedDestinationIds: const <String>{'a', 'b', 'c'},
+        recentDestinationIds: const <String>{'a', 'b'},
+      );
+      expect(pool.map((value) => value.id), <String>['c']);
+    });
+
+    test('allows any candidate when every destination is recent', () {
+      final pool = mysteryDestinationSelectionPool(
+        destinations,
+        completedDestinationIds: const <String>{'a', 'b', 'c'},
+        recentDestinationIds: const <String>{'a', 'b', 'c'},
+      );
+      expect(pool, destinations);
+    });
+  });
+
+  test('completed Mystery pins refresh through the Map ViewModel', () async {
+    final repository = FakeMapQuestRepository();
+    final model = MapQuestViewModel(questRepository: repository);
+    addTearDown(model.dispose);
+
+    await model.refreshCompletedMysteries();
+
+    expect(repository.completedMysteryRequests, 1);
+    expect(model.completedMysteries.single.place.id, 'completed-place');
+    expect(model.completedMysteries.single.completionCount, 2);
+    model.selectCompletedMystery(model.completedMysteries.single);
+    expect(model.selected?.id, 'completed-place');
+    expect(model.selectedMysteryCompletion, isNotNull);
+  });
+
+  test('Map Mystery state hides spoilers and exposes only revealed state', () {
+    final repository = FakeMapQuestRepository();
+    final model = MapQuestViewModel(questRepository: repository);
+    addTearDown(model.dispose);
+    final place = repository.completions.single.place;
+
+    model.setMysteryJourneyState(
+      destination: place,
+      revealed: false,
+      completed: false,
+    );
+    expect(model.shouldHideForActiveMystery(place), isTrue);
+    expect(model.revealedActiveMysteryDestination, isNull);
+
+    model.setMysteryJourneyState(
+      destination: place,
+      revealed: true,
+      completed: false,
+    );
+    expect(model.shouldHideForActiveMystery(place), isTrue);
+    expect(model.revealedActiveMysteryDestination?.id, place.id);
+
+    model.setMysteryJourneyState(
+      destination: place,
+      revealed: true,
+      completed: true,
+    );
+    expect(model.shouldHideForActiveMystery(place), isFalse);
+    expect(model.revealedActiveMysteryDestination, isNull);
+  });
+
+  test(
+    'completed Mystery history remains scoped to each Map ViewModel',
+    () async {
+      final completedRepository = FakeMapQuestRepository();
+      final newUserRepository = FakeMapQuestRepository()..completions.clear();
+      final completedUser = MapQuestViewModel(
+        questRepository: completedRepository,
+      );
+      final newUser = MapQuestViewModel(questRepository: newUserRepository);
+      addTearDown(completedUser.dispose);
+      addTearDown(newUser.dispose);
+
+      await completedUser.refreshCompletedMysteries();
+      await newUser.refreshCompletedMysteries();
+
+      expect(completedUser.completedMysteries, hasLength(1));
+      expect(newUser.completedMysteries, isEmpty);
+    },
+  );
+
   group('password recovery', () {
     test('rejects invalid email without sending a recovery request', () async {
       final service = FakeRecoverySupabaseService();
@@ -116,7 +244,10 @@ void main() {
       addTearDown(auth.dispose);
       addTearDown(service.dispose);
 
-      expect(await auth.recover('not-an-email'), AuthViewModel.invalidEmailMessage);
+      expect(
+        await auth.recover('not-an-email'),
+        AuthViewModel.invalidEmailMessage,
+      );
       expect(service.recoveryRequests, 0);
     });
 
@@ -136,21 +267,24 @@ void main() {
       expect(auth.recoverySent, isTrue);
     });
 
-    test('recovery event enters reset mode and normal sign-in does not', () async {
-      final service = FakeRecoverySupabaseService();
-      final auth = AuthViewModel(supabaseService: service);
-      addTearDown(auth.dispose);
-      addTearDown(service.dispose);
+    test(
+      'recovery event enters reset mode and normal sign-in does not',
+      () async {
+        final service = FakeRecoverySupabaseService();
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
 
-      service.emit(AuthChangeEvent.signedIn, hasSession: true);
-      await Future<void>.delayed(Duration.zero);
-      expect(auth.isPasswordRecovery, isFalse);
+        service.emit(AuthChangeEvent.signedIn, hasSession: true);
+        await Future<void>.delayed(Duration.zero);
+        expect(auth.isPasswordRecovery, isFalse);
 
-      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
-      await Future<void>.delayed(Duration.zero);
-      expect(auth.isPasswordRecovery, isTrue);
-      expect(auth.shouldShowResetPassword, isTrue);
-    });
+        service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+        await Future<void>.delayed(Duration.zero);
+        expect(auth.isPasswordRecovery, isTrue);
+        expect(auth.shouldShowResetPassword, isTrue);
+      },
+    );
 
     test('new password policy and confirmation are enforced', () async {
       final service = FakeRecoverySupabaseService();
@@ -183,20 +317,23 @@ void main() {
       expect(service.passwordUpdates, 0);
     });
 
-    test('valid password updates once, signs out, and clears recovery', () async {
-      final service = FakeRecoverySupabaseService();
-      final auth = AuthViewModel(supabaseService: service);
-      addTearDown(auth.dispose);
-      addTearDown(service.dispose);
-      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
-      await Future<void>.delayed(Duration.zero);
+    test(
+      'valid password updates once, signs out, and clears recovery',
+      () async {
+        final service = FakeRecoverySupabaseService();
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
+        service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+        await Future<void>.delayed(Duration.zero);
 
-      expect(await auth.resetPassword('ValidPass!', 'ValidPass!'), isNull);
-      expect(service.passwordUpdates, 1);
-      expect(service.localSignOuts, 1);
-      expect(auth.isPasswordRecovery, isFalse);
-      expect(auth.recoverySent, isFalse);
-    });
+        expect(await auth.resetPassword('ValidPass!', 'ValidPass!'), isNull);
+        expect(service.passwordUpdates, 1);
+        expect(service.localSignOuts, 1);
+        expect(auth.isPasswordRecovery, isFalse);
+        expect(auth.recoverySent, isFalse);
+      },
+    );
 
     test('invalid or expired recovery session is rejected safely', () async {
       final service = FakeRecoverySupabaseService();
@@ -298,6 +435,18 @@ void main() {
     return (model, fake);
   }
 
+  Future<void> scrollToArrival(WidgetTester tester) async {
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('test_real_arrival')),
+      240,
+      scrollable: find.descendant(
+        of: find.byKey(const PageStorageKey<String>('mystery-active')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.pump();
+  }
+
   testWidgets('authentication gate blocks modules until sign in', (
     tester,
   ) async {
@@ -389,6 +538,7 @@ void main() {
 
     model.mystery.resumeJourney();
     await tester.pump();
+    await scrollToArrival(tester);
     expect(
       model.mystery.arrivalVerification.state,
       journey.ArrivalVerificationState.idle,
@@ -396,7 +546,7 @@ void main() {
     expect(find.text('Arrival not checked yet'), findsOneWidget);
     expect(repository.arrivalCheckCount, 0);
 
-    unawaited(model.mystery.testArrivalNow());
+    await tester.tap(find.byKey(const Key('test_real_arrival')));
     await tester.pump();
     expect(
       model.mystery.arrivalVerification.state,
@@ -475,6 +625,7 @@ void main() {
 
     model.mystery.resumeJourney();
     await tester.pump();
+    await scrollToArrival(tester);
     expect(find.text('Arrival not checked yet'), findsOneWidget);
     expect(repository.arrivalCheckCount, 0);
 
@@ -645,9 +796,7 @@ void main() {
       find.widgetWithText(TextField, 'Share a clue guess…'),
       'Testing group chat',
     );
-    await tester.ensureVisible(find.byTooltip('Send message'));
-    await tester.pump();
-    await tester.tap(find.byTooltip('Send message'));
+    await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Testing group chat'), findsOneWidget);
     await model.mystery.useGroupSurpriseMe();
@@ -865,6 +1014,7 @@ void main() {
 
     model.mystery.resumeJourney();
     await tester.pump();
+    await scrollToArrival(tester);
 
     expect(model.mystery.stage, MysteryStage.active);
     expect(model.mystery.message, isNull);
@@ -1053,6 +1203,14 @@ void main() {
 
     await model.mystery.castGroupVote(journey.GroupVoteType.hint);
     await tester.pump();
+    await tester.scrollUntilVisible(
+      find.textContaining('Group Hint vote active'),
+      220,
+      scrollable: find.descendant(
+        of: find.byKey(const PageStorageKey<String>('mystery-active')),
+        matching: find.byType(Scrollable),
+      ),
+    );
     expect(find.textContaining('Group Hint vote active'), findsOneWidget);
     expect(find.textContaining('1/2 Yes votes'), findsOneWidget);
 
@@ -1158,7 +1316,14 @@ void main() {
     expect(repository.shakeCallback, isNotNull);
     repository.shakeCallback!();
     await tester.pump(const Duration(milliseconds: 50));
-    await tester.ensureVisible(find.text('Reveal route'));
+    await tester.scrollUntilVisible(
+      find.text('Reveal route'),
+      220,
+      scrollable: find.descendant(
+        of: find.byKey(const PageStorageKey<String>('mystery-active')),
+        matching: find.byType(Scrollable),
+      ),
+    );
     await tester.tap(find.text('Reveal route'));
     await tester.pump();
     await tester.tap(find.text('Reveal Route'));
@@ -1168,6 +1333,60 @@ void main() {
     expect(model.map.directionTarget?.id, 'destination-1');
     expect(model.map.directionTarget?.image, isEmpty);
     expect(model.tab, MainTab.map);
+  });
+
+  testWidgets('journey progress only adds Route after it is revealed', (
+    tester,
+  ) async {
+    final repository = FakeShakeFindRepository();
+    repository.active = journey.Journey(
+      id: 'dynamic-progress',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A real database clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 1200,
+      destination: repository.destination,
+    );
+    final (model, _) = await pumpApp(tester, repository: repository);
+    model.mystery.resumeJourney();
+    await tester.pump();
+
+    expect(find.text('Journey progress'), findsOneWidget);
+    expect(find.text('Route'), findsNothing);
+
+    await model.mystery.revealRoute();
+    await tester.pump();
+
+    expect(find.text('Route'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a repeated destination is clearly marked as a revisit', (
+    tester,
+  ) async {
+    final repository = FakeShakeFindRepository();
+    repository.active = journey.Journey(
+      id: 'revisit-journey',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A different clue for a familiar place',
+      locationHint: 'Mystery area',
+      distanceMeters: 1200,
+      destination: repository.destination,
+      isRevisit: true,
+    );
+    final (model, _) = await pumpApp(tester, repository: repository);
+    model.mystery.resumeJourney();
+    await tester.pump();
+
+    expect(find.text('Revisit Challenge'), findsOneWidget);
+    expect(
+      find.textContaining("You've explored this place before"),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Solo arrival simulation completes once and awards XP once', (
@@ -1181,9 +1400,23 @@ void main() {
     await tester.pump();
     expect(model.mystery.stage, MysteryStage.complete);
     expect(model.mystery.revealedDestination?.id, 'destination-1');
+    expect(find.text('Journey Complete'), findsOneWidget);
+    await tester.drag(
+      find.byKey(const PageStorageKey<String>('mystery-complete')),
+      const Offset(0, -420),
+    );
+    await tester.pump();
     expect(
       find.byKey(const Key('add_mystery_destination_to_plan')),
       findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const Key('add_mystery_destination_to_plan')),
+          )
+          .onPressed,
+      isNotNull,
     );
     expect(repository.profileXp, 700);
     expect(repository.profileStreak, 4);
@@ -1259,15 +1492,175 @@ void main() {
     );
   });
 
+  testWidgets('completed Mystery details reuse the existing Map place sheet', (
+    tester,
+  ) async {
+    final mapRepository = FakeMapQuestRepository();
+    final mapViewModel = MapQuestViewModel(questRepository: mapRepository);
+    await mapViewModel.refreshCompletedMysteries();
+    final model = AppViewModel(
+      mysteryRepository: FakeShakeFindRepository(),
+      authViewModel: FakeAuthViewModel(signedIn: true),
+      mapViewModel: mapViewModel,
+    );
+    await pumpApp(tester, viewModel: model);
+    model.selectTab(MainTab.map);
+    await tester.pump(const Duration(milliseconds: 100));
+
+    mapViewModel.selectCompletedMystery(mapViewModel.completedMysteries.single);
+    await tester.pump();
+
+    expect(find.byKey(const Key('completed_mystery_details')), findsOneWidget);
+    expect(find.text('Mystery Journey Completed ✓'), findsOneWidget);
+    expect(find.text('Explored 2 times'), findsOneWidget);
+  });
+
+  testWidgets('Map renders hidden, revealed, and completed Mystery states', (
+    tester,
+  ) async {
+    final mapRepository = FakeMapQuestRepository();
+    final mapViewModel = MapQuestViewModel(questRepository: mapRepository);
+    await mapViewModel.refreshCompletedMysteries();
+    final place = mapRepository.completions.single.place;
+    final model = AppViewModel(
+      mysteryRepository: FakeShakeFindRepository(),
+      authViewModel: FakeAuthViewModel(signedIn: true),
+      mapViewModel: mapViewModel,
+    );
+    await pumpApp(tester, viewModel: model);
+    model.selectTab(MainTab.map);
+
+    mapViewModel.setMysteryJourneyState(
+      destination: place,
+      revealed: false,
+      completed: false,
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(
+      find.bySemanticsLabel('${place.name}, active Mystery destination'),
+      findsNothing,
+    );
+    expect(
+      find.bySemanticsLabel('${place.name}, completed Mystery Journey'),
+      findsNothing,
+    );
+
+    mapViewModel.setMysteryJourneyState(
+      destination: place,
+      revealed: true,
+      completed: false,
+    );
+    await tester.pump();
+    expect(
+      find.bySemanticsLabel('${place.name}, active Mystery destination'),
+      findsOneWidget,
+    );
+
+    mapViewModel.setMysteryJourneyState(
+      destination: place,
+      revealed: true,
+      completed: true,
+    );
+    await tester.pump();
+    expect(
+      find.bySemanticsLabel('${place.name}, active Mystery destination'),
+      findsNothing,
+    );
+    expect(
+      find.bySemanticsLabel('${place.name}, completed Mystery Journey'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('compact and standard phone widths render without overflow', (
     tester,
   ) async {
-    for (final size in <Size>[const Size(360, 800), const Size(430, 932)]) {
+    for (final size in <Size>[
+      const Size(360, 800),
+      const Size(430, 932),
+      const Size(800, 1200),
+    ]) {
       await pumpApp(tester, size: size);
       expect(tester.takeException(), isNull, reason: 'failed at $size');
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     }
+  });
+
+  testWidgets(
+    'active mystery card wraps long destination content on narrow phones',
+    (tester) async {
+      final repository = FakeShakeFindRepository();
+      repository.active = journey.Journey(
+        id: 'journey-long-content',
+        participantId: 'participant-a',
+        status: journey.JourneyStatus.routeRevealed,
+        mode: journey.JourneyMode.solo,
+        clue:
+            'Follow the old workshop trail where generations of local craftspeople '
+            'preserved a lesser-known Malaysian heritage tradition.',
+        locationHint:
+            'The Traditional Craft Workshop, Jalan Warisan Perusahaan Kampung, '
+            'Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur',
+        distanceMeters: 128,
+        exactRouteRevealed: true,
+        destination: repository.destination,
+        additionalHints: const <String>[
+          'Look beside the long row of restored shophouses where handmade metalwork '
+              'is still demonstrated by local artisans.',
+        ],
+      );
+      final (model, _) = await pumpApp(
+        tester,
+        repository: repository,
+        size: const Size(320, 800),
+      );
+
+      model.mystery.resumeJourney();
+      await tester.pump();
+
+      await tester.scrollUntilVisible(
+        find.textContaining('Traditional Craft Workshop'),
+        220,
+        scrollable: find.descendant(
+          of: find.byKey(const PageStorageKey<String>('mystery-active')),
+          matching: find.byType(Scrollable),
+        ),
+      );
+
+      expect(find.textContaining('Traditional Craft Workshop'), findsOneWidget);
+      expect(find.textContaining('Look beside the long row'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('active group action row fits a narrow phone', (tester) async {
+    final (model, repository) = await pumpApp(
+      tester,
+      size: const Size(320, 800),
+    );
+
+    model.mystery.setMode(JourneyMode.group);
+    await model.mystery.createGroupRoom();
+    await model.mystery.addTestCompanion();
+    await model.mystery.useGroupSurpriseMe();
+    await model.mystery.setReady(true);
+    await model.mystery.beginGroupJourney();
+    repository.shakeCallback!();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    await tester.scrollUntilVisible(
+      find.text('Request Group Hint'),
+      220,
+      scrollable: find.descendant(
+        of: find.byKey(const PageStorageKey<String>('mystery-active')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+
+    expect(find.text('Request Group Hint'), findsOneWidget);
+    expect(find.text('Vote to Reveal'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 
@@ -1742,6 +2135,39 @@ class FakeShakeFindRepository implements ShakeFindRepository {
 
   @override
   Future<void> dispose() async {}
+}
+
+class FakeMapQuestRepository extends MapQuestRepository {
+  int completedMysteryRequests = 0;
+  final List<MysteryMapCompletion> completions = <MysteryMapCompletion>[
+    MysteryMapCompletion(
+      place: HeritagePlace(
+        id: 'completed-place',
+        name: 'Completed Heritage Place',
+        category: 'Cultural Heritage',
+        state: 'Penang',
+        shortDescription: 'A completed Mystery destination.',
+        description: 'A completed Mystery destination.',
+        image: '',
+        distanceKm: 0,
+        rating: 0,
+        reviewsCount: 0,
+        latitude: 5.4182,
+        longitude: 100.3411,
+        address: 'George Town, Penang',
+        hours: '',
+      ),
+      completedAt: DateTime(2026, 9, 6),
+      completionCount: 2,
+      passportStampCollected: true,
+    ),
+  ];
+
+  @override
+  Future<List<MysteryMapCompletion>> getCompletedMysteries() async {
+    completedMysteryRequests++;
+    return List<MysteryMapCompletion>.from(completions);
+  }
 }
 
 class FakeAuthViewModel extends AuthViewModel {
