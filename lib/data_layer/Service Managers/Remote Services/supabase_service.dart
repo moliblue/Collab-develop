@@ -17,6 +17,45 @@ class SupabaseService {
 
   bool get isAuthenticated => currentUser != null;
 
+  bool get hasCurrentSession => currentSession != null;
+
+  Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
+
+  Future<void> requestPasswordReset({
+    required String email,
+    required String redirectTo,
+  }) => client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
+
+  Future<void> updatePassword(String password) async {
+    await client.auth.updateUser(UserAttributes(password: password));
+  }
+
+  Future<void> signOutLocal() =>
+      client.auth.signOut(scope: SignOutScope.local);
+
+  Future<AuthResponse> register({
+    required String email,
+    required String password,
+    required String redirectTo,
+    required Map<String, dynamic> data,
+  }) => client.auth.signUp(
+    email: email,
+    password: password,
+    emailRedirectTo: redirectTo,
+    data: data,
+  );
+
+  Future<void> resendSignupConfirmation({
+    required String email,
+    required String redirectTo,
+  }) => client.auth.resend(
+    type: OtpType.signup,
+    email: email,
+    emailRedirectTo: redirectTo,
+  );
+
+  Future<void> signOut() => client.auth.signOut();
+
   Future<AuthResponse> signInWithPassword({
     required String email,
     required String password,

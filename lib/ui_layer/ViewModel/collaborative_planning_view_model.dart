@@ -39,12 +39,15 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   bool get supabaseReady => _supabaseReady;
   String? get supabaseError => _supabaseError;
 
+  Future<void> refreshAuthenticatedSession() => _initializeSupabase();
+
   Future<void> _initializeSupabase() async {
     if (!repository.supabase.isConfigured) {
       notifyListeners();
       return;
     }
     try {
+      _supabaseError = null;
       final session = await repository.authenticate();
       _supabaseReady = session != null;
       _availablePlans = await repository.loadPlans(
@@ -534,7 +537,8 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   Future<bool> _persistCurrentPlan() async {
     if (!repository.supabase.isConfigured) {
       _supabaseError =
-          'Supabase is not configured. Start the app with SUPABASE_URL and SUPABASE_ANON_KEY.';
+          'Supabase is not configured. Start the app with SUPABASE_URL and '
+          'SUPABASE_PUBLISHABLE_KEY.';
       notifyListeners();
       return false;
     }

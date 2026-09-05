@@ -54,12 +54,21 @@ class AppViewModel extends ChangeNotifier {
   MainTab _previousBeforeMap = MainTab.mystery;
   AppToastData? _toast;
   Timer? _toastTimer;
+  String? _profileRefreshedForJourneyId;
 
   MainTab get tab => _tab;
   AppToastData? get toast => _toast;
-  bool get requiresAuthentication => !auth.isAuthenticated;
+  bool get requiresAuthentication =>
+      !auth.isAuthenticated || auth.shouldShowResetPassword;
 
   void _handleAuthChanged() {
+    if (auth.shouldShowResetPassword) {
+      if (profile.stage != ProfileStage.resetPassword) {
+        profile.setStage(ProfileStage.resetPassword);
+      }
+      notifyListeners();
+      return;
+    }
     if (requiresAuthentication) {
       if (profile.stage != ProfileStage.login &&
           profile.stage != ProfileStage.register &&
@@ -70,8 +79,10 @@ class AppViewModel extends ChangeNotifier {
     } else if (profile.stage == ProfileStage.login ||
         profile.stage == ProfileStage.register ||
         profile.stage == ProfileStage.verifyEmail ||
-        profile.stage == ProfileStage.recover) {
+        profile.stage == ProfileStage.recover ||
+        profile.stage == ProfileStage.resetPassword) {
       profile.authenticated();
+      unawaited(plan.refreshAuthenticatedSession());
     }
     notifyListeners();
   }
@@ -92,22 +103,28 @@ class AppViewModel extends ChangeNotifier {
   }
 
   void showMysteryDirections() {
-    final destination = mystery.revealedDestination;
-    if (destination == null) {
+    final place = _mysteryPlace;
+    if (place == null) {
       showToast(
         'Confirm Reveal Exact Route before opening navigation.',
         AppColors.warning,
       );
       return;
     }
-    final place = HeritagePlace(
+    showDirections(place);
+  }
+
+  HeritagePlace? get _mysteryPlace {
+    final destination = mystery.revealedDestination;
+    if (destination == null) return null;
+    return HeritagePlace(
       id: destination.id,
       name: destination.name,
       category: destination.category,
       state: '',
       shortDescription: destination.description,
       description: destination.description,
-      image: destination.imageUrl ?? 'assets/sultan_abdul_samad.png',
+      image: destination.imageUrl?.trim() ?? '',
       distanceKm: mystery.distanceMeters / 1000,
       rating: 0,
       reviewsCount: 0,
@@ -116,14 +133,24 @@ class AppViewModel extends ChangeNotifier {
       address: destination.address,
       hours: '',
     );
-    showDirections(place);
   }
 
-  void addToPlan(HeritagePlace place) {
-    plan.addPlace(place);
+  void addMysteryToPlan() {
+    final place = _mysteryPlace;
+    if (place == null) {
+      showToast('Mystery destination is not available yet.', AppColors.warning);
+      return;
+    }
+    addToPlan(place);
+  }
+
+  Future<void> addToPlan(HeritagePlace place) async {
+    final added = await plan.addPlace(place);
     showToast(
-      'Added ${place.name} to ${plan.activeDay.label}.',
-      AppColors.teal,
+      added
+          ? 'Added ${place.name} to ${plan.activeDay.label}.'
+          : 'Could not add ${place.name} to the active Plan day.',
+      added ? AppColors.teal : AppColors.warning,
     );
   }
 
@@ -206,9 +233,7 @@ class AppViewModel extends ChangeNotifier {
     if (unlockMessage != null) showToast(unlockMessage, AppColors.warning);
   }
 
-  void rewardXp(int amount) {
-    profile.rewardXp(amount);
-  }
+  void rewardXp(int _) => unawaited(_refreshProfile());
 
   void _syncMysteryProfile() {
     final value = mystery.profile;
@@ -218,6 +243,13 @@ class AppViewModel extends ChangeNotifier {
       explorerLevel: value.explorerLevel,
       streakDays: value.streakDays,
     );
+    final journey = mystery.journey;
+    if (mystery.stage == MysteryStage.complete &&
+        journey != null &&
+        _profileRefreshedForJourneyId != journey.id) {
+      _profileRefreshedForJourneyId = journey.id;
+      unawaited(_refreshProfile());
+    }
   }
 
   void showToast(String message, Color color) {

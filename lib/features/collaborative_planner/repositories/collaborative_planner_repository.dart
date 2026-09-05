@@ -20,7 +20,8 @@ class CollaborativePlannerRepository {
 
   Future<SupabaseSession?> authenticate() async {
     if (!supabase.isConfigured) return null;
-    return _session ??= await supabase.signInAnonymously();
+    _session = await supabase.authenticatedSession();
+    return _session;
   }
 
   Future<List<OsmPlace>> searchLocations(
@@ -66,6 +67,7 @@ class CollaborativePlannerRepository {
     }
     return osm.search(term, heritageOnly: heritageOnly);
   }
+
   Future<RouteLeg> calculateRoute(List<PlannerActivity> activities) =>
       osrm.route(activities.map((a) => a.point).toList());
 

@@ -8,16 +8,15 @@ import 'osm_heritage_service.dart';
 /// Reads the curated catalogue first and falls back to live OSM/Overpass data.
 class HeritageCatalogService {
   HeritageCatalogService({
-    SupabaseClient? client,
+    this.client,
     OsmHeritageService? osm,
-  }) : _client = client,
-       _osm = osm ?? OsmHeritageService();
+  }) : _osm = osm ?? OsmHeritageService();
 
-  final SupabaseClient? _client;
+  final SupabaseClient? client;
   final OsmHeritageService _osm;
 
   SupabaseClient? get _availableClient {
-    if (_client != null) return _client;
+    if (client != null) return client;
     try {
       return Supabase.instance.client;
     } catch (_) {

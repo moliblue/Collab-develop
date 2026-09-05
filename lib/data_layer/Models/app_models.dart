@@ -19,6 +19,7 @@ enum ProfileStage {
   register,
   verifyEmail,
   recover,
+  resetPassword,
 }
 
 class Review {
