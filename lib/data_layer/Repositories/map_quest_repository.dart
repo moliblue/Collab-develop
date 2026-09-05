@@ -37,6 +37,98 @@ class MapQuestRepository {
 
   bool get hasAuthenticatedUser => _service.currentUser != null;
 
+  Future<List<MysteryMapCompletion>> getCompletedMysteries() async {
+    final user = _service.currentUser;
+    if (user == null) return const <MysteryMapCompletion>[];
+    final stampRows = await _service.client
+        .from('user_passport_stamps')
+        .select(
+          'destination_id, earned_at, destinations!inner('
+          'id, name, category, latitude, longitude, address, description, image_url)',
+        )
+        .eq('user_id', user.id)
+        .order('earned_at', ascending: false);
+    if (stampRows.isEmpty) return const <MysteryMapCompletion>[];
+
+    final completionCounts = <String, int>{};
+    final lastCompletedAt = <String, DateTime>{};
+    try {
+      final participantRows = await _service.client
+          .from('journey_participants')
+          .select('journey_id, completed_at')
+          .eq('user_id', user.id)
+          .eq('participant_status', 'completed');
+      final journeyIds = participantRows
+          .map((row) => row['journey_id']?.toString())
+          .whereType<String>()
+          .toSet()
+          .toList(growable: false);
+      if (journeyIds.isNotEmpty) {
+        final journeyRows = await _service.client
+            .from('mystery_journeys')
+            .select('id, destination_id')
+            .inFilter('id', journeyIds);
+        final destinationByJourney = <String, String>{
+          for (final row in journeyRows)
+            row['id'].toString(): row['destination_id'].toString(),
+        };
+        for (final participant in participantRows) {
+          final destinationId =
+              destinationByJourney[participant['journey_id']?.toString()];
+          if (destinationId == null) continue;
+          completionCounts.update(
+            destinationId,
+            (count) => count + 1,
+            ifAbsent: () => 1,
+          );
+          final completedAt = DateTime.tryParse(
+            participant['completed_at']?.toString() ?? '',
+          );
+          if (completedAt != null &&
+              (lastCompletedAt[destinationId] == null ||
+                  completedAt.isAfter(lastCompletedAt[destinationId]!))) {
+            lastCompletedAt[destinationId] = completedAt;
+          }
+        }
+      }
+    } catch (_) {
+      // Passport stamps remain the authoritative, user-scoped fallback.
+    }
+
+    return stampRows
+        .map((row) {
+          final destination = Map<String, dynamic>.from(
+            row['destinations'] as Map,
+          );
+          final destinationId = row['destination_id'].toString();
+          final earnedAt = DateTime.parse(
+            row['earned_at'].toString(),
+          ).toLocal();
+          return MysteryMapCompletion(
+            place: HeritagePlace(
+              id: destinationId,
+              name: destination['name']?.toString() ?? 'Mystery destination',
+              category: destination['category']?.toString() ?? '',
+              state: '',
+              shortDescription: destination['description']?.toString() ?? '',
+              description: destination['description']?.toString() ?? '',
+              image: destination['image_url']?.toString().trim() ?? '',
+              distanceKm: 0,
+              rating: 0,
+              reviewsCount: 0,
+              latitude: (destination['latitude'] as num).toDouble(),
+              longitude: (destination['longitude'] as num).toDouble(),
+              address: destination['address']?.toString() ?? '',
+              hours: '',
+            ),
+            completedAt: lastCompletedAt[destinationId]?.toLocal() ?? earnedAt,
+            completionCount: completionCounts[destinationId] ?? 1,
+            passportStampCollected: true,
+          );
+        })
+        .toList(growable: false);
+  }
+
   Future<bool> hasCurrentUserCompletedByOsmId(String osmId) async {
     final user = _service.currentUser;
     if (user == null) throw const MapQuestAuthenticationException();

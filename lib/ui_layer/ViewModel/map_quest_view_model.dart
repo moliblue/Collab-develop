@@ -58,12 +58,19 @@ class MapQuestViewModel extends ChangeNotifier {
   bool _heritageLoadAttempted = false;
   String? _heritageIssue;
   HeritagePlace? _selected;
+  MysteryMapCompletion? _selectedMysteryCompletion;
+  HeritagePlace? _activeMysteryDestination;
+  bool _activeMysteryRevealed = false;
+  bool _activeMysteryCompleted = false;
   HeritagePlace? _directionTarget;
   List<ActivityItem> _routeStops = <ActivityItem>[];
   final Set<String> _completedQuests = <String>{};
   bool _gpsNearby = false;
   bool _questLoading = false;
   bool _questSubmitting = false;
+  List<MysteryMapCompletion> _completedMysteries =
+      const <MysteryMapCompletion>[];
+  bool _completedMysteriesLoading = false;
 
   String get query => _query;
   String get category => _category;
@@ -75,6 +82,15 @@ class MapQuestViewModel extends ChangeNotifier {
   bool get heritageLoadAttempted => _heritageLoadAttempted;
   String? get heritageIssue => _heritageIssue;
   HeritagePlace? get selected => _selected;
+  MysteryMapCompletion? get selectedMysteryCompletion =>
+      _selectedMysteryCompletion;
+  List<MysteryMapCompletion> get completedMysteries =>
+      List<MysteryMapCompletion>.unmodifiable(_completedMysteries);
+  bool get completedMysteriesLoading => _completedMysteriesLoading;
+  HeritagePlace? get revealedActiveMysteryDestination =>
+      _activeMysteryRevealed && !_activeMysteryCompleted
+      ? _activeMysteryDestination
+      : null;
   HeritagePlace? get directionTarget => _directionTarget;
   List<ActivityItem> get routeStops =>
       List<ActivityItem>.unmodifiable(_routeStops);
@@ -155,13 +171,67 @@ class MapQuestViewModel extends ChangeNotifier {
 
   void select(HeritagePlace? value) {
     _selected = value;
+    _selectedMysteryCompletion = null;
     notifyListeners();
+  }
+
+  void selectCompletedMystery(MysteryMapCompletion value) {
+    _selected = value.place;
+    _selectedMysteryCompletion = value;
+    notifyListeners();
+  }
+
+  void setMysteryJourneyState({
+    required HeritagePlace? destination,
+    required bool revealed,
+    required bool completed,
+  }) {
+    if (_activeMysteryDestination?.id == destination?.id &&
+        _activeMysteryRevealed == revealed &&
+        _activeMysteryCompleted == completed) {
+      return;
+    }
+    _activeMysteryDestination = destination;
+    _activeMysteryRevealed = revealed;
+    _activeMysteryCompleted = completed;
+    notifyListeners();
+  }
+
+  bool isCurrentMysteryPlace(HeritagePlace place) {
+    final destination = _activeMysteryDestination;
+    if (destination == null) return false;
+    if (destination.id == place.id) return true;
+    final sameName =
+        destination.name.trim().toLowerCase() ==
+        place.name.trim().toLowerCase();
+    final sameCoordinates =
+        (destination.latitude - place.latitude).abs() < .0003 &&
+        (destination.longitude - place.longitude).abs() < .0003;
+    return sameName || sameCoordinates;
+  }
+
+  bool shouldHideForActiveMystery(HeritagePlace place) =>
+      !_activeMysteryCompleted && isCurrentMysteryPlace(place);
+
+  Future<void> refreshCompletedMysteries() async {
+    if (_completedMysteriesLoading) return;
+    _completedMysteriesLoading = true;
+    notifyListeners();
+    try {
+      _completedMysteries = await _questRepository.getCompletedMysteries();
+    } catch (_) {
+      // Completed pins are supplementary; the main map remains available.
+    } finally {
+      _completedMysteriesLoading = false;
+      notifyListeners();
+    }
   }
 
   void showDirections(HeritagePlace value) {
     _directionTarget = value;
     _routeStops = <ActivityItem>[];
     _selected = null;
+    _selectedMysteryCompletion = null;
     notifyListeners();
   }
 

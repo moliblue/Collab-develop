@@ -80,6 +80,20 @@ class HeritagePlace {
   final List<Review> reviews;
 }
 
+class MysteryMapCompletion {
+  const MysteryMapCompletion({
+    required this.place,
+    required this.completedAt,
+    required this.completionCount,
+    required this.passportStampCollected,
+  });
+
+  final HeritagePlace place;
+  final DateTime completedAt;
+  final int completionCount;
+  final bool passportStampCollected;
+}
+
 class ActivityItem {
   ActivityItem({
     required this.id,

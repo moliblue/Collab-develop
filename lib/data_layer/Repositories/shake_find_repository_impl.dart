@@ -1,6 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart'
+    show debugPrint, kDebugMode, visibleForTesting;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../Models/journey.dart';
@@ -186,8 +187,16 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   Future<Journey> _createSoloJourney(TravelPreferences preferences) async {
     final userId = _supabase.requireCurrentUserId();
     final location = await _location.getFreshLocation();
-    final destination = await _selectDestination(preferences, location);
-    final clue = await _initialClue(destination.id);
+    final selection = await _selectDestination(
+      preferences,
+      location,
+      userId: userId,
+    );
+    final destination = selection.destination;
+    final clue = await _initialClue(
+      destination.id,
+      previouslyUsedClueIds: selection.previouslyUsedClueIds,
+    );
     final totalHintCount = await _additionalHintCount(destination.id);
     String? journeyId;
     try {
@@ -230,6 +239,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         destination: destination,
         preferences: preferences,
         totalHintCount: totalHintCount,
+        isRevisit: selection.isRevisit,
       );
       _activeJourney = result;
       return result;
@@ -241,10 +251,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     }
   }
 
-  Future<JourneyDestination> _selectDestination(
+  Future<_DestinationSelection> _selectDestination(
     TravelPreferences preferences,
-    LocationReading location,
-  ) async {
+    LocationReading location, {
+    required String userId,
+  }) async {
     final rows = await _client
         .from('destinations')
         .select()
@@ -270,23 +281,93 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         'No active mystery destination matches these preferences and radius.',
       );
     }
-    return candidates[_random.nextInt(candidates.length)];
+    final history = await _completedDestinationHistory(userId);
+    final visitedIds = history.map((visit) => visit.destinationId).toSet();
+    final recentIds = <String>{};
+    for (final visit in history) {
+      recentIds.add(visit.destinationId);
+      if (recentIds.length == 5) break;
+    }
+    final pool = mysteryDestinationSelectionPool(
+      candidates,
+      completedDestinationIds: visitedIds,
+      recentDestinationIds: recentIds,
+    );
+    final destination = pool[_random.nextInt(pool.length)];
+    return _DestinationSelection(
+      destination: destination,
+      isRevisit: visitedIds.contains(destination.id),
+      previouslyUsedClueIds: history
+          .where((visit) => visit.destinationId == destination.id)
+          .map((visit) => visit.initialClueId)
+          .whereType<String>()
+          .toSet(),
+    );
   }
 
-  Future<Map<String, dynamic>> _initialClue(String destinationId) async {
+  Future<List<_CompletedDestinationVisit>> _completedDestinationHistory(
+    String userId,
+  ) async {
+    final participantRows = await _client
+        .from('journey_participants')
+        .select('journey_id, completed_at')
+        .eq('user_id', userId)
+        .eq('participant_status', 'completed')
+        .order('completed_at', ascending: false);
+    if (participantRows.isEmpty) return const <_CompletedDestinationVisit>[];
+    final journeyIds = participantRows
+        .map((row) => row['journey_id']?.toString())
+        .whereType<String>()
+        .toSet()
+        .toList(growable: false);
+    if (journeyIds.isEmpty) return const <_CompletedDestinationVisit>[];
+    final journeyRows = await _client
+        .from('mystery_journeys')
+        .select('id, destination_id, initial_clue_id')
+        .inFilter('id', journeyIds);
+    final journeysById = <String, Map<String, dynamic>>{
+      for (final row in journeyRows)
+        row['id'].toString(): Map<String, dynamic>.from(row),
+    };
+    return participantRows
+        .map((participant) {
+          final journey = journeysById[participant['journey_id']?.toString()];
+          final destinationId = journey?['destination_id']?.toString();
+          if (journey == null || destinationId == null) return null;
+          return _CompletedDestinationVisit(
+            destinationId: destinationId,
+            initialClueId: journey['initial_clue_id']?.toString(),
+            completedAt:
+                DateTime.tryParse(
+                  participant['completed_at']?.toString() ?? '',
+                ) ??
+                DateTime.fromMillisecondsSinceEpoch(0),
+          );
+        })
+        .whereType<_CompletedDestinationVisit>()
+        .toList(growable: false);
+  }
+
+  Future<Map<String, dynamic>> _initialClue(
+    String destinationId, {
+    Set<String> previouslyUsedClueIds = const <String>{},
+  }) async {
     final rows = await _client
         .from('destination_clues')
         .select()
         .eq('destination_id', destinationId)
         .eq('clue_type', 'initial')
-        .order('clue_order')
-        .limit(1);
+        .order('clue_order');
     if (rows.isEmpty) {
       throw const JourneyDataException(
         'This destination does not have an initial mystery clue.',
       );
     }
-    return Map<String, dynamic>.from(rows.single);
+    final unusedRows = rows
+        .where((row) => !previouslyUsedClueIds.contains(row['id'].toString()))
+        .toList(growable: false);
+    final pool = unusedRows.isNotEmpty ? unusedRows : rows;
+    return Map<String, dynamic>.from(pool[_random.nextInt(pool.length)]);
   }
 
   Future<int> _additionalHintCount(String destinationId) async {
@@ -632,25 +713,67 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     double radiusMeters = 1000,
   }) async {
     final userId = _supabase.requireCurrentUserId();
-    final location = await _location.getFreshLocation();
-    final rows = await _waitingRoomRows(userId);
+    if (kDebugMode) {
+      debugPrint(
+        'Nearby room scan: user=$userId radius=${radiusMeters.round()}m',
+      );
+    }
+    late final LocationReading location;
+    late final List<Map<String, dynamic>> rows;
+    try {
+      location = await _location.getFreshLocation();
+      rows = await _waitingRoomRows(userId);
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint(
+          'Nearby room scan failed before filtering: '
+          '${error.runtimeType}: $error',
+        );
+      }
+      rethrow;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        'Nearby room scan location: lat=${location.latitude}, '
+        'lng=${location.longitude}, accuracy=${location.accuracy}m; '
+        'raw waiting rooms=${rows.length}',
+      );
+    }
     final nearbyRooms = <NearbyGroupRoom>[];
+    var invalidCoordinates = 0;
+    var expired = 0;
+    var outsideRadius = 0;
+    var alreadyMember = 0;
+    var full = 0;
     for (final row in rows) {
       final latitude = _asDouble(row['host_latitude'], fallback: double.nan);
       final longitude = _asDouble(row['host_longitude'], fallback: double.nan);
-      if (!latitude.isFinite || !longitude.isFinite) continue;
+      if (!latitude.isFinite || !longitude.isFinite) {
+        invalidCoordinates++;
+        continue;
+      }
       final expiresAt = DateTime.tryParse(row['expires_at']?.toString() ?? '');
       if (expiresAt != null && !expiresAt.isAfter(DateTime.now().toUtc())) {
+        expired++;
         continue;
       }
       final distance = _location.distanceBetween(location, latitude, longitude);
       final isDebugTestingRoom =
           kDebugMode && row['id'].toString() == defaultTestingRoomId;
-      if (distance > radiusMeters && !isDebugTestingRoom) continue;
+      if (distance > radiusMeters && !isDebugTestingRoom) {
+        outsideRadius++;
+        continue;
+      }
       final members = await _loadGroupMembers(row['id'].toString());
-      if (members.any((member) => member.userId == userId)) continue;
+      if (members.any((member) => member.userId == userId)) {
+        alreadyMember++;
+        continue;
+      }
       const capacity = 4;
-      if (members.length >= capacity) continue;
+      if (members.length >= capacity) {
+        full++;
+        continue;
+      }
       final roomPreferences = _roomPreferences(row['preferences']);
       final labels = roomPreferences == null
           ? const <String>[]
@@ -674,6 +797,13 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     nearbyRooms.sort(
       (left, right) => left.distanceMeters.compareTo(right.distanceMeters),
     );
+    if (kDebugMode) {
+      debugPrint(
+        'Nearby room scan result: visible=${nearbyRooms.length}, '
+        'invalidCoordinates=$invalidCoordinates, expired=$expired, '
+        'outsideRadius=$outsideRadius, alreadyMember=$alreadyMember, full=$full',
+      );
+    }
     return nearbyRooms;
   }
 
@@ -950,24 +1080,45 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
 
   Future<Journey> _createGroupRoom() async {
     final userId = _supabase.requireCurrentUserId();
+    if (kDebugMode) {
+      debugPrint(
+        'Create group room: user=$userId preferenceMode=saved_preferences',
+      );
+    }
     if (await getActiveJourney() != null) {
       throw const JourneyDataException(
         'Resume or leave your current journey room first.',
       );
     }
-    final location = await _location.getFreshLocation();
-    final room = await _client
-        .from('group_rooms')
-        .insert(<String, dynamic>{
-          'host_user_id': userId,
-          'status': 'waiting',
-          'preference_mode': 'saved_preferences',
-          'host_latitude': location.latitude,
-          'host_longitude': location.longitude,
-        })
-        .select()
-        .single();
+    late final LocationReading location;
+    late final Map<String, dynamic> room;
+    try {
+      location = await _location.getFreshLocation();
+      if (kDebugMode) {
+        debugPrint(
+          'Create group room location: lat=${location.latitude}, '
+          'lng=${location.longitude}, accuracy=${location.accuracy}m',
+        );
+      }
+      room = await _client
+          .from('group_rooms')
+          .insert(<String, dynamic>{
+            'host_user_id': userId,
+            'status': 'waiting',
+            'preference_mode': 'saved_preferences',
+            'host_latitude': location.latitude,
+            'host_longitude': location.longitude,
+          })
+          .select()
+          .single();
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Create group room failed: ${error.runtimeType}: $error');
+      }
+      rethrow;
+    }
     final roomId = room['id'].toString();
+    if (kDebugMode) debugPrint('Create group room result: room=$roomId');
     try {
       await _client.from('group_room_members').insert(<String, dynamic>{
         'room_id': roomId,
@@ -1220,8 +1371,16 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       );
     }
     final location = await _location.getFreshLocation();
-    final destination = await _selectDestination(preferences, location);
-    final clue = await _initialClue(destination.id);
+    final selection = await _selectDestination(
+      preferences,
+      location,
+      userId: userId,
+    );
+    final destination = selection.destination;
+    final clue = await _initialClue(
+      destination.id,
+      previouslyUsedClueIds: selection.previouslyUsedClueIds,
+    );
     final totalHintCount = await _additionalHintCount(destination.id);
     final activatedAt = DateTime.now().toUtc();
     final deadline = activatedAt.add(const Duration(hours: 24));
@@ -1292,6 +1451,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         groupDeadline: deadline.toLocal(),
         members: members,
         isHost: true,
+        isRevisit: selection.isRevisit,
       );
       _activeJourney = result;
       return result;
@@ -1515,6 +1675,14 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
         ? JourneyStatus.routeRevealed
         : JourneyStatus.active;
     final destination = JourneyDestination.fromJson(destinationRow);
+    final startedAt =
+        DateTime.tryParse(row['started_at']?.toString() ?? '') ??
+        DateTime.now();
+    final isRevisit = (await _completedDestinationHistory(userId)).any(
+      (visit) =>
+          visit.destinationId == destination.id &&
+          visit.completedAt.isBefore(startedAt),
+    );
     return Journey(
       id: journeyId,
       participantId: participant['id'].toString(),
@@ -1538,6 +1706,7 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       groupDeadline: deadline,
       members: members,
       isHost: isHost,
+      isRevisit: isRevisit,
       completedAt: DateTime.tryParse(
         participant['completed_at']?.toString() ?? '',
       ),
@@ -1592,4 +1761,48 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
 
   @override
   Future<void> dispose() => _sensorService.dispose();
+}
+
+@visibleForTesting
+List<JourneyDestination> mysteryDestinationSelectionPool(
+  List<JourneyDestination> candidates, {
+  required Set<String> completedDestinationIds,
+  required Set<String> recentDestinationIds,
+}) {
+  final unvisited = candidates
+      .where((destination) => !completedDestinationIds.contains(destination.id))
+      .toList(growable: false);
+  if (unvisited.isNotEmpty) return unvisited;
+  final olderVisits = candidates
+      .where(
+        (destination) =>
+            completedDestinationIds.contains(destination.id) &&
+            !recentDestinationIds.contains(destination.id),
+      )
+      .toList(growable: false);
+  return olderVisits.isNotEmpty ? olderVisits : candidates;
+}
+
+class _DestinationSelection {
+  const _DestinationSelection({
+    required this.destination,
+    required this.isRevisit,
+    required this.previouslyUsedClueIds,
+  });
+
+  final JourneyDestination destination;
+  final bool isRevisit;
+  final Set<String> previouslyUsedClueIds;
+}
+
+class _CompletedDestinationVisit {
+  const _CompletedDestinationVisit({
+    required this.destinationId,
+    required this.initialClueId,
+    required this.completedAt,
+  });
+
+  final String destinationId;
+  final String? initialClueId;
+  final DateTime completedAt;
 }

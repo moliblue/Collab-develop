@@ -148,28 +148,40 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ],
     if (widget.viewModel.profile != null) ...<Widget>[
       Container(
-        height: 286,
+        height: 198,
         decoration: BoxDecoration(
+          color: const Color(0xFFF0F3EA),
           borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-          boxShadow: const <BoxShadow>[
-            BoxShadow(
-              color: Color(0x18203548),
-              blurRadius: 24,
-              offset: Offset(0, 10),
-            ),
-          ],
+          border: Border.all(color: const Color(0xFFDCE4D8)),
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
           children: <Widget>[
-            Image.asset('assets/sultan_abdul_samad.png', fit: BoxFit.cover),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: <Color>[Color(0x180B2234), Color(0xDF0B2234)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+            Positioned(
+              right: -28,
+              top: -34,
+              child: Icon(
+                Icons.explore_rounded,
+                size: 190,
+                color: AppColors.teal.withValues(alpha: .07),
+              ),
+            ),
+            Positioned(
+              right: 22,
+              top: 20,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .72),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.route_rounded,
+                  color: AppColors.tealDark,
+                  size: 24,
                 ),
               ),
             ),
@@ -180,19 +192,17 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Eyebrow('Mystery trip', color: Colors.white),
+                  const Eyebrow('Mystery Journey', color: AppColors.tealDark),
                   const SizedBox(height: 8),
                   Text(
-                    'Less planning.\nMore exploring.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.headlineLarge?.copyWith(color: Colors.white),
+                    'Follow the clue.\nFind the story.',
+                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Follow playful clues and discover Malaysia’s stories, food and hidden corners.',
+                    'A hidden local experience, shaped around the way you like to explore.',
                     style: TextStyle(
-                      color: Color(0xE8FFFFFF),
+                      color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.45,
                     ),
@@ -213,8 +223,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           Expanded(
             child: _modeCard(
               JourneyMode.solo,
-              'Solo mode',
-              'Solve the mystery on your own',
+              'Solo Journey',
+              'A personal mystery at your own pace',
               Icons.person_rounded,
               AppColors.primary,
             ),
@@ -223,8 +233,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           Expanded(
             child: _modeCard(
               JourneyMode.group,
-              'Team mode',
-              'Solve it with nearby teammates',
+              'Group Journey',
+              'One shared mystery with nearby travellers',
               Icons.groups_rounded,
               AppColors.teal,
             ),
@@ -378,23 +388,44 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     Color color,
   ) {
     final selected = widget.viewModel.mode == mode;
-    return AppCard(
-      onTap: widget.viewModel.journeyActive
-          ? null
-          : () => widget.viewModel.setMode(mode),
-      radius: AppTokens.cardRadius,
-      color: selected ? color.withValues(alpha: .09) : Colors.white,
-      borderColor: selected ? color : AppColors.border,
-      child: SizedBox(
-        height: 132,
+    return AnimatedScale(
+      scale: selected ? 1 : .985,
+      duration: AppTokens.fast,
+      curve: Curves.easeOut,
+      child: AppCard(
+        onTap: widget.viewModel.journeyActive
+            ? null
+            : () => widget.viewModel.setMode(mode),
+        radius: AppTokens.cardRadius,
+        color: selected ? color.withValues(alpha: .09) : Colors.white,
+        borderColor: selected ? color : AppColors.border,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            CircleAvatar(
-              backgroundColor: color.withValues(alpha: .13),
-              child: Icon(icon, color: color),
+            Row(
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundColor: color.withValues(alpha: .13),
+                  child: Icon(icon, color: color),
+                ),
+                const Spacer(),
+                AnimatedSwitcher(
+                  duration: AppTokens.fast,
+                  child: selected
+                      ? Icon(
+                          Icons.check_circle_rounded,
+                          key: ValueKey<JourneyMode>(mode),
+                          color: color,
+                          size: 21,
+                        )
+                      : const SizedBox.square(
+                          key: ValueKey<String>('unselected'),
+                          dimension: 21,
+                        ),
+                ),
+              ],
             ),
-            const Spacer(),
+            const SizedBox(height: AppTokens.space24),
             Text(
               title,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -403,8 +434,9 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             Text(
               subtitle,
               maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 color: AppColors.textSecondary,
                 height: 1.3,
               ),
@@ -478,22 +510,6 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       ),
     );
   }
-
-  Widget _memberCard() => AppCard(
-    child: Column(
-      children: widget.viewModel.members.indexed
-          .expand(
-            ((int, JourneyMember) item) => <Widget>[
-              if (item.$1 > 0) const Divider(),
-              _memberTile(
-                item.$2,
-                isCurrentUser: item.$2.userId == widget.viewModel.currentUserId,
-              ),
-            ],
-          )
-          .toList(growable: false),
-    ),
-  );
 
   Widget _memberTile(
     JourneyMember member, {
@@ -681,35 +697,94 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   );
 
   Widget _groupWaiting() => _scroll(<Widget>[
-    Row(
-      children: <Widget>[
-        const Expanded(
-          child: Eyebrow('Nearby travellers', color: AppColors.teal),
+    Container(
+      padding: const EdgeInsets.all(AppTokens.space16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: <Color>[Color(0xFF173D66), Color(0xFF205A91)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        AppChip(
-          label: '${widget.viewModel.roomMemberCount} / 4 Travellers',
-          selected: true,
-          selectedColor: AppColors.teal,
-        ),
-      ],
-    ),
-    const SizedBox(height: 4),
-    SectionTitle(
-      widget.viewModel.isHost ? 'Your waiting room' : 'Group waiting room',
-      subtitle: 'Room ID: ${widget.viewModel.journey?.groupRoomId ?? ''}',
-    ),
-    Align(
-      alignment: Alignment.centerLeft,
-      child: TextButton.icon(
-        key: const Key('leave_waiting_room'),
-        onPressed: widget.viewModel.loading ? null : _confirmLeaveWaitingRoom,
-        style: TextButton.styleFrom(foregroundColor: AppColors.danger),
-        icon: const Icon(Icons.exit_to_app_rounded),
-        label: Text(
-          widget.viewModel.isHost ? 'Close Waiting Room' : 'Leave Waiting Room',
-        ),
+        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const CircleAvatar(
+                radius: 20,
+                backgroundColor: Color(0x26FFFFFF),
+                child: Icon(
+                  Icons.groups_rounded,
+                  color: Colors.white,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: AppTokens.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Eyebrow('Nearby travellers', color: Colors.white),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.viewModel.isHost
+                          ? 'Your waiting room'
+                          : 'Group waiting room',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${widget.viewModel.roomMemberCount} / 4',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.space12),
+          Text(
+            'Room ID: ${widget.viewModel.journey?.groupRoomId ?? ''}',
+            style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 11),
+          ),
+          const SizedBox(height: AppTokens.space8),
+          TextButton.icon(
+            key: const Key('leave_waiting_room'),
+            onPressed: widget.viewModel.loading
+                ? null
+                : _confirmLeaveWaitingRoom,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.zero,
+            ),
+            icon: const Icon(Icons.exit_to_app_rounded, size: 18),
+            label: Text(
+              widget.viewModel.isHost
+                  ? 'Close Waiting Room'
+                  : 'Leave Waiting Room',
+            ),
+          ),
+        ],
       ),
     ),
+    const SizedBox(height: AppTokens.space12),
     if (widget.viewModel.message != null) ...<Widget>[
       const SizedBox(height: 8),
       AppCard(
@@ -726,10 +801,33 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ],
     const SizedBox(height: 10),
     AppCard(
-      color: const Color(0xFFE9FAF4),
-      borderColor: const Color(0xFFBFECDD),
+      color: widget.viewModel.allRoomMembersReady
+          ? const Color(0xFFE9FAF4)
+          : AppColors.surface,
+      borderColor: widget.viewModel.allRoomMembersReady
+          ? const Color(0xFFBFECDD)
+          : AppColors.border,
       child: Column(
         children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Expanded(
+                child: Text(
+                  'Travellers',
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+              Text(
+                '${widget.viewModel.members.where((member) => member.isReady).length} ready',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 22),
           ...widget.viewModel.members.indexed.expand(
             ((int, JourneyMember) item) => <Widget>[
               if (item.$1 > 0) const Divider(),
@@ -846,51 +944,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ),
     if (widget.viewModel.groupChatUnlocked) ...<Widget>[
       const SizedBox(height: 14),
-      AppCard(
-        child: Column(
-          children: <Widget>[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFE9FAF4),
-                child: Icon(Icons.chat_rounded, color: AppColors.teal),
-              ),
-              title: const Text(
-                'Group Chat',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-              subtitle: Text('${widget.viewModel.roomMemberCount} people'),
-              trailing: IconButton(
-                onPressed: _toggleChat,
-                icon: Icon(_chatOpen ? Icons.expand_less : Icons.expand_more),
-              ),
-            ),
-            if (_chatOpen) ...<Widget>[
-              ..._chatMessageWidgets(),
-              TextField(
-                controller: _chatController,
-                enabled: !widget.viewModel.chatSending,
-                onSubmitted: _sendChat,
-                decoration: InputDecoration(
-                  hintText: 'Share a clue guess…',
-                  suffixIcon: IconButton(
-                    onPressed: widget.viewModel.chatSending
-                        ? null
-                        : () => _sendChat(_chatController.text),
-                    icon: widget.viewModel.chatSending
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send_rounded),
-                    tooltip: 'Send message',
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+      _groupChatCard(),
     ] else ...<Widget>[
       const SizedBox(height: 14),
       const AppCard(
@@ -933,6 +987,12 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         onPressed: widget.viewModel.loading
             ? null
             : widget.viewModel.beginGroupJourney,
+        style: !_canStartWaitingRoom
+            ? FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE0E4E7),
+                foregroundColor: AppColors.textSecondary,
+              )
+            : null,
         icon: const Icon(Icons.rocket_launch_rounded),
         label: Text(
           widget.viewModel.groupPreferenceMode == 'surprise_me'
@@ -1128,241 +1188,49 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   ], key: const PageStorageKey<String>('mystery-shake'));
 
   Widget _active() => _scroll(<Widget>[
-    Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF173D66),
-        borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Eyebrow('Live mystery', color: Colors.white),
-          const SizedBox(height: 8),
-          Text(
-            'Your hidden destination',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            widget.viewModel.clue,
-            style: const TextStyle(
-              color: Color(0xE6FFFFFF),
-              fontSize: 12,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    ),
+    _activeHero(),
+    const SizedBox(height: AppTokens.space16),
+    _journeyProgressCard(),
     if (widget.viewModel.loading) ...<Widget>[
-      const SizedBox(height: 10),
+      const SizedBox(height: AppTokens.space12),
       const LinearProgressIndicator(),
     ],
     if (widget.viewModel.message != null) ...<Widget>[
-      const SizedBox(height: 10),
+      const SizedBox(height: AppTokens.space12),
       AppCard(
         color: const Color(0xFFFFF5DF),
-        child: Text(widget.viewModel.message!),
-      ),
-    ],
-    const SizedBox(height: 13),
-    AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Icon(Icons.near_me_rounded, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  widget.viewModel.distanceMeters > 0
-                      ? '${widget.viewModel.distanceMeters.toStringAsFixed(0)} m away'
-                      : 'Distance updates with GPS',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                widget.viewModel.routeRevealed
-                    ? widget.viewModel.journey?.locationHint ?? 'Exact route'
-                    : 'Destination hidden',
-                style: const TextStyle(fontSize: 10, color: AppColors.muted),
-              ),
-            ],
-          ),
-          ...widget.viewModel.hints.map(
-            (String hint) => Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Hint: $hint',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-    const SizedBox(height: 12),
-    _arrivalStatusCard(),
-    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
-      const SizedBox(height: 12),
-      _memberCard(),
-    ],
-    const SizedBox(height: 14),
-    Row(
-      children: <Widget>[
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed:
-                !widget.viewModel.hasHintsRemaining ||
-                    (widget.viewModel.mode == JourneyMode.group &&
-                        widget.viewModel.hasSubmittedVote(GroupVoteType.hint))
-                ? null
-                : _askHint,
-            icon: const Icon(Icons.lightbulb_outline_rounded),
-            label: Text(_voteButtonLabel(GroupVoteType.hint, 'Unlock hint')),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: widget.viewModel.routeRevealed
-                ? widget.onDirections
-                : widget.viewModel.mode == JourneyMode.group &&
-                      widget.viewModel.hasSubmittedVote(GroupVoteType.route)
-                ? null
-                : _confirmRoute,
-            icon: const Icon(Icons.route_rounded),
-            label: Text(
-              widget.viewModel.routeRevealed
-                  ? 'Open Map'
-                  : _voteButtonLabel(GroupVoteType.route, 'Reveal route'),
-            ),
-          ),
-        ),
-      ],
-    ),
-    if (!widget.viewModel.hasHintsRemaining) ...<Widget>[
-      const SizedBox(height: 9),
-      const Text(
-        'All Mystery Hints have been unlocked.',
-        style: TextStyle(
-          color: AppColors.textSecondary,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    ],
-    if (widget.viewModel.mode == JourneyMode.group) ..._groupVoteStatusCards(),
-    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
-      const SizedBox(height: 12),
-      AppCard(
-        child: Column(
+        borderColor: const Color(0xFFFFD78A),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Row(
-              children: <Widget>[
-                Icon(Icons.monitor_heart_rounded, color: AppColors.teal),
-                SizedBox(width: 8),
-                Text(
-                  'Group Progress',
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
-            const Divider(height: 22),
-            ...widget.viewModel.members.map(
-              (JourneyMember member) => Padding(
-                padding: const EdgeInsets.only(bottom: 7),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 1),
-                      child: Icon(
-                        member.participantStatus == 'completed'
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 16,
-                        color: member.participantStatus == 'completed'
-                            ? AppColors.teal
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${member.displayName} — '
-                        '${member.participantStatus == 'completed' ? 'Arrived' : 'Travelling'}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            const Icon(Icons.info_outline_rounded, color: AppColors.warning),
+            const SizedBox(width: AppTokens.space8),
+            Expanded(child: Text(widget.viewModel.message!)),
           ],
         ),
       ),
     ],
-    const SizedBox(height: 12),
-    if (widget.viewModel.mode == JourneyMode.group &&
-        widget.viewModel.groupChatUnlocked)
-      AppCard(
-        child: Column(
-          children: <Widget>[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.forum_rounded, color: AppColors.teal),
-              title: const Text(
-                'Group Chat',
-                style: TextStyle(fontWeight: FontWeight.w900),
-              ),
-              subtitle: Text('${widget.viewModel.roomMemberCount} members'),
-              trailing: IconButton(
-                onPressed: _toggleChat,
-                icon: Icon(_chatOpen ? Icons.expand_less : Icons.expand_more),
-              ),
-            ),
-            if (_chatOpen) ...<Widget>[
-              ..._chatMessageWidgets(),
-              TextField(
-                controller: _chatController,
-                enabled: !widget.viewModel.chatSending,
-                onSubmitted: _sendChat,
-                decoration: InputDecoration(
-                  hintText: 'Share a clue guess…',
-                  suffixIcon: IconButton(
-                    onPressed: widget.viewModel.chatSending
-                        ? null
-                        : () => _sendChat(_chatController.text),
-                    icon: widget.viewModel.chatSending
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send_rounded),
-                    tooltip: 'Send message',
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    const SizedBox(height: 12),
+    const SizedBox(height: AppTokens.space16),
+    _clueCard(),
+    const SizedBox(height: AppTokens.space12),
+    _secondaryJourneyActions(),
+    if (widget.viewModel.mode == JourneyMode.group) ..._groupVoteStatusCards(),
+    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
+      const SizedBox(height: AppTokens.space16),
+      _groupProgressCard(),
+      if (widget.viewModel.groupChatUnlocked) ...<Widget>[
+        const SizedBox(height: AppTokens.space16),
+        _groupChatCard(),
+      ],
+    ],
+    const SizedBox(height: AppTokens.space24),
+    const SectionTitle(
+      "Think you've found it?",
+      subtitle: 'Check in with real GPS when you reach the place.',
+    ),
+    const SizedBox(height: AppTokens.space8),
+    _arrivalStatusCard(),
+    const SizedBox(height: AppTokens.space12),
     FilledButton.icon(
       key: const Key('test_real_arrival'),
       onPressed: widget.viewModel.loading || widget.viewModel.currentUserArrived
@@ -1372,16 +1240,478 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       label: Text(
         widget.viewModel.currentUserArrived
             ? 'Your arrival is verified'
-            : 'Check Arrival with Real GPS',
+            : 'Check Arrival',
       ),
     ),
-    const SizedBox(height: 8),
-    TextButton.icon(
-      onPressed: () => widget.viewModel.setStage(MysteryStage.interrupted),
-      icon: const Icon(Icons.pause_circle_outline_rounded),
-      label: const Text('Leave and continue later'),
+    const SizedBox(height: AppTokens.space8),
+    Center(
+      child: TextButton.icon(
+        onPressed: () => widget.viewModel.setStage(MysteryStage.interrupted),
+        icon: const Icon(Icons.pause_circle_outline_rounded),
+        label: const Text('Leave and continue later'),
+      ),
     ),
   ], key: const PageStorageKey<String>('mystery-active'));
+
+  Widget _activeHero() => Container(
+    padding: const EdgeInsets.all(AppTokens.space16),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF1F3EA),
+      borderRadius: BorderRadius.circular(AppTokens.cardRadius),
+      border: Border.all(color: const Color(0xFFDCE4D8)),
+    ),
+    child: Stack(
+      children: <Widget>[
+        Positioned(
+          right: -20,
+          top: -22,
+          child: Icon(
+            Icons.explore_rounded,
+            color: AppColors.teal.withValues(alpha: .08),
+            size: 118,
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Row(
+              children: <Widget>[
+                Icon(Icons.circle, color: AppColors.teal, size: 9),
+                SizedBox(width: 7),
+                Eyebrow('Live mystery', color: AppColors.tealDark),
+              ],
+            ),
+            const SizedBox(height: AppTokens.space12),
+            const Text(
+              'Your hidden destination',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppTokens.space8),
+            Text(
+              widget.viewModel.clue,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            if (widget.viewModel.journey?.isRevisit == true) ...<Widget>[
+              const SizedBox(height: AppTokens.space12),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .82),
+                  borderRadius: BorderRadius.circular(AppTokens.controlRadius),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Icon(
+                        Icons.replay_rounded,
+                        size: 18,
+                        color: AppColors.teal,
+                      ),
+                      SizedBox(width: AppTokens.space8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Revisit Challenge',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              "You've explored this place before. Try a fresh clue path this time.",
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _journeyProgressCard() {
+    final arrived =
+        widget.viewModel.currentUserArrived ||
+        widget.viewModel.arrivalVerification.state ==
+            ArrivalVerificationState.verified;
+    final steps = <({String label, IconData icon, bool completed})>[
+      (label: 'Started', icon: Icons.flag_rounded, completed: true),
+      (
+        label: 'Clues',
+        icon: Icons.auto_stories_rounded,
+        completed: widget.viewModel.clue.trim().isNotEmpty || arrived,
+      ),
+      if (widget.viewModel.routeRevealed)
+        (label: 'Route', icon: Icons.route_rounded, completed: true),
+      (label: 'Arrived', icon: Icons.verified_rounded, completed: arrived),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'Journey progress',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: AppTokens.space12),
+          AnimatedSwitcher(
+            duration: AppTokens.fast,
+            child: Row(
+              key: ValueKey<bool>(widget.viewModel.routeRevealed),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                for (var index = 0; index < steps.length; index++) ...<Widget>[
+                  Expanded(
+                    child: _JourneyProgressStep(
+                      label: steps[index].label,
+                      icon: steps[index].icon,
+                      completed: steps[index].completed,
+                    ),
+                  ),
+                  if (index < steps.length - 1)
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: AppTokens.fast,
+                        margin: const EdgeInsets.only(top: 13),
+                        height: 2,
+                        color: steps[index + 1].completed
+                            ? AppColors.teal
+                            : AppColors.border,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _clueCard() {
+    final location = widget.viewModel.journey?.locationHint.trim();
+    final locationText = location == null || location.isEmpty
+        ? 'The exact destination remains hidden.'
+        : location;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Row(
+            children: <Widget>[
+              CircleAvatar(
+                radius: 19,
+                backgroundColor: AppColors.softBlue,
+                child: Icon(
+                  Icons.travel_explore_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              SizedBox(width: AppTokens.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Clues & discoveries',
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                    Text(
+                      'Your unlocked journey details',
+                      style: TextStyle(fontSize: 11, color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTokens.space16),
+          _MysteryDetailTile(
+            icon: widget.viewModel.routeRevealed
+                ? Icons.location_on_rounded
+                : Icons.near_me_rounded,
+            title: widget.viewModel.routeRevealed
+                ? 'Exact location'
+                : 'Location clue',
+            text: locationText,
+            trailing: widget.viewModel.distanceMeters > 0
+                ? '${widget.viewModel.distanceMeters.toStringAsFixed(0)} m away'
+                : null,
+          ),
+          AnimatedSwitcher(
+            duration: AppTokens.normal,
+            switchInCurve: Curves.easeOut,
+            transitionBuilder: (child, animation) => SizeTransition(
+              sizeFactor: animation,
+              alignment: Alignment.topLeft,
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: Column(
+              key: ValueKey<int>(widget.viewModel.hints.length),
+              children: <Widget>[
+                for (
+                  var index = 0;
+                  index < widget.viewModel.hints.length;
+                  index++
+                ) ...<Widget>[
+                  const Divider(height: 22),
+                  _MysteryDetailTile(
+                    icon: Icons.lightbulb_outline_rounded,
+                    title: 'Hint ${index + 1}',
+                    text: widget.viewModel.hints[index],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (widget.viewModel.hints.isEmpty) ...<Widget>[
+            const Divider(height: 22),
+            const _MysteryDetailTile(
+              icon: Icons.lock_outline_rounded,
+              title: 'Hints locked',
+              text: 'Unlock a hint when you need another nudge.',
+              muted: true,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _secondaryJourneyActions() {
+    final actions = <Widget>[];
+    if (widget.viewModel.hasHintsRemaining) {
+      actions.add(
+        OutlinedButton.icon(
+          onPressed:
+              widget.viewModel.mode == JourneyMode.group &&
+                  widget.viewModel.hasSubmittedVote(GroupVoteType.hint)
+              ? null
+              : _askHint,
+          icon: const Icon(Icons.lightbulb_outline_rounded),
+          label: Text(
+            _voteButtonLabel(GroupVoteType.hint, 'Unlock hint'),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    actions.add(
+      OutlinedButton.icon(
+        onPressed: widget.viewModel.routeRevealed
+            ? widget.onDirections
+            : widget.viewModel.mode == JourneyMode.group &&
+                  widget.viewModel.hasSubmittedVote(GroupVoteType.route)
+            ? null
+            : _confirmRoute,
+        icon: Icon(
+          widget.viewModel.routeRevealed
+              ? Icons.map_outlined
+              : Icons.route_rounded,
+        ),
+        label: Text(
+          widget.viewModel.routeRevealed
+              ? 'Open Map'
+              : _voteButtonLabel(GroupVoteType.route, 'Reveal route'),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (!widget.viewModel.hasHintsRemaining) ...<Widget>[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE9FAF4),
+              borderRadius: BorderRadius.circular(AppTokens.controlRadius),
+              border: Border.all(color: const Color(0xFFBFECDD)),
+            ),
+            child: const Row(
+              children: <Widget>[
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: AppColors.teal,
+                  size: 19,
+                ),
+                SizedBox(width: AppTokens.space8),
+                Expanded(
+                  child: Text(
+                    'All clues discovered ✓',
+                    style: TextStyle(
+                      color: AppColors.tealDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppTokens.space8),
+        ],
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final width = actions.length == 1
+                ? constraints.maxWidth
+                : (constraints.maxWidth - AppTokens.space8) / 2;
+            return Wrap(
+              spacing: AppTokens.space8,
+              runSpacing: AppTokens.space8,
+              children: actions
+                  .map((action) => SizedBox(width: width, child: action))
+                  .toList(growable: false),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _groupProgressCard() => AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            const CircleAvatar(
+              radius: 19,
+              backgroundColor: Color(0xFFE9FAF4),
+              child: Icon(
+                Icons.groups_rounded,
+                color: AppColors.teal,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppTokens.space12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Group progress',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                  Text(
+                    'Arrival is verified individually',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  ),
+                ],
+              ),
+            ),
+            AppChip(
+              label:
+                  '${widget.viewModel.members.where((member) => member.participantStatus == 'completed').length}/${widget.viewModel.members.length}',
+              selected: true,
+              selectedColor: AppColors.teal,
+            ),
+          ],
+        ),
+        const Divider(height: 24),
+        ...widget.viewModel.members.map(
+          (JourneyMember member) => Padding(
+            padding: const EdgeInsets.only(bottom: AppTokens.space8),
+            child: _memberTile(
+              member,
+              color: const Color(0xFFE9FAF4),
+              isCurrentUser: member.userId == widget.viewModel.currentUserId,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _groupChatCard() => AppCard(
+    child: Column(
+      children: <Widget>[
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(
+            radius: 19,
+            backgroundColor: Color(0xFFE9FAF4),
+            child: Icon(Icons.forum_rounded, color: AppColors.teal, size: 20),
+          ),
+          title: const Text(
+            'Group Chat',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          subtitle: Text('${widget.viewModel.roomMemberCount} travellers'),
+          trailing: IconButton(
+            onPressed: _toggleChat,
+            icon: AnimatedRotation(
+              turns: _chatOpen ? .5 : 0,
+              duration: AppTokens.fast,
+              child: const Icon(Icons.expand_more),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: AppTokens.normal,
+          curve: Curves.easeOutCubic,
+          child: _chatOpen
+              ? Column(
+                  children: <Widget>[
+                    const Divider(height: 10),
+                    ..._chatMessageWidgets(),
+                    const SizedBox(height: AppTokens.space8),
+                    TextField(
+                      controller: _chatController,
+                      enabled: !widget.viewModel.chatSending,
+                      onSubmitted: _sendChat,
+                      decoration: InputDecoration(
+                        hintText: 'Share a clue guess…',
+                        prefixIcon: const Icon(
+                          Icons.chat_bubble_outline_rounded,
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: widget.viewModel.chatSending
+                              ? null
+                              : () => _sendChat(_chatController.text),
+                          icon: widget.viewModel.chatSending
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded),
+                          tooltip: 'Send message',
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
+    ),
+  );
 
   List<Widget> _chatMessageWidgets() {
     final messages = widget.viewModel.messages;
@@ -1403,61 +1733,86 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ];
   }
 
-  Widget _chatMessage(GroupChatMessage message, {required bool showSender}) =>
-      Align(
-        key: ValueKey<String>('group-chat-message-${message.id}'),
-        alignment: message.isCurrentUser
-            ? Alignment.centerRight
-            : Alignment.centerLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 7),
-          child: Column(
-            crossAxisAlignment: message.isCurrentUser
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: <Widget>[
-              if (showSender) ...<Widget>[
-                Text(
-                  message.senderName,
-                  key: ValueKey<String>('group-chat-sender-${message.id}'),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
+  Widget _chatMessage(
+    GroupChatMessage message, {
+    required bool showSender,
+  }) => Align(
+    key: ValueKey<String>('group-chat-message-${message.id}'),
+    alignment: message.isCurrentUser
+        ? Alignment.centerRight
+        : Alignment.centerLeft,
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Column(
+        crossAxisAlignment: message.isCurrentUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: <Widget>[
+          if (showSender) ...<Widget>[
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * .68,
+              ),
+              child: Text(
+                message.senderName,
+                key: ValueKey<String>('group-chat-sender-${message.id}'),
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: 3),
-              ],
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: message.isCurrentUser
-                        ? AppColors.primary
-                        : const Color(0xFFF0F3F5),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Text(
+              ),
+            ),
+            const SizedBox(height: 3),
+          ],
+          FractionallySizedBox(
+            widthFactor: .78,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: message.isCurrentUser
+                    ? AppColors.primary
+                    : const Color(0xFFF0F3F5),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
                       message.message,
                       style: TextStyle(
                         color: message.isCurrentUser
                             ? Colors.white
                             : AppColors.textPrimary,
                         fontSize: 12,
+                        height: 1.4,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${message.createdAt.hour.toString().padLeft(2, '0')}:'
+                      '${message.createdAt.minute.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        color: message.isCurrentUser
+                            ? const Color(0xCFFFFFFF)
+                            : AppColors.muted,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 
   Future<void> _sendChat(String value) async {
     final message = value.trim();
@@ -1654,10 +2009,28 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               const Icon(Icons.how_to_vote_rounded, color: AppColors.primary),
               const SizedBox(width: 10),
               Expanded(
-                child: Text(
-                  '${type == GroupVoteType.hint ? 'Group Hint' : 'Route Reveal'} vote active\n'
-                  '${status.yesVotes}/${status.requiredVotes} Yes votes',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      '${type == GroupVoteType.hint ? 'Group Hint' : 'Route Reveal'} vote active',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 3),
+                    AnimatedSwitcher(
+                      duration: AppTokens.fast,
+                      child: Text(
+                        '${status.yesVotes}/${status.requiredVotes} Yes votes',
+                        key: ValueKey<String>(
+                          '${type.name}-${status.yesVotes}-${status.requiredVotes}',
+                        ),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1667,15 +2040,35 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     }
     final feedback = widget.viewModel.groupVoteFeedback;
     if (feedback != null) {
+      final lowerFeedback = feedback.toLowerCase();
+      final approved = lowerFeedback.contains('approved');
+      final failed = lowerFeedback.contains('failed');
+      final feedbackColor = approved
+          ? AppColors.teal
+          : failed
+          ? AppColors.danger
+          : AppColors.primary;
+      final feedbackBackground = approved
+          ? const Color(0xFFE9FAF4)
+          : failed
+          ? const Color(0xFFFFECEC)
+          : AppColors.softBlue;
       cards.addAll(<Widget>[
         const SizedBox(height: 10),
         AppCard(
           key: const Key('group_vote_result'),
-          color: const Color(0xFFE9FAF4),
-          borderColor: const Color(0xFFBFECDD),
+          color: feedbackBackground,
+          borderColor: feedbackColor.withValues(alpha: .28),
           child: Row(
             children: <Widget>[
-              const Icon(Icons.check_circle_rounded, color: AppColors.teal),
+              Icon(
+                approved
+                    ? Icons.check_circle_rounded
+                    : failed
+                    ? Icons.cancel_rounded
+                    : Icons.how_to_vote_rounded,
+                color: feedbackColor,
+              ),
               const SizedBox(width: 10),
               Expanded(child: Text(feedback)),
             ],
@@ -1809,7 +2202,15 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           ),
           if (progress != null) ...<Widget>[
             const SizedBox(height: 10),
-            LinearProgressIndicator(value: progress),
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(end: progress),
+              duration: AppTokens.fast,
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                borderRadius: BorderRadius.circular(4),
+                minHeight: 6,
+              ),
+            ),
           ],
         ],
       ),
@@ -1836,23 +2237,45 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
 
   Widget _genericCompletionVisual() => Container(
     key: const Key('generic_mystery_completion_visual'),
-    height: 150,
+    height: 164,
     width: double.infinity,
     decoration: const BoxDecoration(
       gradient: LinearGradient(
-        colors: <Color>[Color(0xFF173D66), Color(0xFF2878D0)],
+        colors: <Color>[
+          Color(0xFF173D66),
+          Color(0xFF246BFD),
+          Color(0xFF169C8A),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
     ),
-    child: const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    child: Stack(
       children: <Widget>[
-        Icon(Icons.explore_rounded, color: Colors.white, size: 54),
-        SizedBox(height: 6),
-        Text(
-          'Mystery Journey completed',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        Positioned(
+          right: -24,
+          top: -30,
+          child: Icon(
+            Icons.public_rounded,
+            color: Colors.white.withValues(alpha: .09),
+            size: 160,
+          ),
+        ),
+        const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(Icons.explore_rounded, color: Colors.white, size: 54),
+              SizedBox(height: 8),
+              Text(
+                'A Malaysian story discovered',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     ),
@@ -1873,88 +2296,87 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
   }
 
   Widget _complete() => _scroll(<Widget>[
-    const SizedBox(height: 30),
-    const CircleAvatar(
-      radius: 48,
-      backgroundColor: Color(0xFFE9FAF4),
-      child: Icon(Icons.verified_rounded, size: 55, color: AppColors.teal),
+    const SizedBox(height: AppTokens.space16),
+    TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: .82, end: 1),
+      duration: AppTokens.normal,
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) => Transform.scale(
+        scale: value,
+        child: Opacity(opacity: value.clamp(0, 1), child: child),
+      ),
+      child: const CircleAvatar(
+        radius: 46,
+        backgroundColor: Color(0xFFE9FAF4),
+        child: Icon(Icons.verified_rounded, size: 52, color: AppColors.teal),
+      ),
     ),
-    const SizedBox(height: 18),
-    const Eyebrow('Verified arrival', color: AppColors.teal),
-    const SizedBox(height: 8),
+    const SizedBox(height: AppTokens.space16),
+    const Center(child: Eyebrow('Verified arrival', color: AppColors.teal)),
+    const SizedBox(height: AppTokens.space8),
     Text(
-      'Quest Completed!',
+      'Journey Complete',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.headlineLarge,
     ),
-    const SizedBox(height: 5),
+    const SizedBox(height: AppTokens.space8),
     const Text(
-      'You found the mystery destination and earned a new travel memory.',
+      'You found another piece of Malaysia.',
       textAlign: TextAlign.center,
-      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
     ),
-    const SizedBox(height: 18),
+    const SizedBox(height: AppTokens.space16),
     AppCard(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            child: Stack(
-              children: <Widget>[
-                _completionVisual(),
-                Positioned(
-                  right: 12,
-                  bottom: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      '+100 XP',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            child: _completionVisual(),
           ),
           Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(
-                  widget.viewModel.revealedDestination?.name ??
-                      'Mystery destination',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Icon(
+                      Icons.location_on_rounded,
+                      color: AppColors.primary,
+                      size: 21,
+                    ),
+                    const SizedBox(width: AppTokens.space8),
+                    Expanded(
+                      child: Text(
+                        widget.viewModel.revealedDestination?.name ??
+                            'Mystery destination',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppTokens.space8),
                 Text(
                   widget.viewModel.revealedDestination?.address ?? '',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.textSecondary,
+                    height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const Divider(height: 22),
                 Text(
                   widget.viewModel.revealedDestination?.description ?? '',
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: AppColors.textSecondary,
+                    height: 1.5,
                   ),
                 ),
               ],
@@ -1963,34 +2385,44 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         ],
       ),
     ),
-    const SizedBox(height: 16),
-    OutlinedButton.icon(
-      key: const Key('add_mystery_destination_to_plan'),
-      onPressed: widget.onAddToPlan,
-      icon: const Icon(Icons.add_task_rounded),
-      label: const Text('Add to Plan'),
+    const SizedBox(height: AppTokens.space16),
+    FilledButton.icon(
+      onPressed: widget.viewModel.resetForNewQuest,
+      icon: const Icon(Icons.explore_rounded),
+      label: const Text('Explore Another Mystery'),
     ),
-    const SizedBox(height: 9),
+    const SizedBox(height: AppTokens.space8),
     Row(
       children: <Widget>[
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: widget.onViewPassport,
-            icon: const Icon(Icons.workspace_premium_rounded),
-            label: const Text('View Passport'),
+            key: const Key('add_mystery_destination_to_plan'),
+            onPressed: widget.onAddToPlan,
+            icon: const Icon(Icons.add_task_rounded),
+            label: const Text('Add to Plan', textAlign: TextAlign.center),
           ),
         ),
-        const SizedBox(width: 9),
+        const SizedBox(width: AppTokens.space8),
         Expanded(
-          child: FilledButton.icon(
-            onPressed: widget.viewModel.resetForNewQuest,
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('New Quest'),
+          child: OutlinedButton.icon(
+            onPressed: widget.onViewPassport,
+            icon: const Icon(Icons.workspace_premium_rounded),
+            label: const Text('View Passport', textAlign: TextAlign.center),
           ),
         ),
       ],
     ),
-  ]);
+    if (widget.viewModel.revealedDestination != null) ...<Widget>[
+      const SizedBox(height: AppTokens.space8),
+      Center(
+        child: TextButton.icon(
+          onPressed: widget.onDirections,
+          icon: const Icon(Icons.map_outlined),
+          label: const Text('View on Map'),
+        ),
+      ),
+    ],
+  ], key: const PageStorageKey<String>('mystery-complete'));
 
   Widget _centredState({
     required IconData icon,
@@ -2034,6 +2466,138 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
         ],
       ),
     ),
+  );
+}
+
+class _JourneyProgressStep extends StatelessWidget {
+  const _JourneyProgressStep({
+    required this.label,
+    required this.icon,
+    required this.completed,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: <Widget>[
+      AnimatedContainer(
+        duration: AppTokens.fast,
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: completed ? AppColors.teal : AppColors.elevated,
+          border: Border.all(
+            color: completed ? AppColors.teal : AppColors.borderStrong,
+          ),
+        ),
+        child: Icon(
+          completed ? Icons.check_rounded : icon,
+          color: completed ? Colors.white : AppColors.muted,
+          size: 15,
+        ),
+      ),
+      const SizedBox(height: 5),
+      Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: completed ? AppColors.tealDark : AppColors.muted,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    ],
+  );
+}
+
+class _MysteryDetailTile extends StatelessWidget {
+  const _MysteryDetailTile({
+    required this.icon,
+    required this.title,
+    required this.text,
+    this.trailing,
+    this.muted = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String text;
+  final String? trailing;
+  final bool muted;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: <Widget>[
+      Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: muted ? AppColors.elevated : AppColors.softBlue,
+          borderRadius: BorderRadius.circular(11),
+        ),
+        child: Icon(
+          icon,
+          color: muted ? AppColors.muted : AppColors.primary,
+          size: 18,
+        ),
+      ),
+      const SizedBox(width: AppTokens.space12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: muted
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                if (trailing != null) ...<Widget>[
+                  const SizedBox(width: AppTokens.space8),
+                  Flexible(
+                    child: Text(
+                      trailing!,
+                      textAlign: TextAlign.end,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              text,
+              softWrap: true,
+              style: TextStyle(
+                color: muted ? AppColors.muted : AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.45,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
   );
 }
 
@@ -2085,10 +2649,18 @@ class _TravellerTile extends StatelessWidget {
     subtitle: Text(status, style: const TextStyle(fontSize: 10)),
     trailing: isReady == null
         ? null
-        : Icon(
-            isReady! ? Icons.check_circle_rounded : Icons.schedule_rounded,
-            color: isReady! ? AppColors.teal : AppColors.muted,
-            size: 18,
+        : AnimatedSwitcher(
+            duration: AppTokens.fast,
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: animation,
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: Icon(
+              isReady! ? Icons.check_circle_rounded : Icons.schedule_rounded,
+              key: ValueKey<bool>(isReady!),
+              color: isReady! ? AppColors.teal : AppColors.muted,
+              size: 18,
+            ),
           ),
   );
 }

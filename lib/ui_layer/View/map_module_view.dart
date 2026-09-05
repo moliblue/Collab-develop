@@ -654,6 +654,10 @@ class _MapModuleViewState extends State<MapModuleView> {
           : _routeMode == _RouteMode.driving
           ? _routeWaypoints()
           : <LatLng>[];
+      final completedMysteryIds = vm.completedMysteries
+          .map((completion) => completion.place.id)
+          .toSet();
+      final revealedMystery = vm.revealedActiveMysteryDestination;
       return Stack(
         children: <Widget>[
           Positioned.fill(
@@ -715,18 +719,63 @@ class _MapModuleViewState extends State<MapModuleView> {
                         ),
                       ),
                     if (vm.routeStops.isEmpty && vm.directionTarget == null)
-                      ...filtered.map(
-                        (HeritagePlace p) => Marker(
-                          point: LatLng(p.latitude, p.longitude),
-                          alignment: Alignment.topCenter,
-                          width: 150,
-                          height: 84,
-                          child: _PlaceMarker(
-                            place: p,
-                            bookmarked: p.bookmarked,
-                            showLabel: _showHeritageLabels,
-                            onTap: () => vm.select(p),
+                      ...filtered
+                          .where(
+                            (place) =>
+                                !completedMysteryIds.contains(place.id) &&
+                                !vm.shouldHideForActiveMystery(place),
+                          )
+                          .map(
+                            (HeritagePlace p) => Marker(
+                              point: LatLng(p.latitude, p.longitude),
+                              alignment: Alignment.topCenter,
+                              width: 150,
+                              height: 84,
+                              child: _PlaceMarker(
+                                place: p,
+                                bookmarked: p.bookmarked,
+                                showLabel: _showHeritageLabels,
+                                onTap: () => vm.select(p),
+                              ),
+                            ),
                           ),
+                    if (vm.routeStops.isEmpty && vm.directionTarget == null)
+                      ...vm.completedMysteries
+                          .where(
+                            (completion) => !vm.shouldHideForActiveMystery(
+                              completion.place,
+                            ),
+                          )
+                          .map(
+                            (MysteryMapCompletion completion) => Marker(
+                              point: LatLng(
+                                completion.place.latitude,
+                                completion.place.longitude,
+                              ),
+                              alignment: Alignment.topCenter,
+                              width: 58,
+                              height: 58,
+                              child: _CompletedMysteryMarker(
+                                place: completion.place,
+                                onTap: () =>
+                                    vm.selectCompletedMystery(completion),
+                              ),
+                            ),
+                          ),
+                    if (vm.routeStops.isEmpty &&
+                        vm.directionTarget == null &&
+                        revealedMystery != null)
+                      Marker(
+                        point: LatLng(
+                          revealedMystery.latitude,
+                          revealedMystery.longitude,
+                        ),
+                        alignment: Alignment.topCenter,
+                        width: 64,
+                        height: 64,
+                        child: _ActiveMysteryMarker(
+                          place: revealedMystery,
+                          onTap: () => vm.showDirections(revealedMystery),
                         ),
                       ),
                     if (vm.directionTarget != null)
@@ -737,11 +786,18 @@ class _MapModuleViewState extends State<MapModuleView> {
                         ),
                         width: 52,
                         height: 52,
-                        child: const Icon(
-                          Icons.location_on_rounded,
-                          size: 47,
-                          color: AppColors.primaryDark,
-                        ),
+                        child:
+                            vm.revealedActiveMysteryDestination != null &&
+                                vm.isCurrentMysteryPlace(vm.directionTarget!)
+                            ? _ActiveMysteryMarker(
+                                place: vm.directionTarget!,
+                                onTap: () {},
+                              )
+                            : const Icon(
+                                Icons.location_on_rounded,
+                                size: 47,
+                                color: AppColors.primaryDark,
+                              ),
                       ),
                     ...vm.routeStops.indexed.map(((int, ActivityItem) pair) {
                       final (i, a) = pair;
@@ -1036,6 +1092,7 @@ class _MapModuleViewState extends State<MapModuleView> {
           if (vm.selected != null)
             _LocationSheet(
               place: vm.selected!,
+              mysteryCompletion: vm.selectedMysteryCompletion,
               vm: vm,
               currentPosition: () => _effectiveUserPosition,
               notify: widget.notify,
@@ -1269,6 +1326,87 @@ class _PlaceMarker extends StatelessWidget {
     'Cultural Heritage' => Icons.palette_rounded,
     _ => Icons.museum_rounded,
   };
+}
+
+class _CompletedMysteryMarker extends StatelessWidget {
+  const _CompletedMysteryMarker({required this.place, required this.onTap});
+
+  final HeritagePlace place;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: '${place.name}, completed Mystery Journey',
+    child: InkResponse(
+      onTap: onTap,
+      radius: 28,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[
+          const Icon(
+            Icons.location_on_rounded,
+            size: 52,
+            color: AppColors.tealDark,
+          ),
+          const Positioned(
+            top: 10,
+            child: Icon(Icons.check_rounded, size: 18, color: Colors.white),
+          ),
+          Positioned(
+            right: 1,
+            top: 0,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.teal, width: 2),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(2),
+                child: Icon(
+                  Icons.explore_rounded,
+                  size: 11,
+                  color: AppColors.tealDark,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ActiveMysteryMarker extends StatelessWidget {
+  const _ActiveMysteryMarker({required this.place, required this.onTap});
+
+  final HeritagePlace place;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: '${place.name}, active Mystery destination',
+    child: InkResponse(
+      onTap: onTap,
+      radius: 28,
+      child: const Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[
+          Icon(
+            Icons.location_on_rounded,
+            size: 54,
+            color: AppColors.primaryDark,
+          ),
+          Positioned(
+            top: 10,
+            child: Icon(Icons.explore_rounded, size: 19, color: Colors.white),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _NumberMarker extends StatelessWidget {
@@ -1641,6 +1779,7 @@ class _PlaceImage extends StatelessWidget {
 class _LocationSheet extends StatelessWidget {
   const _LocationSheet({
     required this.place,
+    required this.mysteryCompletion,
     required this.vm,
     required this.currentPosition,
     required this.notify,
@@ -1648,6 +1787,7 @@ class _LocationSheet extends StatelessWidget {
     required this.onXpReward,
   });
   final HeritagePlace place;
+  final MysteryMapCompletion? mysteryCompletion;
   final MapQuestViewModel vm;
   final LatLng? Function() currentPosition;
   final void Function(String, Color) notify;
@@ -1755,13 +1895,14 @@ class _LocationSheet extends StatelessWidget {
                               size: 15,
                               color: AppColors.primary,
                             ),
-                            Text(
-                              ' ${place.distanceKm.toStringAsFixed(1)} km away',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.textSecondary,
+                            if (mysteryCompletion == null)
+                              Text(
+                                ' ${place.distanceKm.toStringAsFixed(1)} km away',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 9),
@@ -1769,6 +1910,55 @@ class _LocationSheet extends StatelessWidget {
                           place.shortDescription,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
+                        if (mysteryCompletion
+                            case final completion?) ...<Widget>[
+                          const SizedBox(height: 12),
+                          AppCard(
+                            key: const Key('completed_mystery_details'),
+                            color: const Color(0xFFE9FAF4),
+                            borderColor: AppColors.teal.withValues(alpha: .3),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const Row(
+                                  children: <Widget>[
+                                    Icon(
+                                      Icons.verified_rounded,
+                                      size: 19,
+                                      color: AppColors.tealDark,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Mystery Journey Completed ✓',
+                                        style: TextStyle(
+                                          color: AppColors.tealDark,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Last explored: ${_shortDate(completion.completedAt)}',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                if (completion.passportStampCollected)
+                                  const Text(
+                                    'Passport Stamp: Collected',
+                                    style: TextStyle(fontSize: 11),
+                                  ),
+                                Text(
+                                  completion.completionCount == 1
+                                      ? 'Explored once'
+                                      : 'Explored ${completion.completionCount} times',
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         const AppCard(
                           color: AppColors.softBlue,
@@ -1783,14 +1973,17 @@ class _LocationSheet extends StatelessWidget {
                                     color: AppColors.primary,
                                   ),
                                   SizedBox(width: 7),
-                                  Text(
-                                    'PICTURE QUEST',
-                                    style: TextStyle(
-                                      color: AppColors.primaryDark,
-                                      fontWeight: FontWeight.w700,
+                                  Expanded(
+                                    child: Text(
+                                      'PICTURE QUEST',
+                                      maxLines: 2,
+                                      style: TextStyle(
+                                        color: AppColors.primaryDark,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
-                                  Spacer(),
+                                  SizedBox(width: 8),
                                   AppChip(label: '+100 XP', selected: true),
                                 ],
                               ),
@@ -1853,6 +2046,10 @@ class _LocationSheet extends StatelessWidget {
     notify: notify,
     onXpReward: onXpReward,
   );
+
+  static String _shortDate(DateTime value) =>
+      '${value.day.toString().padLeft(2, '0')}/'
+      '${value.month.toString().padLeft(2, '0')}/${value.year}';
 }
 
 Future<void> _showQuestMessage(BuildContext context, String message) =>
