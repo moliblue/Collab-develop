@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
+import '../../data_layer/Models/journey.dart' show JourneyStatus;
 import '../../data_layer/Repositories/shake_find_repository.dart';
 import '../../data_layer/Repositories/shake_find_repository_impl.dart';
 import '../../data_layer/Service Managers/device/shake_sensor_service.dart';
@@ -27,11 +28,12 @@ class AppViewModel extends ChangeNotifier {
   AppViewModel({
     ShakeFindRepository? mysteryRepository,
     AuthViewModel? authViewModel,
+    MapQuestViewModel? mapViewModel,
   }) : mystery = MysteryJourneyViewModel(
          mysteryRepository ?? ShakeFindRepositoryImpl(ShakeSensorService()),
        ),
        discovery = DiscoveryViewModel(),
-       map = MapQuestViewModel(),
+       map = mapViewModel ?? MapQuestViewModel(),
        plan = CollaborativePlanningViewModel(),
        profile = ProfileViewModel(),
        auth = authViewModel ?? AuthViewModel() {
@@ -55,6 +57,7 @@ class AppViewModel extends ChangeNotifier {
   AppToastData? _toast;
   Timer? _toastTimer;
   String? _profileRefreshedForJourneyId;
+  String? _mapRefreshedForJourneyId;
 
   MainTab get tab => _tab;
   AppToastData? get toast => _toast;
@@ -90,6 +93,9 @@ class AppViewModel extends ChangeNotifier {
   void selectTab(MainTab value) {
     if (value == MainTab.map && _tab != MainTab.map) _previousBeforeMap = _tab;
     _tab = value;
+    if (value == MainTab.map && !requiresAuthentication) {
+      unawaited(map.refreshCompletedMysteries());
+    }
     if (value == MainTab.profile && !requiresAuthentication) {
       unawaited(_refreshProfile());
     }
@@ -116,6 +122,27 @@ class AppViewModel extends ChangeNotifier {
 
   HeritagePlace? get _mysteryPlace {
     final destination = mystery.revealedDestination;
+    if (destination == null) return null;
+    return HeritagePlace(
+      id: destination.id,
+      name: destination.name,
+      category: destination.category,
+      state: '',
+      shortDescription: destination.description,
+      description: destination.description,
+      image: destination.imageUrl?.trim() ?? '',
+      distanceKm: mystery.distanceMeters / 1000,
+      rating: 0,
+      reviewsCount: 0,
+      latitude: destination.latitude,
+      longitude: destination.longitude,
+      address: destination.address,
+      hours: '',
+    );
+  }
+
+  HeritagePlace? get _currentMysteryMapPlace {
+    final destination = mystery.journey?.destination;
     if (destination == null) return null;
     return HeritagePlace(
       id: destination.id,
@@ -236,6 +263,21 @@ class AppViewModel extends ChangeNotifier {
   void rewardXp(int _) => unawaited(_refreshProfile());
 
   void _syncMysteryProfile() {
+    final journey = mystery.journey;
+    final arrivalVerified =
+        journey?.status == JourneyStatus.completed ||
+        mystery.currentUserArrived;
+    map.setMysteryJourneyState(
+      destination: _currentMysteryMapPlace,
+      revealed: mystery.routeRevealed,
+      completed: arrivalVerified,
+    );
+    if (arrivalVerified &&
+        journey != null &&
+        _mapRefreshedForJourneyId != journey.id) {
+      _mapRefreshedForJourneyId = journey.id;
+      unawaited(map.refreshCompletedMysteries());
+    }
     final value = mystery.profile;
     if (value == null) return;
     profile.applyJourneyProgress(
@@ -243,7 +285,6 @@ class AppViewModel extends ChangeNotifier {
       explorerLevel: value.explorerLevel,
       streakDays: value.streakDays,
     );
-    final journey = mystery.journey;
     if (mystery.stage == MysteryStage.complete &&
         journey != null &&
         _profileRefreshedForJourneyId != journey.id) {
