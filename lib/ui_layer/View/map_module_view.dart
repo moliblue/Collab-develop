@@ -42,6 +42,7 @@ class _MapModuleViewState extends State<MapModuleView> {
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<double?>? _headingSubscription;
   Timer? _demoMovementTimer;
+  Timer? _locationTimeoutTimer;
   bool filtersOpen = false;
   bool _navigationActive = false;
   bool _locating = false;
@@ -93,6 +94,7 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   @override
   void dispose() {
+    _locationTimeoutTimer?.cancel();
     _demoMovementTimer?.cancel();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
@@ -157,6 +159,20 @@ class _MapModuleViewState extends State<MapModuleView> {
       final lastKnown = await navigation.getLastKnownPosition();
       if (lastKnown != null && mounted && _navigationActive) {
         _updatePosition(lastKnown);
+      } else {
+        _locationTimeoutTimer?.cancel();
+        _locationTimeoutTimer = Timer(const Duration(seconds: 15), () {
+          if (!mounted || !_navigationActive || _userPosition != null) return;
+          _navigationActive = false;
+          _positionSubscription?.cancel();
+          _positionSubscription = null;
+          setState(() {
+            _locating = false;
+            _locationIssue =
+                'GPS did not return a position. Allow Location for this site, '
+                'enable device Location, then tap the location button again.';
+          });
+        });
       }
     } catch (_) {
       if (mounted) {
@@ -172,6 +188,7 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   void _stopNavigation() {
     _navigationActive = false;
+    _locationTimeoutTimer?.cancel();
     _clearDemoMovementState();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
@@ -187,6 +204,7 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   void _updatePosition(Position position) {
     if (!mounted) return;
+    _locationTimeoutTimer?.cancel();
     final next = LatLng(position.latitude, position.longitude);
     final effectiveNext = _demoPosition ?? next;
     final moved = _routedFrom == null

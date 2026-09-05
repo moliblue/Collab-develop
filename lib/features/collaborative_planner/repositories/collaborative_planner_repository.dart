@@ -26,7 +26,38 @@ class CollaborativePlannerRepository {
   Future<List<OsmPlace>> searchLocations(
     String query, {
     bool heritageOnly = false,
-  }) => osm.search(query, heritageOnly: heritageOnly);
+  }) async {
+    final term = query.trim();
+    if (term.length < 3) return <OsmPlace>[];
+    if (supabase.isConfigured) {
+      try {
+        final encodedPattern = Uri.encodeQueryComponent('*$term*');
+        final rows = await supabase.select(
+          'heritage_locations',
+          query: 'select=osm_id,name,address,category,latitude,longitude'
+              '&is_active=eq.true'
+              '&or=(name.ilike.$encodedPattern,address.ilike.$encodedPattern,state.ilike.$encodedPattern)'
+              '&order=name.asc&limit=8',
+          accessToken: (await authenticate())?.accessToken,
+        );
+        final catalogue = rows.map((row) => OsmPlace(
+          name: '${row['name']}',
+          displayName: '${row['address']}'.trim().isEmpty
+              ? '${row['name']}'
+              : '${row['name']}, ${row['address']}',
+          point: GeoPoint(
+            (row['latitude'] as num).toDouble(),
+            (row['longitude'] as num).toDouble(),
+          ),
+          type: '${row['category']}',
+        )).toList();
+        if (catalogue.isNotEmpty) return catalogue;
+      } catch (_) {
+        // Fall through to Nominatim when the catalogue is unavailable.
+      }
+    }
+    return osm.search(term, heritageOnly: heritageOnly);
+  }
   Future<RouteLeg> calculateRoute(List<PlannerActivity> activities) =>
       osrm.route(activities.map((a) => a.point).toList());
 

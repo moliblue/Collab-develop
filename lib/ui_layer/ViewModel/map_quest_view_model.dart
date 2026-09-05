@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Repositories/map_quest_repository.dart';
-import '../../data_layer/Service Managers/Remote Services/osm_heritage_service.dart';
+import '../../data_layer/Service Managers/Remote Services/heritage_catalog_service.dart';
 
 enum QuestJoinStatus {
   ready,
@@ -37,9 +37,9 @@ class QuestSubmissionResult {
 
 class MapQuestViewModel extends ChangeNotifier {
   MapQuestViewModel({
-    OsmHeritageService? heritageService,
+    HeritageCatalogService? heritageService,
     MapQuestRepository? questRepository,
-  }) : _heritageService = heritageService ?? OsmHeritageService(),
+  }) : _heritageService = heritageService ?? HeritageCatalogService(),
        _questRepository = questRepository ?? MapQuestRepository();
 
   static const double defaultSearchRadiusKm = 5;
@@ -48,7 +48,7 @@ class MapQuestViewModel extends ChangeNotifier {
       'Upload a photo of this heritage location.';
   static const int pictureQuestXp = 100;
   static const List<double> radiusOptionsKm = <double>[0.5, 1, 2, 5, 10];
-  final OsmHeritageService _heritageService;
+  final HeritageCatalogService _heritageService;
   final MapQuestRepository _questRepository;
   String _query = '';
   String _category = 'All';
