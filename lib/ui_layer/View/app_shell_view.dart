@@ -64,61 +64,73 @@ class _AppShellViewState extends State<AppShellView> {
                 if (!didPop && vm.hasNestedScreen) vm.back();
               },
               child: Scaffold(
+                backgroundColor: const Color(0xFFEAF2F7),
                 body: SafeArea(
-                  child: Stack(
-                    children: <Widget>[
-                      Column(
-                        children: <Widget>[
-                          _Header(
-                            viewModel: vm,
-                            onProfileTap: vm.openProfile,
-                          ),
-                          Expanded(
-                            child: IndexedStack(
-                              index: vm.tab.index,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 430),
+                      child: ColoredBox(
+                        color: AppColors.background,
+                        child: Stack(
+                          children: <Widget>[
+                            Column(
                               children: <Widget>[
-                                DiscoverModuleView(
-                                  viewModel: vm.discovery,
-                                  onDirections: vm.showDirections,
-                                  onAddToPlan: vm.addToPlan,
-                                  notify: vm.showToast,
+                                _Header(
+                                  viewModel: vm,
+                                  onProfileTap: vm.openProfile,
                                 ),
-                                MapModuleView(
-                                  viewModel: vm.map,
-                                  places: vm.discovery.places,
-                                  active: vm.tab == MainTab.map,
-                                  onBack: vm.back,
-                                  onXpReward: vm.rewardXp,
-                                  notify: vm.showToast,
+                                Expanded(
+                                  child: IndexedStack(
+                                    index: vm.tab.index,
+                                    children: <Widget>[
+                                      DiscoverModuleView(
+                                        viewModel: vm.discovery,
+                                        onDirections: vm.showDirections,
+                                        onAddToPlan: vm.addToPlan,
+                                        notify: vm.showToast,
+                                      ),
+                                      MapModuleView(
+                                        viewModel: vm.map,
+                                        active: vm.tab == MainTab.map,
+                                        onBack: vm.back,
+                                        onXpReward: vm.rewardXp,
+                                        notify: vm.showToast,
+                                      ),
+                                      MysteryJourneyView(
+                                        viewModel: vm.mystery,
+                                        onViewPassport: vm.openPassport,
+                                        onDirections: vm.showMysteryDirections,
+                                        notify: vm.showToast,
+                                      ),
+                                      PlanModuleView(
+                                        viewModel: vm.plan,
+                                        bookmarks: vm.discovery.bookmarks,
+                                        recommendations: vm.discovery.places,
+                                        onDiscover: () =>
+                                            vm.selectTab(MainTab.discover),
+                                        onViewRoute: vm.showDayRoute,
+                                        notify: vm.showToast,
+                                      ),
+                                      ProfileModuleView(
+                                        viewModel: vm.profile,
+                                        authViewModel: vm.auth,
+                                        notify: vm.showToast,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                MysteryJourneyView(
-                                  viewModel: vm.mystery,
-                                  onViewPassport: vm.openPassport,
-                                  onDirections: vm.showMysteryDirections,
-                                  notify: vm.showToast,
-                                ),
-                                PlanModuleView(
-                                  viewModel: vm.plan,
-                                  bookmarks: vm.discovery.bookmarks,
-                                  onDiscover: () =>
-                                      vm.selectTab(MainTab.discover),
-                                  onViewRoute: vm.showDayRoute,
-                                  notify: vm.showToast,
-                                ),
-                                ProfileModuleView(
-                                  viewModel: vm.profile,
-                                  authViewModel: vm.auth,
-                                  notify: vm.showToast,
-                                ),
+                                _BottomNavigation(viewModel: vm),
                               ],
                             ),
-                          ),
-                          _BottomNavigation(viewModel: vm),
-                        ],
+                            if (vm.toast != null)
+                              _Toast(
+                                data: vm.toast!,
+                                onDismiss: vm.dismissToast,
+                              ),
+                          ],
+                        ),
                       ),
-                      if (vm.toast != null)
-                        _Toast(data: vm.toast!, onDismiss: vm.dismissToast),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -140,10 +152,13 @@ class _Header extends StatelessWidget {
     ),
     child: Row(
       children: <Widget>[
-        if (viewModel.hasNestedScreen && viewModel.tab != MainTab.map)
+        if ((viewModel.hasNestedScreen && viewModel.tab != MainTab.map) ||
+            viewModel.tab == MainTab.plan)
           IconButton(
             tooltip: 'Back',
-            onPressed: viewModel.back,
+            onPressed: viewModel.hasNestedScreen
+                ? viewModel.back
+                : () => viewModel.selectTab(MainTab.discover),
             style: IconButton.styleFrom(
               backgroundColor: AppColors.elevated,
               side: const BorderSide(color: AppColors.border),
@@ -183,19 +198,6 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          if (viewModel.plan.hasConflict)
-            IconButton(
-              tooltip: 'Time conflict',
-              onPressed: () => viewModel.showToast(
-                'Open the itinerary conflict control to auto-adjust.',
-                AppColors.warning,
-              ),
-              icon: const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.warning,
-                size: 19,
-              ),
-            ),
           IconButton(
             tooltip: 'Export PDF',
             onPressed: () => viewModel.showToast(

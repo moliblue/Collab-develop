@@ -7,6 +7,7 @@ import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Repositories/shake_find_repository.dart';
 import '../../data_layer/Repositories/shake_find_repository_impl.dart';
 import '../../data_layer/Service Managers/device/shake_sensor_service.dart';
+import '../../features/collaborative_planner/models/planner_messages.dart';
 import 'auth_view_model.dart';
 import 'collaborative_planning_view_model.dart';
 import 'discovery_view_model.dart';
@@ -130,7 +131,7 @@ class AppViewModel extends ChangeNotifier {
     map.showDayRoute(stops);
     selectTab(MainTab.map);
     showToast(
-      'Showing ${stops.length} route stops in time order.',
+      PlannerMessages.redirectRoute(plan.dayIndex + 1),
       AppColors.tealDark,
     );
   }

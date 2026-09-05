@@ -51,6 +51,10 @@ class HeritagePlace {
     required this.address,
     required this.hours,
     this.bookmarked = false,
+    this.osmId,
+    this.osmType,
+    this.osmNumericId,
+    this.osmTags = const <String, String>{},
     List<Review>? reviews,
   }) : reviews = reviews ?? <Review>[];
   final String id;
@@ -68,6 +72,10 @@ class HeritagePlace {
   final String address;
   final String hours;
   bool bookmarked;
+  final String? osmId;
+  final String? osmType;
+  final int? osmNumericId;
+  final Map<String, String> osmTags;
   final List<Review> reviews;
 }
 

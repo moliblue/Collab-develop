@@ -15,20 +15,18 @@ Future<void> main() async {
       kIsWeb &&
       (Uri.base.queryParameters.containsKey('code') ||
           Uri.base.fragment.contains('type=signup'));
-
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter framework error: ${details.exceptionAsString()}');
   };
-
   PlatformDispatcher.instance.onError = (Object error, StackTrace stackTrace) {
     debugPrint('Uncaught application error: $error\n$stackTrace');
     return true;
   };
-
   const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   const supabasePublishableKey = String.fromEnvironment(
     'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
 
   if (supabaseUrl.isEmpty || supabasePublishableKey.isEmpty) {
@@ -48,13 +46,14 @@ Future<void> main() async {
   if (openedFromEmailConfirmation) {
     await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
   }
-
   runApp(const FindItMyApp());
 }
 
 class FindItMyApp extends StatelessWidget {
   const FindItMyApp({super.key, this.viewModel, this.appViewModel});
 
+  /// Retained for compatibility with the original Shake & Find smoke test.
+  /// Integrated UI state is supplied by [appViewModel] through MVVM.
   final Object? viewModel;
   final AppViewModel? appViewModel;
 
