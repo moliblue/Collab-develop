@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -13,18 +15,18 @@ import '../../data_layer/Service Managers/device/map_navigation_service.dart';
 import '../ViewModel/map_quest_view_model.dart';
 import 'shared/app_widgets.dart';
 
+enum _RouteMode { driving, walking }
+
 class MapModuleView extends StatefulWidget {
   const MapModuleView({
     super.key,
     required this.viewModel,
-    required this.places,
     required this.active,
     required this.onBack,
     required this.onXpReward,
     required this.notify,
   });
   final MapQuestViewModel viewModel;
-  final List<HeritagePlace> places;
   final bool active;
   final VoidCallback onBack;
   final ValueChanged<int> onXpReward;
@@ -36,14 +38,22 @@ class MapModuleView extends StatefulWidget {
 class _MapModuleViewState extends State<MapModuleView> {
   final MapController controller = MapController();
   final MapNavigationService navigation = MapNavigationService();
+  final ValueNotifier<double> _headingNotifier = ValueNotifier<double>(0);
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<double?>? _headingSubscription;
+  Timer? _demoMovementTimer;
   bool filtersOpen = false;
   bool _navigationActive = false;
   bool _locating = false;
   bool _routeLoading = false;
+  _RouteMode _routeMode = _RouteMode.driving;
   bool _guidanceMode = false;
   LatLng? _userPosition;
+  LatLng? _demoPosition;
+  double? _demoDistanceMeters;
+  List<LatLng> _demoRoutePoints = <LatLng>[];
+  int _demoRouteIndex = 0;
+  bool _demoMovementActive = false;
   LatLng? _routedFrom;
   double _heading = 0;
   double _routeDistanceMeters = 0;
@@ -54,6 +64,14 @@ class _MapModuleViewState extends State<MapModuleView> {
   String? _lastRouteSignature;
   bool _routeReloadPending = false;
   int _routeRequest = 0;
+  bool _heritageLoadStarted = false;
+  bool _showHeritageLabels = false;
+  DateTime? _lastHeadingUpdate;
+
+  static const Duration _headingUpdateInterval = Duration(milliseconds: 200);
+  static const Duration _demoMovementInterval = Duration(milliseconds: 400);
+  static const double _demoMovementStepMeters = 40;
+  static const double _heritageLabelZoomThreshold = 15;
 
   @override
   void initState() {
@@ -75,8 +93,10 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   @override
   void dispose() {
+    _demoMovementTimer?.cancel();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
+    _headingNotifier.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -96,12 +116,10 @@ class _MapModuleViewState extends State<MapModuleView> {
           _navigationActive = false;
           _locating = false;
           _locationIssue = switch (access) {
-            LocationAccessStatus.servicesDisabled =>
-              'Turn on Location Services to navigate.',
-            LocationAccessStatus.denied =>
-              'Allow location access to show your position.',
+            LocationAccessStatus.servicesDisabled ||
+            LocationAccessStatus.denied ||
             LocationAccessStatus.deniedForever =>
-              'Enable location permission in Android settings.',
+              'Current location is unavailable. Please enable location services and try again.',
             LocationAccessStatus.ready => null,
           };
         });
@@ -114,16 +132,26 @@ class _MapModuleViewState extends State<MapModuleView> {
             setState(() {
               _navigationActive = false;
               _locating = false;
-              _locationIssue = 'Live GPS is temporarily unavailable.';
+              _locationIssue =
+                  'Current location is unavailable. Please enable location services and try again.';
             });
           }
         },
       );
       _headingSubscription = navigation.headingStream?.listen((double? value) {
         if (!mounted || value == null) return;
-        setState(() => _heading = value);
-        if (_guidanceMode && _userPosition != null) {
-          controller.moveAndRotate(_userPosition!, 17.5, (360 - value) % 360);
+        final now = DateTime.now();
+        final lastUpdate = _lastHeadingUpdate;
+        if (lastUpdate != null &&
+            now.difference(lastUpdate) < _headingUpdateInterval) {
+          return;
+        }
+        _lastHeadingUpdate = now;
+        _heading = value;
+        _headingNotifier.value = value;
+        final currentPosition = _effectiveUserPosition;
+        if (_guidanceMode && currentPosition != null) {
+          controller.moveAndRotate(currentPosition, 17.5, (360 - value) % 360);
         }
       });
       final lastKnown = await navigation.getLastKnownPosition();
@@ -135,7 +163,8 @@ class _MapModuleViewState extends State<MapModuleView> {
         setState(() {
           _navigationActive = false;
           _locating = false;
-          _locationIssue = 'Live location is unavailable on this device.';
+          _locationIssue =
+              'Current location is unavailable. Please enable location services and try again.';
         });
       }
     }
@@ -143,18 +172,26 @@ class _MapModuleViewState extends State<MapModuleView> {
 
   void _stopNavigation() {
     _navigationActive = false;
+    _clearDemoMovementState();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
     _positionSubscription = null;
     _headingSubscription = null;
   }
 
+  void _updateHeritageLabelVisibility(MapCamera camera, bool hasGesture) {
+    final showLabels = camera.zoom >= _heritageLabelZoomThreshold;
+    if (showLabels == _showHeritageLabels || !mounted) return;
+    setState(() => _showHeritageLabels = showLabels);
+  }
+
   void _updatePosition(Position position) {
     if (!mounted) return;
     final next = LatLng(position.latitude, position.longitude);
+    final effectiveNext = _demoPosition ?? next;
     final moved = _routedFrom == null
         ? double.infinity
-        : const Distance().as(LengthUnit.Meter, _routedFrom!, next);
+        : const Distance().as(LengthUnit.Meter, _routedFrom!, effectiveNext);
     setState(() {
       _userPosition = next;
       _locating = false;
@@ -163,10 +200,23 @@ class _MapModuleViewState extends State<MapModuleView> {
         _heading = position.heading;
       }
     });
-    if (_guidanceMode) {
-      controller.moveAndRotate(next, 17.5, (360 - _heading) % 360);
+    if (position.heading >= 0 && position.headingAccuracy > 0) {
+      _headingNotifier.value = position.heading;
     }
-    if (moved > 40 && _hasRouteTarget) {
+    if (_guidanceMode) {
+      controller.moveAndRotate(effectiveNext, 17.5, (360 - _heading) % 360);
+    }
+    if (!_heritageLoadStarted) {
+      _heritageLoadStarted = true;
+      if (!_hasRouteTarget) controller.move(next, 14);
+      unawaited(
+        widget.viewModel.loadNearbyHeritage(
+          latitude: next.latitude,
+          longitude: next.longitude,
+        ),
+      );
+    }
+    if (_demoPosition == null && moved > 40 && _hasRouteTarget) {
       if (_routeLoading) {
         _routeReloadPending = true;
       } else {
@@ -179,11 +229,14 @@ class _MapModuleViewState extends State<MapModuleView> {
       widget.viewModel.directionTarget != null ||
       widget.viewModel.routeStops.isNotEmpty;
 
+  LatLng? get _effectiveUserPosition => _demoPosition ?? _userPosition;
+
   List<LatLng> _routeWaypoints() {
-    if (_userPosition == null) return <LatLng>[];
+    final origin = _userPosition;
+    if (origin == null) return <LatLng>[];
     if (widget.viewModel.routeStops.isNotEmpty) {
       return <LatLng>[
-        _userPosition!,
+        origin,
         ...widget.viewModel.routeStops.map(
           (ActivityItem item) => LatLng(item.latitude, item.longitude),
         ),
@@ -192,7 +245,7 @@ class _MapModuleViewState extends State<MapModuleView> {
     final target = widget.viewModel.directionTarget;
     return target == null
         ? <LatLng>[]
-        : <LatLng>[_userPosition!, LatLng(target.latitude, target.longitude)];
+        : <LatLng>[origin, LatLng(target.latitude, target.longitude)];
   }
 
   void _syncRoute() {
@@ -204,10 +257,14 @@ class _MapModuleViewState extends State<MapModuleView> {
         : 'none';
     if (signature == _lastRouteSignature) return;
     _lastRouteSignature = signature;
+    _clearDemoMovementState();
     _roadRoute = <LatLng>[];
+    _routeDistanceMeters = 0;
+    _routeDurationSeconds = 0;
     _routeIssue = null;
     _routedFrom = null;
     _guidanceMode = false;
+    _routeMode = _RouteMode.driving;
     if (signature != 'none') {
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
     } else {
@@ -241,7 +298,9 @@ class _MapModuleViewState extends State<MapModuleView> {
       _routeIssue = null;
     });
     try {
-      final result = await navigation.fetchDrivingRoute(waypoints);
+      final result = _routeMode == _RouteMode.driving
+          ? await navigation.fetchDrivingRoute(waypoints)
+          : await navigation.fetchWalkingRoute(waypoints);
       if (!mounted ||
           request != _routeRequest ||
           signature != _lastRouteSignature) {
@@ -260,18 +319,28 @@ class _MapModuleViewState extends State<MapModuleView> {
           signature != _lastRouteSignature) {
         return;
       }
-      setState(() {
-        _roadRoute = waypoints;
-        _routeDistanceMeters = const Distance().as(
-          LengthUnit.Meter,
-          waypoints.first,
-          waypoints.last,
-        );
-        _routeDurationSeconds = 0;
-        _routedFrom = routeOrigin;
-        _routeIssue = 'Road routing unavailable · showing direct connection';
-      });
-      _fitRoute(waypoints);
+      if (_routeMode == _RouteMode.driving) {
+        setState(() {
+          _roadRoute = waypoints;
+          _routeDistanceMeters = const Distance().as(
+            LengthUnit.Meter,
+            waypoints.first,
+            waypoints.last,
+          );
+          _routeDurationSeconds = 0;
+          _routedFrom = routeOrigin;
+          _routeIssue = 'Road routing unavailable · showing direct connection';
+        });
+        _fitRoute(waypoints);
+      } else {
+        setState(() {
+          _roadRoute = <LatLng>[];
+          _routeDistanceMeters = 0;
+          _routeDurationSeconds = 0;
+          _routedFrom = null;
+          _routeIssue = 'Route is currently unavailable. Please try again.';
+        });
+      }
     } finally {
       if (mounted && request == _routeRequest) {
         setState(() => _routeLoading = false);
@@ -312,7 +381,8 @@ class _MapModuleViewState extends State<MapModuleView> {
   }
 
   void _centerOnUser() {
-    if (_userPosition == null) {
+    final currentPosition = _effectiveUserPosition;
+    if (currentPosition == null) {
       _startNavigation();
       widget.notify(
         _locationIssue ?? 'Waiting for your GPS position…',
@@ -320,17 +390,18 @@ class _MapModuleViewState extends State<MapModuleView> {
       );
       return;
     }
-    controller.move(_userPosition!, 16.5);
+    controller.move(currentPosition, 16.5);
   }
 
   void _toggleGuidance() {
-    if (_userPosition == null) {
+    final currentPosition = _effectiveUserPosition;
+    if (currentPosition == null) {
       _centerOnUser();
       return;
     }
     setState(() => _guidanceMode = !_guidanceMode);
     if (_guidanceMode) {
-      controller.moveAndRotate(_userPosition!, 17.5, (360 - _heading) % 360);
+      controller.moveAndRotate(currentPosition, 17.5, (360 - _heading) % 360);
     } else {
       controller.rotate(0);
       if (_roadRoute.isNotEmpty) _fitRoute(_roadRoute);
@@ -338,22 +409,198 @@ class _MapModuleViewState extends State<MapModuleView> {
   }
 
   String get _routeDetail {
-    if (_routeLoading) return 'Calculating the best road route…';
-    if (_routeIssue != null) return _routeIssue!;
-    if (_routeDistanceMeters <= 0) return 'Waiting for live location…';
+    final mode = _routeMode == _RouteMode.driving ? 'Driving' : 'Walking';
+    if (_routeLoading) return '$mode · Calculating route…';
+    if (_routeIssue != null) return '$mode · $_routeIssue';
+    if (_routeDistanceMeters <= 0) return '$mode · Waiting for live location…';
     final distance = _routeDistanceMeters >= 1000
         ? '${(_routeDistanceMeters / 1000).toStringAsFixed(1)} km'
         : '${_routeDistanceMeters.round()} m';
-    if (_routeDurationSeconds <= 0) return distance;
+    if (_routeDurationSeconds <= 0) return '$mode · $distance';
     final minutes = (_routeDurationSeconds / 60).ceil();
-    return '$distance · about $minutes min';
+    return '$mode · $distance · about $minutes min';
+  }
+
+  void _setRouteMode(_RouteMode mode) {
+    if (_routeLoading || mode == _routeMode || !_hasRouteTarget) return;
+    _clearDemoMovementState();
+    setState(() {
+      _routeMode = mode;
+      _guidanceMode = false;
+      _roadRoute = <LatLng>[];
+      _routeDistanceMeters = 0;
+      _routeDurationSeconds = 0;
+      _routeIssue = null;
+      _routedFrom = null;
+      _routeReloadPending = false;
+    });
+    controller.rotate(0);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
+  }
+
+  void _startRouteDemo() {
+    final target = widget.viewModel.directionTarget;
+    if (target == null ||
+        _routeLoading ||
+        _routeIssue != null ||
+        _roadRoute.length < 2) {
+      return;
+    }
+    final destination = LatLng(target.latitude, target.longitude);
+    final originDistance = const Distance().as(
+      LengthUnit.Meter,
+      _roadRoute.first,
+      destination,
+    );
+    if (originDistance <= 500) {
+      widget.notify(
+        'Current route already starts within 500 metres.',
+        AppColors.tealDark,
+      );
+      return;
+    }
+    final samples = _interpolateRoute(_roadRoute);
+    if (samples.length < 2) return;
+    _demoMovementTimer?.cancel();
+    setState(() {
+      _demoRoutePoints = samples;
+      _demoRouteIndex = 0;
+      _demoPosition = samples.first;
+      _demoDistanceMeters = originDistance;
+      _demoMovementActive = true;
+    });
+    _demoMovementTimer = Timer.periodic(
+      _demoMovementInterval,
+      (_) => _advanceRouteDemo(destination),
+    );
+  }
+
+  List<LatLng> _interpolateRoute(List<LatLng> route) {
+    final samples = <LatLng>[route.first];
+    for (var index = 0; index < route.length - 1; index++) {
+      final start = route[index];
+      final end = route[index + 1];
+      final segmentMeters = const Distance().as(LengthUnit.Meter, start, end);
+      if (!segmentMeters.isFinite || segmentMeters <= 0) continue;
+      final steps = math.max(
+        1,
+        (segmentMeters / _demoMovementStepMeters).ceil(),
+      );
+      var longitudeDelta = end.longitude - start.longitude;
+      if (longitudeDelta > 180) longitudeDelta -= 360;
+      if (longitudeDelta < -180) longitudeDelta += 360;
+      for (var step = 1; step <= steps; step++) {
+        final progress = step / steps;
+        var longitude = start.longitude + longitudeDelta * progress;
+        if (longitude > 180) longitude -= 360;
+        if (longitude < -180) longitude += 360;
+        samples.add(
+          LatLng(
+            start.latitude + (end.latitude - start.latitude) * progress,
+            longitude,
+          ),
+        );
+      }
+    }
+    return samples;
+  }
+
+  void _advanceRouteDemo(LatLng destination) {
+    if (!mounted || !_demoMovementActive) return;
+    final nextIndex = _demoRouteIndex + 1;
+    if (nextIndex >= _demoRoutePoints.length) {
+      _demoMovementTimer?.cancel();
+      _demoMovementTimer = null;
+      setState(() => _demoMovementActive = false);
+      return;
+    }
+    final next = _demoRoutePoints[nextIndex];
+    final distanceMeters = const Distance().as(
+      LengthUnit.Meter,
+      next,
+      destination,
+    );
+    setState(() {
+      _demoRouteIndex = nextIndex;
+      _demoPosition = next;
+      _demoDistanceMeters = distanceMeters;
+    });
+  }
+
+  void _stopRouteDemo() {
+    if (_demoPosition == null && !_demoMovementActive) return;
+    setState(_clearDemoMovementState);
+  }
+
+  void _clearDemoMovementState() {
+    _demoMovementTimer?.cancel();
+    _demoMovementTimer = null;
+    _demoMovementActive = false;
+    _demoPosition = null;
+    _demoDistanceMeters = null;
+    _demoRoutePoints = <LatLng>[];
+    _demoRouteIndex = 0;
+  }
+
+  Future<void> _joinRouteQuest(BuildContext context) async {
+    final target = widget.viewModel.directionTarget;
+    if (target == null) return;
+    _demoMovementTimer?.cancel();
+    _demoMovementTimer = null;
+    if (_demoMovementActive && mounted) {
+      setState(() => _demoMovementActive = false);
+    }
+    await _joinHeritageQuest(
+      context: context,
+      place: target,
+      vm: widget.viewModel,
+      currentPosition: _effectiveUserPosition,
+      notify: widget.notify,
+    );
+  }
+
+  double? _routeOriginDistance(HeritagePlace target) {
+    if (_roadRoute.isEmpty) return null;
+    return const Distance().as(
+      LengthUnit.Meter,
+      _roadRoute.first,
+      LatLng(target.latitude, target.longitude),
+    );
+  }
+
+  bool _canStartRouteDemo(HeritagePlace target) {
+    final originDistance = _routeOriginDistance(target);
+    return !_routeLoading &&
+        _routeIssue == null &&
+        _roadRoute.length >= 2 &&
+        _demoPosition == null &&
+        originDistance != null &&
+        originDistance > 500;
+  }
+
+  String? _routeDemoStatus(HeritagePlace target) {
+    final demoDistance = _demoDistanceMeters;
+    if (_demoPosition != null && demoDistance != null) {
+      return demoDistance <= 500
+          ? 'Within 500m — Quest available'
+          : '${demoDistance.round()} m away from quest';
+    }
+    final originDistance = _routeOriginDistance(target);
+    if (_routeIssue == null &&
+        _roadRoute.length >= 2 &&
+        originDistance != null &&
+        originDistance <= 500) {
+      return 'Current route already starts within 500 metres.';
+    }
+    return null;
   }
 
   List<HeritagePlace> get filtered {
     final q = widget.viewModel.query.toLowerCase();
-    return widget.places
+    return widget.viewModel.nearbyPlaces
         .where(
           (HeritagePlace p) =>
+              p.distanceKm <= widget.viewModel.radius &&
               (q.isEmpty ||
                   p.name.toLowerCase().contains(q) ||
                   p.address.toLowerCase().contains(q)) &&
@@ -367,6 +614,11 @@ class _MapModuleViewState extends State<MapModuleView> {
     'Traditional Heritage Site' => 'Historical Monument',
     'Local Craft' => 'Cultural Heritage',
     'Local Food' => 'Cultural Heritage',
+    'Architecture' ||
+    'Historical Monument' ||
+    'Cultural Heritage' ||
+    'Temple & Sacred' ||
+    'Museum' => p.category,
     _ => 'Architecture',
   };
 
@@ -376,16 +628,21 @@ class _MapModuleViewState extends State<MapModuleView> {
     builder: (BuildContext context, _) {
       final vm = widget.viewModel;
       _syncRoute();
-      final points = _roadRoute.isNotEmpty ? _roadRoute : _routeWaypoints();
+      final points = _roadRoute.isNotEmpty
+          ? _roadRoute
+          : _routeMode == _RouteMode.driving
+          ? _routeWaypoints()
+          : <LatLng>[];
       return Stack(
         children: <Widget>[
           Positioned.fill(
             child: FlutterMap(
               mapController: controller,
-              options: const MapOptions(
-                initialCenter: LatLng(5.4182, 100.3411),
+              options: MapOptions(
+                initialCenter: const LatLng(5.4182, 100.3411),
                 initialZoom: 12.2,
-                backgroundColor: Color(0xFFE7F0EA),
+                backgroundColor: const Color(0xFFE7F0EA),
+                onPositionChanged: _updateHeritageLabelVisibility,
               ),
               children: <Widget>[
                 const _OfflineMapBackground(),
@@ -394,12 +651,12 @@ class _MapModuleViewState extends State<MapModuleView> {
                   userAgentPackageName: 'com.finditmy.findit_my',
                   maxNativeZoom: 19,
                 ),
-                if (_userPosition != null && !_hasRouteTarget)
+                if (_effectiveUserPosition != null && !_hasRouteTarget)
                   CircleLayer(
                     circles: <CircleMarker>[
                       CircleMarker(
-                        point: _userPosition!,
-                        radius: vm.radius * 650,
+                        point: _effectiveUserPosition!,
+                        radius: vm.radius * 1000,
                         useRadiusInMeter: true,
                         color: AppColors.teal.withValues(alpha: .06),
                         borderColor: AppColors.teal.withValues(alpha: .45),
@@ -425,24 +682,28 @@ class _MapModuleViewState extends State<MapModuleView> {
                 MarkerLayer(
                   rotate: true,
                   markers: <Marker>[
-                    if (_userPosition != null)
+                    if (_effectiveUserPosition != null)
                       Marker(
-                        point: _userPosition!,
+                        point: _effectiveUserPosition!,
                         width: 64,
                         height: 64,
-                        child: _UserMarker(
-                          heading: _guidanceMode ? 0 : _heading,
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _headingNotifier,
+                          builder: (BuildContext context, double heading, _) =>
+                              _UserMarker(heading: _guidanceMode ? 0 : heading),
                         ),
                       ),
                     if (vm.routeStops.isEmpty && vm.directionTarget == null)
                       ...filtered.map(
                         (HeritagePlace p) => Marker(
                           point: LatLng(p.latitude, p.longitude),
-                          width: 130,
-                          height: 52,
+                          alignment: Alignment.topCenter,
+                          width: 150,
+                          height: 84,
                           child: _PlaceMarker(
                             place: p,
                             bookmarked: p.bookmarked,
+                            showLabel: _showHeritageLabels,
                             onTap: () => vm.select(p),
                           ),
                         ),
@@ -532,6 +793,59 @@ class _MapModuleViewState extends State<MapModuleView> {
                       ),
                     ],
                   ),
+                  if (vm.heritageLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: LinearProgressIndicator(minHeight: 3),
+                    ),
+                  if (vm.heritageIssue != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: AppCard(
+                        radius: 14,
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Text(
+                                vm.heritageIssue!,
+                                style: const TextStyle(
+                                  color: AppColors.danger,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed:
+                                  vm.heritageLoading || _userPosition == null
+                                  ? null
+                                  : () => vm.retryNearbyHeritage(
+                                      latitude: _userPosition!.latitude,
+                                      longitude: _userPosition!.longitude,
+                                    ),
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  if (vm.heritageLoadAttempted &&
+                      !vm.heritageLoading &&
+                      vm.heritageIssue == null &&
+                      vm.nearbyPlaces.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 7),
+                      child: AppCard(
+                        radius: 14,
+                        child: Text(
+                          'No named heritage locations were found in this area.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ),
                   if (filtersOpen)
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
@@ -541,18 +855,21 @@ class _MapModuleViewState extends State<MapModuleView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'Search radius · ${vm.radius.round()} km',
+                              'Search radius · ${_radiusLabel(vm.radius)}',
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
                             Slider(
-                              value: vm.radius,
-                              min: 1,
-                              max: 25,
-                              divisions: 24,
-                              onChanged: vm.setRadius,
+                              value: vm.radiusOptionIndex.toDouble(),
+                              min: 0,
+                              max:
+                                  (MapQuestViewModel.radiusOptionsKm.length - 1)
+                                      .toDouble(),
+                              divisions:
+                                  MapQuestViewModel.radiusOptionsKm.length - 1,
+                              onChanged: vm.setRadiusOption,
                             ),
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -652,11 +969,31 @@ class _MapModuleViewState extends State<MapModuleView> {
                 detail: _routeDetail,
                 loading: _routeLoading,
                 guidanceActive: _guidanceMode,
+                mode: _routeMode,
+                onModeChanged: _setRouteMode,
+                demoActive: _demoPosition != null,
+                demoRunning: _demoMovementActive,
+                demoStatus: _routeDemoStatus(vm.directionTarget!),
+                canStartDemo: _canStartRouteDemo(vm.directionTarget!),
+                canJoinQuest:
+                    _demoPosition == null ||
+                    (_demoDistanceMeters ?? double.infinity) <= 500,
+                questLoading: vm.questLoading,
+                onStartDemo: _startRouteDemo,
+                onStopDemo: _stopRouteDemo,
+                onJoinQuest: () => _joinRouteQuest(context),
                 onGuide: _toggleGuidance,
                 onClose: () {
+                  _clearDemoMovementState();
                   setState(() {
                     _guidanceMode = false;
                     _roadRoute = <LatLng>[];
+                    _routeDistanceMeters = 0;
+                    _routeDurationSeconds = 0;
+                    _routeIssue = null;
+                    _routedFrom = null;
+                    _routeMode = _RouteMode.driving;
+                    _routeReloadPending = false;
                   });
                   controller.rotate(0);
                   vm.clearDirections();
@@ -679,13 +1016,17 @@ class _MapModuleViewState extends State<MapModuleView> {
             _LocationSheet(
               place: vm.selected!,
               vm: vm,
-              onReward: widget.onXpReward,
+              currentPosition: () => _effectiveUserPosition,
               notify: widget.notify,
             ),
         ],
       );
     },
   );
+
+  String _radiusLabel(double radiusKm) => radiusKm < 1
+      ? '${(radiusKm * 1000).round()} m'
+      : '${radiusKm.round()} km';
 }
 
 class _OfflineMapBackground extends StatelessWidget {
@@ -805,62 +1146,106 @@ class _PlaceMarker extends StatelessWidget {
   const _PlaceMarker({
     required this.place,
     required this.bookmarked,
+    required this.showLabel,
     required this.onTap,
   });
   final HeritagePlace place;
   final bool bookmarked;
+  final bool showLabel;
   final VoidCallback onTap;
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: bookmarked ? AppColors.warning : AppColors.border,
-            ),
-            boxShadow: const <BoxShadow>[
-              BoxShadow(color: Colors.black12, blurRadius: 9),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              if (bookmarked)
-                const Icon(
-                  Icons.star_rounded,
-                  size: 12,
-                  color: AppColors.warning,
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: place.name,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Stack(
+        children: <Widget>[
+          if (showLabel)
+            Positioned(
+              left: 4,
+              right: 4,
+              bottom: 50,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .92),
+                  borderRadius: BorderRadius.circular(5),
                 ),
-              const Icon(
-                Icons.museum_rounded,
-                size: 15,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  place.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    place.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 10,
+                      height: 1.1,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-            ],
+            ),
+          Positioned(
+            left: 51,
+            bottom: 0,
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: <Widget>[
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                Positioned(
+                  top: 10,
+                  child: Icon(
+                    _categoryIcon(place.category),
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                if (bookmarked)
+                  const Positioned(
+                    top: 0,
+                    right: 0,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.star_rounded,
+                          size: 11,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-        const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
-      ],
+        ],
+      ),
     ),
   );
+
+  IconData _categoryIcon(String category) => switch (category) {
+    'Temple & Sacred' => Icons.temple_buddhist_rounded,
+    'Architecture' => Icons.account_balance_rounded,
+    'Cultural Heritage' => Icons.palette_rounded,
+    _ => Icons.museum_rounded,
+  };
 }
 
 class _NumberMarker extends StatelessWidget {
@@ -893,6 +1278,17 @@ class _RoutePanel extends StatelessWidget {
     required this.detail,
     required this.loading,
     required this.guidanceActive,
+    required this.mode,
+    required this.onModeChanged,
+    required this.demoActive,
+    required this.demoRunning,
+    required this.demoStatus,
+    required this.canStartDemo,
+    required this.canJoinQuest,
+    required this.questLoading,
+    required this.onStartDemo,
+    required this.onStopDemo,
+    required this.onJoinQuest,
     required this.onGuide,
     required this.onClose,
   });
@@ -901,64 +1297,216 @@ class _RoutePanel extends StatelessWidget {
   final String detail;
   final bool loading;
   final bool guidanceActive;
+  final _RouteMode mode;
+  final ValueChanged<_RouteMode> onModeChanged;
+  final bool demoActive;
+  final bool demoRunning;
+  final String? demoStatus;
+  final bool canStartDemo;
+  final bool canJoinQuest;
+  final bool questLoading;
+  final VoidCallback onStartDemo;
+  final VoidCallback onStopDemo;
+  final VoidCallback onJoinQuest;
   final VoidCallback onGuide;
   final VoidCallback onClose;
   @override
   Widget build(BuildContext context) => AppCard(
     radius: 20,
-    child: Row(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        CircleAvatar(
-          backgroundColor: guidanceActive
-              ? AppColors.tealDark
-              : AppColors.primary,
-          child: loading
-              ? const SizedBox.square(
-                  dimension: 17,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
+        Row(
+          children: <Widget>[
+            CircleAvatar(
+              backgroundColor: guidanceActive
+                  ? AppColors.tealDark
+                  : AppColors.primary,
+              child: loading
+                  ? const SizedBox.square(
+                      dimension: 17,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Icon(
+                      mode == _RouteMode.driving
+                          ? Icons.directions_car_rounded
+                          : Icons.directions_walk_rounded,
+                      color: Colors.white,
+                    ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Eyebrow(title),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
-                )
-              : const Icon(Icons.navigation_rounded, color: Colors.white),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Eyebrow(title),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w900),
+                  Text(
+                    detail,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  _RouteModeSelector(
+                    mode: mode,
+                    enabled: !loading,
+                    onChanged: onModeChanged,
+                  ),
+                ],
               ),
-              Text(
-                detail,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10, color: AppColors.muted),
+            ),
+            IconButton(
+              tooltip: guidanceActive ? 'Stop guidance' : 'Start guidance',
+              onPressed: loading ? null : onGuide,
+              icon: Icon(
+                guidanceActive
+                    ? Icons.pause_circle_filled_rounded
+                    : Icons.navigation_rounded,
+                color: AppColors.primary,
               ),
-            ],
-          ),
+            ),
+            IconButton(
+              tooltip: 'Clear route',
+              onPressed: onClose,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ],
         ),
-        IconButton(
-          tooltip: guidanceActive ? 'Stop guidance' : 'Start guidance',
-          onPressed: loading ? null : onGuide,
-          icon: Icon(
-            guidanceActive
-                ? Icons.pause_circle_filled_rounded
-                : Icons.navigation_rounded,
-            color: AppColors.primary,
+        const SizedBox(height: 6),
+        if (demoStatus != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              demoStatus!,
+              style: TextStyle(
+                color: demoActive && canJoinQuest
+                    ? AppColors.tealDark
+                    : AppColors.textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
-        ),
-        IconButton(
-          tooltip: 'Clear route',
-          onPressed: onClose,
-          icon: const Icon(Icons.close_rounded),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: TextButton.icon(
+                onPressed: demoActive
+                    ? onStopDemo
+                    : canStartDemo
+                    ? onStartDemo
+                    : null,
+                icon: Icon(
+                  demoActive
+                      ? Icons.stop_circle_outlined
+                      : Icons.play_circle_outline_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  demoActive
+                      ? demoRunning
+                            ? 'Stop Route Demo'
+                            : 'Reset Route Demo'
+                      : 'Start Route Demo',
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: canJoinQuest && !questLoading ? onJoinQuest : null,
+                icon: const Icon(Icons.workspace_premium_rounded, size: 17),
+                label: Text(
+                  questLoading ? 'Checking…' : 'Join Heritage Quest',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
+    ),
+  );
+}
+
+class _RouteModeSelector extends StatelessWidget {
+  const _RouteModeSelector({
+    required this.mode,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final _RouteMode mode;
+  final bool enabled;
+  final ValueChanged<_RouteMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 30,
+    child: Row(
+      children: _RouteMode.values
+          .map(
+            (_RouteMode value) => Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 5),
+                child: Material(
+                  color: mode == value
+                      ? AppColors.primary.withValues(alpha: .13)
+                      : AppColors.elevated,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    side: BorderSide(
+                      color: mode == value
+                          ? AppColors.primary
+                          : AppColors.border,
+                    ),
+                  ),
+                  child: InkWell(
+                    onTap: enabled && mode != value
+                        ? () => onChanged(value)
+                        : null,
+                    borderRadius: BorderRadius.circular(9),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Icon(
+                          value == _RouteMode.driving
+                              ? Icons.directions_car_rounded
+                              : Icons.directions_walk_rounded,
+                          size: 13,
+                          color: enabled ? AppColors.primary : AppColors.muted,
+                        ),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            value == _RouteMode.driving ? 'Driving' : 'Walking',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
     ),
   );
 }
@@ -1041,16 +1589,36 @@ class _DayRoutePanel extends StatelessWidget {
   );
 }
 
+class _PlaceImage extends StatelessWidget {
+  const _PlaceImage({required this.place});
+
+  final HeritagePlace place;
+
+  @override
+  Widget build(BuildContext context) => place.image.isEmpty
+      ? const ColoredBox(
+          color: AppColors.softBlue,
+          child: Center(
+            child: Icon(
+              Icons.museum_rounded,
+              size: 54,
+              color: AppColors.primary,
+            ),
+          ),
+        )
+      : Image.asset(place.image, fit: BoxFit.cover);
+}
+
 class _LocationSheet extends StatelessWidget {
   const _LocationSheet({
     required this.place,
     required this.vm,
-    required this.onReward,
+    required this.currentPosition,
     required this.notify,
   });
   final HeritagePlace place;
   final MapQuestViewModel vm;
-  final ValueChanged<int> onReward;
+  final LatLng? Function() currentPosition;
   final void Function(String, Color) notify;
   @override
   Widget build(BuildContext context) => Positioned.fill(
@@ -1087,7 +1655,7 @@ class _LocationSheet extends StatelessWidget {
                     child: Stack(
                       fit: StackFit.expand,
                       children: <Widget>[
-                        Image.asset(place.image, fit: BoxFit.cover),
+                        _PlaceImage(place: place),
                         const DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -1135,18 +1703,20 @@ class _LocationSheet extends StatelessWidget {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 16,
-                              color: AppColors.warning,
-                            ),
-                            Text(
-                              ' ${place.rating.toStringAsFixed(1)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
+                            if (place.rating > 0) ...<Widget>[
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 16,
+                                color: AppColors.warning,
                               ),
-                            ),
-                            const SizedBox(width: 12),
+                              Text(
+                                ' ${place.rating.toStringAsFixed(1)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
                             const Icon(
                               Icons.place_rounded,
                               size: 15,
@@ -1167,10 +1737,10 @@ class _LocationSheet extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         const SizedBox(height: 12),
-                        AppCard(
+                        const AppCard(
                           color: AppColors.softBlue,
-                          borderColor: const Color(0xFFD4E2FF),
-                          child: const Column(
+                          borderColor: Color(0xFFD4E2FF),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Row(
@@ -1188,16 +1758,16 @@ class _LocationSheet extends StatelessWidget {
                                     ),
                                   ),
                                   Spacer(),
-                                  AppChip(label: '+250 XP', selected: true),
+                                  AppChip(label: '+100 XP', selected: true),
                                 ],
                               ),
                               SizedBox(height: 7),
                               Text(
-                                'Capture a heritage detail',
+                                'Heritage location quest',
                                 style: TextStyle(fontWeight: FontWeight.w700),
                               ),
                               Text(
-                                'Reach the location, capture an original photo and share your reflection.',
+                                'Upload a photo of this heritage location.',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: AppColors.textSecondary,
@@ -1214,27 +1784,14 @@ class _LocationSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
-                          key: const Key('open_map_location_details'),
-                          onPressed: () => _memo(context),
-                          icon: const Icon(Icons.menu_book_rounded),
-                          label: const Text('Heritage Memo'),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: vm.isCompleted(place.id)
+                          onPressed: vm.questLoading
                               ? null
-                              : () {
-                                  if (!vm.gpsNearby) {
-                                    _rangeDialog(context);
-                                  } else {
-                                    _quest(context);
-                                  }
-                                },
+                              : () => _joinQuest(context),
                           icon: const Icon(Icons.workspace_premium_rounded),
                           label: Text(
-                            vm.isCompleted(place.id)
-                                ? 'Picture Quest Completed'
-                                : 'Join Picture Quest',
+                            vm.questLoading
+                                ? 'Checking Quest…'
+                                : 'Join Heritage Quest',
                           ),
                         ),
                       ],
@@ -1249,123 +1806,124 @@ class _LocationSheet extends StatelessWidget {
     ),
   );
 
-  Future<void> _memo(BuildContext context) => showDialog<void>(
+  Future<void> _joinQuest(BuildContext context) => _joinHeritageQuest(
     context: context,
-    builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      icon: const Icon(
-        Icons.auto_stories_rounded,
-        color: AppColors.primary,
-        size: 36,
-      ),
-      title: Text('Heritage Memo · ${place.name}'),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const AppChip(label: '19th Century', selected: true),
-            const SizedBox(height: 10),
-            Text(place.description),
-            const SizedBox(height: 12),
-            const AppCard(
-              color: Color(0xFFFFF7E5),
-              borderColor: Color(0xFFF3D998),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'DID YOU KNOW?',
-                    style: TextStyle(
-                      color: Color(0xFF9A6700),
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Local oral histories connect this landmark to Malaysia’s trade routes, artisan communities and independence story.',
-                    style: TextStyle(fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Wrap(
-              spacing: 5,
-              children: <Widget>[
-                AppChip(label: 'Heritage'),
-                AppChip(label: 'Malaysia'),
-                AppChip(label: 'Local story'),
-              ],
-            ),
-          ],
-        ),
-      ),
-      actions: <Widget>[
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Close Memo'),
-        ),
-      ],
-    ),
-  );
-
-  Future<void> _rangeDialog(BuildContext context) => showDialog<void>(
-    context: context,
-    builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-      icon: const Icon(
-        Icons.location_searching_rounded,
-        color: AppColors.warning,
-        size: 38,
-      ),
-      title: const Text('Join within 500m'),
-      content: const Text(
-        'This picture quest uses local demo GPS. Move the demo position near this spot to continue.',
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Later'),
-        ),
-        FilledButton(
-          onPressed: () {
-            vm.simulateNear();
-            Navigator.pop(context);
-            notify(
-              'GPS moved to this heritage spot for testing.',
-              AppColors.teal,
-            );
-          },
-          child: const Text('Move GPS (Demo)'),
-        ),
-      ],
-    ),
-  );
-
-  Future<void> _quest(BuildContext context) => showAppSheet<void>(
-    context,
-    _QuestForm(
-      place: place,
-      onComplete: () {
-        vm.completeQuest(place);
-        onReward(250);
-        notify('Picture quest completed · +250 XP!', AppColors.teal);
-      },
-    ),
+    place: place,
+    vm: vm,
+    currentPosition: currentPosition(),
+    notify: notify,
   );
 }
 
+Future<void> _showQuestMessage(BuildContext context, String message) =>
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+        icon: const Icon(
+          Icons.location_searching_rounded,
+          color: AppColors.warning,
+          size: 38,
+        ),
+        title: const Text('Heritage Quest'),
+        content: Text(message),
+        actions: <Widget>[
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+
+Future<void> _joinHeritageQuest({
+  required BuildContext context,
+  required HeritagePlace place,
+  required MapQuestViewModel vm,
+  required LatLng? currentPosition,
+  required void Function(String, Color) notify,
+}) async {
+  if (currentPosition == null) {
+    await _showQuestMessage(
+      context,
+      'Current location is unavailable. Please enable location services and try again.',
+    );
+    return;
+  }
+
+  final distanceMeters = const Distance().as(
+    LengthUnit.Meter,
+    currentPosition,
+    LatLng(place.latitude, place.longitude),
+  );
+  if (distanceMeters > 500) {
+    await _showQuestMessage(
+      context,
+      'You must be within 500 metres of this heritage location to join the quest.',
+    );
+    return;
+  }
+
+  final result = await vm.prepareQuest(place);
+  if (!context.mounted) return;
+  switch (result.status) {
+    case QuestJoinStatus.ready:
+      await showAppSheet<void>(
+        context,
+        _QuestForm(place: place, vm: vm, notify: notify),
+      );
+      return;
+    case QuestJoinStatus.unavailable:
+      await _showQuestMessage(
+        context,
+        'Heritage quest is unavailable for this location.',
+      );
+      return;
+    case QuestJoinStatus.alreadyCompleted:
+      await _showQuestMessage(
+        context,
+        'You have already completed this heritage quest.',
+      );
+      return;
+    case QuestJoinStatus.authenticationRequired:
+      await _showQuestMessage(
+        context,
+        'Please sign in to join a heritage quest.',
+      );
+      return;
+    case QuestJoinStatus.failed:
+      await _showQuestMessage(
+        context,
+        'Heritage quest data is currently unavailable. Please try again later.',
+      );
+      return;
+    case QuestJoinStatus.busy:
+      return;
+  }
+}
+
 class _QuestForm extends StatefulWidget {
-  const _QuestForm({required this.place, required this.onComplete});
+  const _QuestForm({
+    required this.place,
+    required this.vm,
+    required this.notify,
+  });
+
   final HeritagePlace place;
-  final VoidCallback onComplete;
+  final MapQuestViewModel vm;
+  final void Function(String, Color) notify;
   @override
   State<_QuestForm> createState() => _QuestFormState();
 }
 
 class _QuestFormState extends State<_QuestForm> {
-  bool photo = false;
   final caption = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  Uint8List? _photoBytes;
+  String? _photoExtension;
+  bool _selectingPhoto = false;
+  bool _submitting = false;
+
   @override
   void dispose() {
     caption.dispose();
@@ -1375,14 +1933,25 @@ class _QuestFormState extends State<_QuestForm> {
   @override
   Widget build(BuildContext context) => SheetBody(
     children: <Widget>[
-      const ModalTitle(
+      ModalTitle(
         title: 'Capture local heritage',
-        subtitle: 'Picture Quest · +250 XP',
+        subtitle:
+            '${widget.place.name} · +${MapQuestViewModel.pictureQuestXp} XP',
         icon: Icons.camera_alt_rounded,
       ),
       const SizedBox(height: 12),
+      AppCard(
+        color: AppColors.softBlue,
+        borderColor: const Color(0xFFD4E2FF),
+        child: const Text(
+          MapQuestViewModel.pictureQuestInstructions,
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      const SizedBox(height: 12),
       InkWell(
-        onTap: () => setState(() => photo = true),
+        onTap: _selectingPhoto || _submitting ? null : _pickPhoto,
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           height: 210,
           decoration: BoxDecoration(
@@ -1390,27 +1959,40 @@ class _QuestFormState extends State<_QuestForm> {
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: const Color(0xFFC4B5FD), width: 2),
           ),
-          child: photo
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: Image.asset(widget.place.image, fit: BoxFit.cover),
-                )
-              : const Column(
+          clipBehavior: Clip.antiAlias,
+          child: _photoBytes == null
+              ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Icon(
-                      Icons.add_a_photo_rounded,
-                      color: Color(0xFF7C3AED),
-                      size: 42,
-                    ),
-                    SizedBox(height: 8),
+                    if (_selectingPhoto)
+                      const CircularProgressIndicator()
+                    else
+                      const Icon(
+                        Icons.add_a_photo_rounded,
+                        color: Color(0xFF7C3AED),
+                        size: 42,
+                      ),
+                    const SizedBox(height: 8),
                     Text(
-                      'Take or upload a photo',
-                      style: TextStyle(fontWeight: FontWeight.w900),
+                      _selectingPhoto
+                          ? 'Opening gallery…'
+                          : 'Choose a photo from Gallery',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
                     ),
-                    Text(
-                      'Tap for deterministic demo capture',
+                    const Text(
+                      'JPG, JPEG, PNG or WEBP',
                       style: TextStyle(fontSize: 9, color: AppColors.muted),
+                    ),
+                  ],
+                )
+              : Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Image.memory(_photoBytes!, fit: BoxFit.cover),
+                    const Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: AppChip(label: 'Tap to change', selected: true),
                     ),
                   ],
                 ),
@@ -1426,15 +2008,106 @@ class _QuestFormState extends State<_QuestForm> {
       ),
       const SizedBox(height: 8),
       FilledButton.icon(
-        onPressed: photo
-            ? () {
-                Navigator.pop(context);
-                widget.onComplete();
-              }
-            : null,
+        onPressed: _submitting ? null : _submit,
         icon: const Icon(Icons.camera_alt_rounded),
-        label: const Text('Submit Picture & Claim XP'),
+        label: Text(
+          _submitting
+              ? 'Submitting…'
+              : 'Submit Picture · +${MapQuestViewModel.pictureQuestXp} XP',
+        ),
       ),
     ],
   );
+
+  Future<void> _pickPhoto() async {
+    setState(() => _selectingPhoto = true);
+    try {
+      final photo = await _imagePicker.pickImage(source: ImageSource.gallery);
+      if (photo == null || !mounted) return;
+      final extension = _supportedExtension(photo.name);
+      if (extension == null) {
+        _showMessage('Please select a JPG, JPEG, PNG or WEBP image.');
+        return;
+      }
+      final bytes = await photo.readAsBytes();
+      if (!mounted) return;
+      if (bytes.isEmpty) {
+        _showMessage('Unable to read the selected photo. Please try again.');
+        return;
+      }
+      setState(() {
+        _photoBytes = bytes;
+        _photoExtension = extension;
+      });
+    } catch (_) {
+      if (mounted) {
+        _showMessage('Unable to select a photo. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _selectingPhoto = false);
+    }
+  }
+
+  String? _supportedExtension(String filename) {
+    final match = RegExp(r'[.]([^.]+)$').firstMatch(filename.toLowerCase());
+    final extension = match?.group(1);
+    return switch (extension) {
+      'jpg' || 'jpeg' || 'png' || 'webp' => extension,
+      _ => null,
+    };
+  }
+
+  Future<void> _submit() async {
+    final photoBytes = _photoBytes;
+    final extension = _photoExtension;
+    if (photoBytes == null || extension == null) {
+      _showMessage('Please upload a photo before submitting the quest.');
+      return;
+    }
+
+    setState(() => _submitting = true);
+    final trimmedCaption = caption.text.trim();
+    final result = await widget.vm.submitPictureQuest(
+      place: widget.place,
+      photoBytes: photoBytes,
+      extension: extension,
+      caption: trimmedCaption.isEmpty ? null : trimmedCaption,
+    );
+    if (!mounted) return;
+    setState(() => _submitting = false);
+
+    switch (result.status) {
+      case QuestSubmissionStatus.completed:
+        Navigator.pop(context);
+        widget.notify(
+          'Quest completed successfully. Experience Points (XP) have been awarded.',
+          AppColors.teal,
+        );
+        return;
+      case QuestSubmissionStatus.alreadyCompleted:
+        Navigator.pop(context);
+        widget.notify(
+          'You have already completed this heritage quest.',
+          AppColors.primary,
+        );
+        return;
+      case QuestSubmissionStatus.uploadFailed:
+        _showMessage('Photo upload failed. Please try again.');
+        return;
+      case QuestSubmissionStatus.authenticationRequired:
+        _showMessage('Please sign in to join a heritage quest.');
+        return;
+      case QuestSubmissionStatus.failed:
+        _showMessage('Quest submission failed. Please try again.');
+        return;
+      case QuestSubmissionStatus.busy:
+        return;
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 }
