@@ -9,16 +9,10 @@ class AuthViewModel extends ChangeNotifier {
   AuthViewModel({SupabaseService? supabaseService})
     : _supabase = supabaseService ?? const SupabaseService() {
     try {
-      _authSubscription = _supabase.client.auth.onAuthStateChange.listen((
-        AuthState state,
-      ) {
-        if (_pendingVerificationEmail != null &&
-            state.event == AuthChangeEvent.signedIn) {
-          unawaited(_finishEmailConfirmation());
-        } else if (!_disposed) {
-          notifyListeners();
-        }
-      });
+      _authSubscription = _supabase.authStateChanges.listen(
+        _handleAuthState,
+        onError: _handleAuthStateError,
+      );
     } on StateError {
       // Widget tests can provide a fake authentication state without
       // initializing the global Supabase client.
@@ -29,10 +23,16 @@ class AuthViewModel extends ChangeNotifier {
   StreamSubscription<AuthState>? _authSubscription;
   bool _busy = false;
   bool _recoverySent = false;
+  bool _passwordRecovery = false;
   bool _disposed = false;
   String? _pendingVerificationEmail;
+  String? _recoveryError;
   bool get busy => _busy;
   bool get recoverySent => _recoverySent;
+  bool get isPasswordRecovery => _passwordRecovery;
+  bool get shouldShowResetPassword =>
+      _passwordRecovery || _recoveryError != null;
+  String? get recoveryError => _recoveryError;
   bool get isAuthenticated => _supabase.isAuthenticated;
   String? get currentEmail => _supabase.currentUser?.email;
   String? get pendingVerificationEmail => _pendingVerificationEmail;
@@ -57,6 +57,12 @@ class AuthViewModel extends ChangeNotifier {
       'Error: The email or IC number is already registered.';
   static const emailNotConfirmedMessage =
       'Error: Please confirm your email address before signing in.';
+  static const passwordsDoNotMatchMessage =
+      'Error: New password and confirmation do not match.';
+  static const invalidRecoverySessionMessage =
+      'This password reset link is invalid, expired, or has already been used.';
+  static const resetSuccessMessage =
+      'Password reset successfully. Please sign in with your new password.';
 
   static final RegExp _emailFormat = RegExp(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$",
@@ -82,7 +88,7 @@ class AuthViewModel extends ChangeNotifier {
     }
     if (!isValidEmail(email)) return invalidEmailMessage;
     return _run(() async {
-      await _supabase.client.auth.signInWithPassword(
+      await _supabase.signInWithPassword(
         email: email.trim(),
         password: password,
       );
@@ -120,11 +126,12 @@ class AuthViewModel extends ChangeNotifier {
       return invalidRegistrationMessage;
     }
     return _run(() async {
-      final response = await _supabase.client.auth.signUp(
+      final response = await _supabase.register(
         email: email.trim(),
         password: password,
-        emailRedirectTo: _emailRedirectTo,
+        redirectTo: _emailRedirectTo,
         data: <String, dynamic>{
+          'username': name.trim(),
           'display_name': name.trim(),
           'full_name': name.trim(),
           'phone': phone.trim(),
@@ -152,15 +159,14 @@ class AuthViewModel extends ChangeNotifier {
     final email = _pendingVerificationEmail;
     if (email == null) return 'Please register again to request a new code.';
     return _run(() async {
-      await _supabase.client.auth.resend(
-        type: OtpType.signup,
+      await _supabase.resendSignupConfirmation(
         email: email,
-        emailRedirectTo: _emailRedirectTo,
+        redirectTo: _emailRedirectTo,
       );
     });
   }
 
-  String? get _emailRedirectTo {
+  String get _emailRedirectTo {
     const configured = String.fromEnvironment('AUTH_REDIRECT_URL');
     if (configured.isNotEmpty) return configured;
     if (kIsWeb) return '${Uri.base.origin}/';
@@ -168,7 +174,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> _finishEmailConfirmation() async {
-    await _supabase.client.auth.signOut(scope: SignOutScope.local);
+    await _supabase.signOutLocal();
     _pendingVerificationEmail = null;
     if (!_disposed) notifyListeners();
   }
@@ -181,7 +187,10 @@ class AuthViewModel extends ChangeNotifier {
   Future<String?> recover(String email) async {
     if (!isValidEmail(email)) return invalidEmailMessage;
     final error = await _run(
-      () => _supabase.client.auth.resetPasswordForEmail(email.trim()),
+      () => _supabase.requestPasswordReset(
+        email: email.trim(),
+        redirectTo: _emailRedirectTo,
+      ),
     );
     if (error == null) {
       _recoverySent = true;
@@ -190,8 +199,32 @@ class AuthViewModel extends ChangeNotifier {
     return error;
   }
 
+  Future<String?> resetPassword(
+    String password,
+    String confirmation,
+  ) async {
+    if (!isValidPassword(password)) return invalidPasswordMessage;
+    if (password != confirmation) return passwordsDoNotMatchMessage;
+    if (!_passwordRecovery || !_supabase.hasCurrentSession) {
+      _recoveryError = invalidRecoverySessionMessage;
+      notifyListeners();
+      return invalidRecoverySessionMessage;
+    }
+    final error = await _run(() async {
+      await _supabase.updatePassword(password);
+      await _supabase.signOutLocal();
+    });
+    if (error == null) {
+      _passwordRecovery = false;
+      _recoverySent = false;
+      _recoveryError = null;
+      notifyListeners();
+    }
+    return error;
+  }
+
   Future<void> logout() async {
-    await _supabase.client.auth.signOut();
+    await _supabase.signOut();
     _pendingVerificationEmail = null;
     notifyListeners();
   }
@@ -232,7 +265,43 @@ class AuthViewModel extends ChangeNotifier {
 
   void resetRecovery() {
     _recoverySent = false;
+    _recoveryError = null;
     notifyListeners();
+  }
+
+  Future<void> cancelPasswordRecovery() async {
+    if (_supabase.hasCurrentSession) await _supabase.signOutLocal();
+    _passwordRecovery = false;
+    _recoverySent = false;
+    _recoveryError = null;
+    if (!_disposed) notifyListeners();
+  }
+
+  void _handleAuthState(AuthState state) {
+    if (state.event == AuthChangeEvent.passwordRecovery) {
+      _passwordRecovery = state.session != null;
+      _recoverySent = false;
+      _recoveryError = state.session == null
+          ? invalidRecoverySessionMessage
+          : null;
+    } else if (_pendingVerificationEmail != null &&
+        state.event == AuthChangeEvent.signedIn) {
+      unawaited(_finishEmailConfirmation());
+      return;
+    }
+    if (!_disposed) notifyListeners();
+  }
+
+  void _handleAuthStateError(Object error, StackTrace stackTrace) {
+    final message = error.toString().toLowerCase();
+    if (message.contains('recovery') ||
+        message.contains('expired') ||
+        message.contains('pkce') ||
+        message.contains('auth code')) {
+      _passwordRecovery = false;
+      _recoveryError = invalidRecoverySessionMessage;
+      if (!_disposed) notifyListeners();
+    }
   }
 
   @override

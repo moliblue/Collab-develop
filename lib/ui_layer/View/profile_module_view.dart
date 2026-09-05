@@ -51,6 +51,11 @@ class ProfileModuleView extends StatelessWidget {
         auth: authViewModel,
         notify: notify,
       ),
+      ProfileStage.resetPassword => _ResetPasswordView(
+        profile: viewModel,
+        auth: authViewModel,
+        notify: notify,
+      ),
       ProfileStage.dashboard => _Dashboard(
         viewModel: viewModel,
         authViewModel: authViewModel,
@@ -2028,20 +2033,7 @@ class _RecoverViewState extends State<_RecoverView> {
                     ),
                     const SizedBox(height: 12),
                     FilledButton(
-                      onPressed: () async {
-                        setState(() => submitted = true);
-                        formKey.currentState?.validate();
-                        final error = await widget.auth.recover(email.text);
-                        if (!context.mounted) return;
-                        if (error != null) {
-                          widget.notify(error, AppColors.danger);
-                        } else {
-                          widget.notify(
-                            AuthViewModel.resetSentMessage,
-                            AppColors.teal,
-                          );
-                        }
-                      },
+                      onPressed: widget.auth.busy ? null : _sendResetLink,
                       child: const Text('Send Password Reset Link'),
                     ),
                   ],
@@ -2050,4 +2042,205 @@ class _RecoverViewState extends State<_RecoverView> {
       ),
     ],
   );
+
+  Future<void> _sendResetLink() async {
+    setState(() => submitted = true);
+    if (!(formKey.currentState?.validate() ?? false)) return;
+    final error = await widget.auth.recover(email.text);
+    if (!mounted) return;
+    widget.notify(
+      error ?? AuthViewModel.resetSentMessage,
+      error == null ? AppColors.teal : AppColors.danger,
+    );
+  }
+}
+
+class _ResetPasswordView extends StatefulWidget {
+  const _ResetPasswordView({
+    required this.profile,
+    required this.auth,
+    required this.notify,
+  });
+
+  final ProfileViewModel profile;
+  final AuthViewModel auth;
+  final void Function(String, Color) notify;
+
+  @override
+  State<_ResetPasswordView> createState() => _ResetPasswordViewState();
+}
+
+class _ResetPasswordViewState extends State<_ResetPasswordView> {
+  final formKey = GlobalKey<FormState>();
+  final password = TextEditingController();
+  final confirmation = TextEditingController();
+  bool submitted = false;
+  bool obscurePassword = true;
+  bool obscureConfirmation = true;
+
+  @override
+  void dispose() {
+    password.dispose();
+    confirmation.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => ListView(
+    key: const Key('reset_password_screen'),
+    padding: const EdgeInsets.fromLTRB(20, 42, 20, 28),
+    children: <Widget>[
+      Row(
+        children: <Widget>[
+          IconButton(
+            onPressed: widget.auth.busy ? null : _backToLogin,
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+          const Expanded(
+            child: SectionTitle(
+              'Create New Password',
+              subtitle: 'Secure your account',
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      AppCard(
+        child: widget.auth.isPasswordRecovery
+            ? Form(
+                key: formKey,
+                autovalidateMode: submitted
+                    ? AutovalidateMode.always
+                    : AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    const Text(
+                      'Use at least 8 characters with an uppercase letter and a special symbol. Spaces are not allowed.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      key: const Key('reset_new_password'),
+                      controller: password,
+                      obscureText: obscurePassword,
+                      validator: _passwordValidator,
+                      decoration: InputDecoration(
+                        labelText: 'New Password *',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => obscurePassword = !obscurePassword,
+                          ),
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      key: const Key('reset_confirm_password'),
+                      controller: confirmation,
+                      obscureText: obscureConfirmation,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please confirm your new password.';
+                        }
+                        if (value != password.text) {
+                          return 'Passwords do not match.';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Confirm New Password *',
+                        prefixIcon: const Icon(Icons.lock_reset_rounded),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => obscureConfirmation = !obscureConfirmation,
+                          ),
+                          icon: Icon(
+                            obscureConfirmation
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    FilledButton(
+                      key: const Key('reset_password_submit'),
+                      onPressed: widget.auth.busy ? null : _submit,
+                      child: widget.auth.busy
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Update Password'),
+                    ),
+                  ],
+                ),
+              )
+            : Column(
+                children: <Widget>[
+                  const Icon(
+                    Icons.link_off_rounded,
+                    size: 42,
+                    color: AppColors.danger,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.auth.recoveryError ??
+                        AuthViewModel.invalidRecoverySessionMessage,
+                    key: const Key('reset_password_error'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.danger),
+                  ),
+                  const SizedBox(height: 14),
+                  FilledButton(
+                    onPressed: _backToLogin,
+                    child: const Text('Back to Login'),
+                  ),
+                ],
+              ),
+      ),
+    ],
+  );
+
+  String? _passwordValidator(String? value) {
+    if (value == null || value.isEmpty) return 'New password is required.';
+    if (!AuthViewModel.isValidPassword(value)) {
+      return 'Use 8+ characters, uppercase and special symbol; no spaces.';
+    }
+    return null;
+  }
+
+  Future<void> _submit() async {
+    setState(() => submitted = true);
+    if (!(formKey.currentState?.validate() ?? false)) return;
+    final error = await widget.auth.resetPassword(
+      password.text,
+      confirmation.text,
+    );
+    if (!mounted) return;
+    if (error != null) {
+      widget.notify(error, AppColors.danger);
+      return;
+    }
+    widget.profile.setStage(ProfileStage.login);
+    widget.notify(AuthViewModel.resetSuccessMessage, AppColors.teal);
+  }
+
+  Future<void> _backToLogin() async {
+    await widget.auth.cancelPasswordRecovery();
+    widget.profile.setStage(ProfileStage.login);
+  }
 }

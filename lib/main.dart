@@ -9,12 +9,12 @@ import 'ui_layer/ViewModel/app_view_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Supabase returns to the web app with a one-time PKCE code after the user
-  // confirms a signup email. Remember that before Supabase consumes the URL.
-  final openedFromEmailConfirmation =
+  // Remember whether the web app opened from an Auth callback before
+  // Supabase consumes the one-time PKCE code.
+  final openedFromAuthCallback =
       kIsWeb &&
       (Uri.base.queryParameters.containsKey('code') ||
-          Uri.base.fragment.contains('type=signup'));
+          Uri.base.fragment.contains('type='));
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter framework error: ${details.exceptionAsString()}');
@@ -41,10 +41,27 @@ Future<void> main() async {
     publishableKey: supabasePublishableKey,
   );
 
-  // Email confirmation proves ownership of the address; the use case still
-  // requires the user to enter their credentials on the login screen.
-  if (openedFromEmailConfirmation) {
-    await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+  // Keep a password-recovery session so the user can update their password.
+  // Signup confirmation still returns to Login, as required by the app flow.
+  if (openedFromAuthCallback) {
+    AuthChangeEvent? callbackEvent;
+    try {
+      callbackEvent = await Supabase
+          .instance
+          .client
+          .auth
+          .onAuthStateChange
+          .firstWhere((state) => state.event != AuthChangeEvent.initialSession)
+          .then((state) => state.event)
+          .timeout(const Duration(seconds: 5));
+    } on Object {
+      // AuthViewModel presents expired/invalid recovery links without exposing
+      // the underlying Auth exception. An invalid callback has no usable session.
+    }
+    if (callbackEvent != AuthChangeEvent.passwordRecovery &&
+        Supabase.instance.client.auth.currentSession != null) {
+      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+    }
   }
   runApp(const FindItMyApp());
 }

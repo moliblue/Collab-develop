@@ -58,9 +58,17 @@ class AppViewModel extends ChangeNotifier {
 
   MainTab get tab => _tab;
   AppToastData? get toast => _toast;
-  bool get requiresAuthentication => !auth.isAuthenticated;
+  bool get requiresAuthentication =>
+      !auth.isAuthenticated || auth.shouldShowResetPassword;
 
   void _handleAuthChanged() {
+    if (auth.shouldShowResetPassword) {
+      if (profile.stage != ProfileStage.resetPassword) {
+        profile.setStage(ProfileStage.resetPassword);
+      }
+      notifyListeners();
+      return;
+    }
     if (requiresAuthentication) {
       if (profile.stage != ProfileStage.login &&
           profile.stage != ProfileStage.register &&
@@ -71,7 +79,8 @@ class AppViewModel extends ChangeNotifier {
     } else if (profile.stage == ProfileStage.login ||
         profile.stage == ProfileStage.register ||
         profile.stage == ProfileStage.verifyEmail ||
-        profile.stage == ProfileStage.recover) {
+        profile.stage == ProfileStage.recover ||
+        profile.stage == ProfileStage.resetPassword) {
       profile.authenticated();
       unawaited(plan.refreshAuthenticatedSession());
     }

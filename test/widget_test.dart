@@ -109,6 +109,176 @@ void main() {
     });
   });
 
+  group('password recovery', () {
+    test('rejects invalid email without sending a recovery request', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      expect(await auth.recover('not-an-email'), AuthViewModel.invalidEmailMessage);
+      expect(service.recoveryRequests, 0);
+    });
+
+    test('valid request uses the configured auth callback', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      expect(await auth.recover('traveller@example.com'), isNull);
+      expect(service.recoveryRequests, 1);
+      expect(service.lastRecoveryEmail, 'traveller@example.com');
+      expect(
+        service.lastRedirectTo,
+        'com.finditmy.findit_my://login-callback/',
+      );
+      expect(auth.recoverySent, isTrue);
+    });
+
+    test('recovery event enters reset mode and normal sign-in does not', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      service.emit(AuthChangeEvent.signedIn, hasSession: true);
+      await Future<void>.delayed(Duration.zero);
+      expect(auth.isPasswordRecovery, isFalse);
+
+      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+      await Future<void>.delayed(Duration.zero);
+      expect(auth.isPasswordRecovery, isTrue);
+      expect(auth.shouldShowResetPassword, isTrue);
+    });
+
+    test('new password policy and confirmation are enforced', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        await auth.resetPassword('short!', 'short!'),
+        AuthViewModel.invalidPasswordMessage,
+      );
+      expect(
+        await auth.resetPassword('lowercase!', 'lowercase!'),
+        AuthViewModel.invalidPasswordMessage,
+      );
+      expect(
+        await auth.resetPassword('NoSymbol1', 'NoSymbol1'),
+        AuthViewModel.invalidPasswordMessage,
+      );
+      expect(
+        await auth.resetPassword('Has Space!', 'Has Space!'),
+        AuthViewModel.invalidPasswordMessage,
+      );
+      expect(
+        await auth.resetPassword('ValidPass!', 'DifferentPass!'),
+        AuthViewModel.passwordsDoNotMatchMessage,
+      );
+      expect(service.passwordUpdates, 0);
+    });
+
+    test('valid password updates once, signs out, and clears recovery', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(await auth.resetPassword('ValidPass!', 'ValidPass!'), isNull);
+      expect(service.passwordUpdates, 1);
+      expect(service.localSignOuts, 1);
+      expect(auth.isPasswordRecovery, isFalse);
+      expect(auth.recoverySent, isFalse);
+    });
+
+    test('invalid or expired recovery session is rejected safely', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+      service.emit(AuthChangeEvent.passwordRecovery, hasSession: false);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(auth.shouldShowResetPassword, isTrue);
+      expect(auth.recoveryError, AuthViewModel.invalidRecoverySessionMessage);
+      expect(
+        await auth.resetPassword('ValidPass!', 'ValidPass!'),
+        AuthViewModel.invalidRecoverySessionMessage,
+      );
+      expect(service.passwordUpdates, 0);
+    });
+
+    test('signup confirmation and normal login remain separate', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      expect(await auth.login('traveller@example.com', 'ValidPass!'), isNull);
+      expect(service.loginRequests, 1);
+      expect(auth.isPasswordRecovery, isFalse);
+
+      expect(
+        await auth.register(
+          name: 'Traveller One',
+          email: 'new@example.com',
+          password: 'ValidPass!',
+          confirmation: 'ValidPass!',
+          phone: '0123456789',
+          ic: '010101010101',
+          birthday: DateTime(2001),
+        ),
+        isNull,
+      );
+      expect(service.lastRegistrationData?['username'], 'Traveller One');
+      service.emit(AuthChangeEvent.signedIn, hasSession: true);
+      await Future<void>.delayed(Duration.zero);
+      expect(service.localSignOuts, 1);
+      expect(auth.isPasswordRecovery, isFalse);
+    });
+
+    testWidgets('recovery event renders the dedicated reset screen', (
+      tester,
+    ) async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      final model = AppViewModel(
+        mysteryRepository: FakeShakeFindRepository(),
+        authViewModel: auth,
+      );
+      addTearDown(service.dispose);
+      await tester.pumpWidget(FindItMyApp(appViewModel: model));
+
+      service.emit(AuthChangeEvent.passwordRecovery, hasSession: true);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('reset_password_screen')), findsOneWidget);
+      expect(find.byKey(const Key('reset_new_password')), findsOneWidget);
+      expect(find.byKey(const Key('reset_password_submit')), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('reset_new_password')),
+        'ValidPass!',
+      );
+      await tester.enterText(
+        find.byKey(const Key('reset_confirm_password')),
+        'ValidPass!',
+      );
+      await tester.tap(find.byKey(const Key('reset_password_submit')));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('login_screen')), findsOneWidget);
+      expect(find.text(AuthViewModel.resetSuccessMessage), findsOneWidget);
+    });
+  });
+
   Future<(AppViewModel, FakeShakeFindRepository)> pumpApp(
     WidgetTester tester, {
     Size size = const Size(390, 844),
@@ -1603,5 +1773,105 @@ class FakeAuthViewModel extends AuthViewModel {
   Future<void> logout() async {
     signedIn = false;
     notifyListeners();
+  }
+}
+
+class FakeRecoverySupabaseService extends SupabaseService {
+  FakeRecoverySupabaseService()
+    : super(
+        clientOverride: SupabaseClient(
+          'http://localhost',
+          'password-recovery-test-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ),
+      );
+
+  final StreamController<AuthState> controller =
+      StreamController<AuthState>.broadcast();
+  bool sessionAvailable = false;
+  int recoveryRequests = 0;
+  int passwordUpdates = 0;
+  int localSignOuts = 0;
+  int loginRequests = 0;
+  String? lastRecoveryEmail;
+  String? lastRedirectTo;
+  Map<String, dynamic>? lastRegistrationData;
+
+  static const User fakeUser = User(
+    id: 'auth-test-user',
+    appMetadata: <String, dynamic>{},
+    userMetadata: <String, dynamic>{},
+    aud: 'authenticated',
+    email: 'traveller@example.com',
+    createdAt: '2026-01-01T00:00:00Z',
+  );
+
+  static final Session fakeSession = Session(
+    accessToken: 'test-session-value',
+    tokenType: 'bearer',
+    user: fakeUser,
+  );
+
+  @override
+  Stream<AuthState> get authStateChanges => controller.stream;
+
+  @override
+  bool get hasCurrentSession => sessionAvailable;
+
+  @override
+  bool get isAuthenticated => sessionAvailable;
+
+  @override
+  User? get currentUser => sessionAvailable ? fakeUser : null;
+
+  void emit(AuthChangeEvent event, {required bool hasSession}) {
+    sessionAvailable = hasSession;
+    controller.add(AuthState(event, hasSession ? fakeSession : null));
+  }
+
+  @override
+  Future<void> requestPasswordReset({
+    required String email,
+    required String redirectTo,
+  }) async {
+    recoveryRequests++;
+    lastRecoveryEmail = email;
+    lastRedirectTo = redirectTo;
+  }
+
+  @override
+  Future<void> updatePassword(String password) async {
+    passwordUpdates++;
+  }
+
+  @override
+  Future<void> signOutLocal() async {
+    localSignOuts++;
+    sessionAvailable = false;
+  }
+
+  @override
+  Future<AuthResponse> signInWithPassword({
+    required String email,
+    required String password,
+  }) async {
+    loginRequests++;
+    sessionAvailable = true;
+    return AuthResponse(session: fakeSession, user: fakeUser);
+  }
+
+  @override
+  Future<AuthResponse> register({
+    required String email,
+    required String password,
+    required String redirectTo,
+    required Map<String, dynamic> data,
+  }) async {
+    lastRegistrationData = data;
+    return AuthResponse(user: fakeUser);
+  }
+
+  void dispose() {
+    unawaited(controller.close());
   }
 }
