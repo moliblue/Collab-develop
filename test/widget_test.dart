@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:findit_my/data_layer/Models/app_models.dart';
 import 'package:findit_my/data_layer/Models/journey.dart' as journey;
 import 'package:findit_my/data_layer/Repositories/shake_find_repository.dart';
+import 'package:findit_my/data_layer/Service Managers/Remote Services/supabase_service.dart';
 import 'package:findit_my/data_layer/Service Managers/device/location_service.dart';
 import 'package:findit_my/main.dart';
 import 'package:findit_my/ui_layer/ViewModel/app_view_model.dart';
@@ -10,6 +11,7 @@ import 'package:findit_my/ui_layer/ViewModel/auth_view_model.dart';
 import 'package:findit_my/ui_layer/ViewModel/shake_find_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   group('UC102 arrival verification', () {
@@ -1567,7 +1569,16 @@ class FakeShakeFindRepository implements ShakeFindRepository {
 }
 
 class FakeAuthViewModel extends AuthViewModel {
-  FakeAuthViewModel({required this.signedIn});
+  FakeAuthViewModel({required this.signedIn})
+    : super(
+        supabaseService: SupabaseService(
+          clientOverride: SupabaseClient(
+            'http://localhost',
+            'widget-test-anon-key',
+            authOptions: const AuthClientOptions(autoRefreshToken: false),
+          ),
+        ),
+      );
 
   bool signedIn;
 
