@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localization.dart';
 import '../../core/theme/app_theme.dart';
 import '../ViewModel/app_view_model.dart';
 import '../ViewModel/collaborative_planning_view_model.dart';
@@ -272,15 +273,15 @@ class _BottomNavigation extends StatelessWidget {
     onDestinationSelected: (int index) =>
         viewModel.selectTab(MainTab.values[index]),
     destinations: <NavigationDestination>[
-      const NavigationDestination(
-        icon: Icon(Icons.search_rounded, key: Key('tab_discover')),
-        selectedIcon: Icon(Icons.travel_explore_rounded),
-        label: 'Discover',
+      NavigationDestination(
+        icon: const Icon(Icons.search_rounded, key: Key('tab_discover')),
+        selectedIcon: const Icon(Icons.travel_explore_rounded),
+        label: context.tr('Discover'),
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.map_outlined, key: Key('tab_map')),
-        selectedIcon: Icon(Icons.map_rounded),
-        label: 'Map',
+      NavigationDestination(
+        icon: const Icon(Icons.map_outlined, key: Key('tab_map')),
+        selectedIcon: const Icon(Icons.map_rounded),
+        label: context.tr('Map'),
       ),
       NavigationDestination(
         icon: Badge(
@@ -289,17 +290,17 @@ class _BottomNavigation extends StatelessWidget {
           child: const Icon(Icons.explore_outlined, key: Key('tab_mystery')),
         ),
         selectedIcon: const Icon(Icons.explore_rounded),
-        label: 'Mystery',
+        label: context.tr('Mystery'),
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.calendar_month_outlined, key: Key('tab_plan')),
-        selectedIcon: Icon(Icons.calendar_month_rounded),
-        label: 'Plan',
+      NavigationDestination(
+        icon: const Icon(Icons.calendar_month_outlined, key: Key('tab_plan')),
+        selectedIcon: const Icon(Icons.calendar_month_rounded),
+        label: context.tr('Plan'),
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.person_outline_rounded, key: Key('tab_profile')),
-        selectedIcon: Icon(Icons.person_rounded),
-        label: 'Profile',
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline_rounded, key: Key('tab_profile')),
+        selectedIcon: const Icon(Icons.person_rounded),
+        label: context.tr('Profile'),
       ),
     ],
   );

@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Models/mock_data.dart';
 import '../../data_layer/Repositories/profile_repository.dart';
 
 class ProfileViewModel extends ChangeNotifier {
+  static final ValueNotifier<Locale> appLocale = ValueNotifier<Locale>(
+    const Locale('en'),
+  );
   ProfileViewModel({ProfileRepository? repository})
     : _repository = repository ?? SupabaseProfileRepository();
 
@@ -145,6 +149,11 @@ class ProfileViewModel extends ChangeNotifier {
 
   void setLanguage(String value) {
     _language = value;
+    appLocale.value = switch (value) {
+      'Bahasa Melayu' => const Locale('ms'),
+      'Chinese (Simplified)' => const Locale('zh'),
+      _ => const Locale('en'),
+    };
     notifyListeners();
   }
 

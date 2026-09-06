@@ -1134,6 +1134,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     final location = TextEditingController(text: item?.location);
     final notes = TextEditingController(text: item?.notes);
     HeritagePlace? selected;
+    String? selectedPlaceId;
     // A place can arrive through both the built-in catalogue and Supabase.
     // DropdownButton requires exactly one item for each selected value, so
     // remove repeated object instances before building its menu.
@@ -1177,26 +1178,29 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  DropdownButtonFormField<HeritagePlace>(
-                    initialValue: selected,
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedPlaceId,
                     isExpanded: true,
                     hint: Text(
                       'Choose from ${savedPlaces.length} saved heritage places',
                     ),
-                    items: savedPlaces
+                    items: savedPlaces.indexed
                         .map(
-                          (p) => DropdownMenuItem<HeritagePlace>(
-                            value: p,
+                          (entry) => DropdownMenuItem<String>(
+                            value: '${entry.$2.id}#${entry.$1}',
                             child: Text(
-                              p.name,
+                              entry.$2.name,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         )
                         .toList(),
-                    onChanged: (p) => sheetSet(() {
-                      selected = p;
-                      if (p != null) {
+                    onChanged: (placeId) => sheetSet(() {
+                      selectedPlaceId = placeId;
+                      if (placeId != null) {
+                        final index = int.parse(placeId.split('#').last);
+                        final p = savedPlaces[index];
+                        selected = p;
                         location.text = p.address;
                         if (title.text.isEmpty) title.text = p.name;
                         category = _plannerCategoryForPlace(p);
@@ -1221,6 +1225,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                 locationSuggestions = _curatedLocationSuggestions('');
               }),
               onChanged: (value) {
+                selectedPlaceId = null;
                 selected = null;
                 sheetSet(() {
                   if (widget.recommendations.any(
@@ -1618,14 +1623,18 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     return unique.values
         .where(
           (place) =>
-              query.isEmpty ||
-              place.name.toLowerCase().contains(query) ||
-              place.address.toLowerCase().contains(query) ||
-              place.category.toLowerCase().contains(query),
+              !_containsCjk(place.name) && query.isEmpty ||
+              (!_containsCjk(place.name) &&
+                  (place.name.toLowerCase().contains(query) ||
+                      place.address.toLowerCase().contains(query) ||
+                      place.category.toLowerCase().contains(query))),
         )
         .take(5)
         .toList();
   }
+
+  bool _containsCjk(String value) =>
+      RegExp(r'[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]').hasMatch(value);
 
   String _plannerCategoryForPlace(HeritagePlace place) {
     if (place.category == 'Food' || place.category == 'Local Food') {
