@@ -12,6 +12,18 @@ import 'package:uuid/uuid.dart';
 
 enum PlanSection { workspace, history, groups }
 
+class PlanChoice {
+  const PlanChoice({
+    required this.id,
+    required this.name,
+    required this.inviteCode,
+  });
+
+  final String id;
+  final String name;
+  final String inviteCode;
+}
+
 class CollaborativePlanningViewModel extends ChangeNotifier {
   CollaborativePlanningViewModel({CollaborativePlannerRepository? repository})
     : repository = repository ?? CollaborativePlannerRepository() {
@@ -208,6 +220,13 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
 
   List<String> get history =>
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
+  List<PlanChoice> get planChoices => List<PlanChoice>.unmodifiable(
+    _availablePlans.map(
+      (plan) =>
+          PlanChoice(id: plan.id, name: plan.name, inviteCode: plan.inviteCode),
+    ),
+  );
+  String? get activePlanId => _planId;
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
@@ -221,6 +240,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
           (activity.longitude - place.longitude).abs() < 0.00001,
     );
   }
+
   String get planName => _planName;
   String get inviteCode =>
       _inviteCode ??
@@ -652,6 +672,14 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> openHistoryPlanById(String id) async {
+    if (!_availablePlans.any((plan) => plan.id == id)) return;
+    if (await _loadPlan(id)) {
+      _section = PlanSection.workspace;
+      notifyListeners();
+    }
+  }
+
   Future<bool> joinPlan(String code) async {
     try {
       final session = await repository.authenticate();
@@ -699,6 +727,31 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  Future<bool> deletePlanById(String id) async {
+    final matching = _availablePlans.where((plan) => plan.id == id);
+    if (matching.isEmpty) return false;
+    final deletingCurrent = _planId == id;
+    try {
+      final session = await repository.authenticate();
+      await repository.deletePlan(id, accessToken: session?.accessToken);
+      _availablePlans = await repository.loadPlans(
+        accessToken: session?.accessToken,
+      );
+      if (deletingCurrent && _availablePlans.isNotEmpty) {
+        await _loadPlan(_availablePlans.first.id, notify: false);
+      } else if (_availablePlans.isEmpty) {
+        _planId = null;
+        _section = PlanSection.history;
+      }
+      notifyListeners();
+      return true;
+    } catch (error) {
+      _supabaseError = '$error';
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> updateRole(Traveller value) async {

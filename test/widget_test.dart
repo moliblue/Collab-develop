@@ -1156,6 +1156,7 @@ void main() {
     await tester.tap(find.text('Close room'));
     await tester.pump(const Duration(milliseconds: 400));
     expect(model.mystery.stage, MysteryStage.home);
+    expect(model.mystery.mode, JourneyMode.solo);
     expect(model.mystery.journey, isNull);
     expect(model.mystery.message, 'Group Room cancelled.');
     expect(repository.waitingRoomEnded, isTrue);

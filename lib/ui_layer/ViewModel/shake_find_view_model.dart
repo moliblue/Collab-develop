@@ -1037,6 +1037,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _nearbyRooms = const <NearbyGroupRoom>[];
       _groupPreferencesSet = false;
       _ready = false;
+      _mode = app.JourneyMode.solo;
       _stage = app.MysteryStage.home;
       _message = hostWasLeaving
           ? 'Group Room cancelled.'
@@ -1501,11 +1502,24 @@ class MysteryJourneyViewModel extends ChangeNotifier {
         _messages = const <GroupChatMessage>[];
         _groupPreferencesSet = false;
         _ready = false;
+        _mode = app.JourneyMode.solo;
         _stage = app.MysteryStage.home;
         _message = 'The Group Room was cancelled by the Host.';
         _notify();
       }
     } catch (error) {
+      if ('$error'.contains('PGRST116')) {
+        _groupSyncTimer?.cancel();
+        _journey = null;
+        _messages = const <GroupChatMessage>[];
+        _groupPreferencesSet = false;
+        _ready = false;
+        _mode = app.JourneyMode.solo;
+        _stage = app.MysteryStage.home;
+        _message = 'The Group Room is no longer available.';
+        _notify();
+        return;
+      }
       debugPrint('Group session refresh failed: $error');
     } finally {
       _groupSyncing = false;

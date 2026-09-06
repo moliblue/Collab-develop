@@ -221,22 +221,24 @@ class _Header extends StatelessWidget {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 isExpanded: true,
-                value: viewModel.plan.planName,
+                value: viewModel.plan.activePlanId,
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
-                items: viewModel.plan.history
+                items: viewModel.plan.planChoices
                     .map(
-                      (String p) => DropdownMenuItem<String>(
-                        value: p,
-                        child: Text(p, overflow: TextOverflow.ellipsis),
+                      (PlanChoice plan) => DropdownMenuItem<String>(
+                        value: plan.id,
+                        child: Text(plan.name, overflow: TextOverflow.ellipsis),
                       ),
                     )
                     .toList(),
-                onChanged: (String? p) {
-                  if (p != null) viewModel.plan.openHistoryPlan(p);
+                onChanged: (String? planId) {
+                  if (planId != null) {
+                    viewModel.plan.openHistoryPlanById(planId);
+                  }
                 },
               ),
             ),

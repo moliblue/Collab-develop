@@ -861,8 +861,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           ),
         )
       else
-        ...widget.viewModel.history.map(
-          (String name) => Align(
+        ...widget.viewModel.planChoices.map(
+          (PlanChoice plan) => Align(
             alignment: Alignment.centerLeft,
             child: Container(
               width: 184,
@@ -895,8 +895,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         left: 10,
                         top: 62,
                         child: AppChip(
-                          label:
-                              'PIN: ${widget.viewModel.inviteCodeForPlan(name)}',
+                          label: 'PIN: ${plan.inviteCode}',
                           selected: true,
                           selectedColor: AppColors.warning,
                         ),
@@ -909,7 +908,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          name,
+                          plan.name,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -944,7 +943,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         const SizedBox(height: 10),
                         FilledButton.icon(
                           onPressed: () =>
-                              widget.viewModel.openHistoryPlan(name),
+                              widget.viewModel.openHistoryPlanById(plan.id),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(40),
                             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -962,7 +961,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                           alignment: Alignment.centerRight,
                           child: IconButton(
                             tooltip: 'Delete Plan',
-                            onPressed: () => _deletePlan(name),
+                            onPressed: () => _deletePlan(plan),
                             icon: const Icon(
                               Icons.delete_outline_rounded,
                               color: AppColors.danger,
@@ -1148,8 +1147,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
         ...widget.recommendations,
       ])
         place.id: place,
-    }.values.toList()
-      ..sort(compareHeritagePlacesForListing);
+    }.values.toList()..sort(compareHeritagePlacesForListing);
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
     String? successMessage;
@@ -1927,8 +1925,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                 Expanded(
                   child: FilledButton(
                     key: const Key('create_plan_confirm'),
-                    onPressed:
-                        name.text.trim().isEmpty || selectedAreas.isEmpty
+                    onPressed: name.text.trim().isEmpty || selectedAreas.isEmpty
                         ? null
                         : () async {
                             final days = end.difference(start).inDays + 1;
@@ -2438,12 +2435,12 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     if (joined) _joinCode.clear();
   }
 
-  Future<void> _deletePlan(String name) async {
+  Future<void> _deletePlan(PlanChoice plan) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Delete Travel Plan?'),
-        content: Text(PlannerMessages.deletePlan(name)),
+        content: Text(PlannerMessages.deletePlan(plan.name)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -2458,7 +2455,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       ),
     );
     if (confirmed == true) {
-      final deleted = await widget.viewModel.deletePlan(name);
+      final deleted = await widget.viewModel.deletePlanById(plan.id);
       widget.notify(
         deleted
             ? PlannerMessages.planDeleted

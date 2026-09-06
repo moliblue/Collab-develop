@@ -1436,64 +1436,22 @@ class _RoutePanel extends StatelessWidget {
       children: <Widget>[
         Row(
           children: <Widget>[
-            CircleAvatar(
-              backgroundColor: guidanceActive
-                  ? AppColors.tealDark
-                  : AppColors.primary,
-              child: loading
-                  ? const SizedBox.square(
-                      dimension: 17,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Icon(
-                      mode == _RouteMode.driving
-                          ? Icons.directions_car_rounded
-                          : Icons.directions_walk_rounded,
-                      color: Colors.white,
-                    ),
-            ),
-            const SizedBox(width: 10),
+            loading
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    guidanceActive
+                        ? Icons.navigation_rounded
+                        : Icons.route_rounded,
+                    color: AppColors.teal,
+                  ),
+            const SizedBox(width: 7),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Eyebrow(title),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                  Text(
-                    detail,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.muted,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  _RouteModeSelector(
-                    mode: mode,
-                    enabled: !loading,
-                    walkingEnabled: walkingEnabled,
-                    onChanged: onModeChanged,
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              tooltip: guidanceActive ? 'Stop guidance' : 'Start guidance',
-              onPressed: loading ? null : onGuide,
-              icon: Icon(
-                guidanceActive
-                    ? Icons.pause_circle_filled_rounded
-                    : Icons.navigation_rounded,
-                color: AppColors.primary,
+              child: Text(
+                guidanceActive ? 'Route guidance · destination' : title,
+                style: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
             IconButton(
@@ -1502,6 +1460,34 @@ class _RoutePanel extends StatelessWidget {
               icon: const Icon(Icons.close_rounded),
             ),
           ],
+        ),
+        ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: const CircleAvatar(
+            radius: 14,
+            backgroundColor: AppColors.tealDark,
+            child: Text(
+              '1',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          title: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+          subtitle: Text(
+            detail,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 10, color: AppColors.muted),
+          ),
         ),
         const SizedBox(height: 6),
         if (liveStatus != null)
@@ -1516,32 +1502,49 @@ class _RoutePanel extends StatelessWidget {
               ),
             ),
           ),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: TextButton.icon(
-                onPressed: loading ? null : onGuide,
-                icon: Icon(
-                  guidanceActive
-                      ? Icons.stop_circle_outlined
-                      : Icons.play_circle_outline_rounded,
-                  size: 18,
-                ),
-                label: Text(guidanceActive ? 'Stop Route' : 'Start Route'),
-              ),
+        const SizedBox(height: 7),
+        _RouteModeSelector(
+          mode: mode,
+          enabled: !loading,
+          walkingEnabled: walkingEnabled,
+          onChanged: onModeChanged,
+        ),
+        if (!walkingEnabled) ...<Widget>[
+          const SizedBox(height: 5),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Walking is not recommended for routes over 10 km.',
+              style: TextStyle(fontSize: 9, color: AppColors.warning),
             ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: canJoinQuest && !questLoading ? onJoinQuest : null,
-                icon: const Icon(Icons.workspace_premium_rounded, size: 17),
-                label: Text(
-                  questLoading ? 'Checking…' : 'Join Heritage Quest',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: loading ? null : onGuide,
+            icon: Icon(
+              guidanceActive
+                  ? Icons.pause_circle_filled_rounded
+                  : Icons.navigation_rounded,
             ),
-          ],
+            label: Text(
+              guidanceActive ? 'Stop Route Guidance' : 'Start Route Guidance',
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: canJoinQuest && !questLoading ? onJoinQuest : null,
+            icon: const Icon(Icons.workspace_premium_rounded, size: 17),
+            label: Text(
+              questLoading ? 'Checking…' : 'Join Heritage Quest',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ),
       ],
     ),

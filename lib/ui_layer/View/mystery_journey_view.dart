@@ -789,8 +789,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
             icon: const Icon(Icons.exit_to_app_rounded, size: 18),
             label: Text(
               widget.viewModel.isHost
-                  ? 'Close Waiting Room'
-                  : 'Leave Waiting Room',
+                  ? 'Close Room & Switch to Solo'
+                  : 'Leave Room & Switch to Solo',
             ),
           ),
         ],
