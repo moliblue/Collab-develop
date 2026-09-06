@@ -1894,14 +1894,14 @@ class _LocationSheet extends StatelessWidget {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            if (place.rating > 0) ...<Widget>[
+                            if (place.displayRating > 0) ...<Widget>[
                               const Icon(
                                 Icons.star_rounded,
                                 size: 16,
                                 color: AppColors.warning,
                               ),
                               Text(
-                                ' ${place.rating.toStringAsFixed(1)}',
+                                ' ${place.displayRating.toStringAsFixed(1)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                 ),

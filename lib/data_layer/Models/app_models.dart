@@ -99,6 +99,8 @@ class HeritagePlace {
     this.openingHoursPeriods,
     this.openingHoursUpdatedAt,
     this.googleMapsUri,
+    this.googleRating,
+    this.googleUserRatingCount,
     List<DestinationImage>? images,
     List<Review>? reviews,
   }) : images = images ?? <DestinationImage>[],
@@ -130,8 +132,14 @@ class HeritagePlace {
   final Map<String, dynamic>? openingHoursPeriods;
   final DateTime? openingHoursUpdatedAt;
   final String? googleMapsUri;
+  final double? googleRating;
+  final int? googleUserRatingCount;
   final List<DestinationImage> images;
   final List<Review> reviews;
+
+  double get displayRating => googleRating ?? rating;
+  int get displayRatingCount =>
+      googleRating != null ? (googleUserRatingCount ?? 0) : reviewsCount;
 
   String get coverImageUrl {
     if (images.isEmpty) return image;

@@ -91,6 +91,8 @@ const PLACE_DETAILS_FIELD_MASK = [
   'regularOpeningHours',
   'currentOpeningHours',
   'googleMapsUri',
+  'rating',
+  'userRatingCount',
 ].join(',');
 
 const WIKIMEDIA_API = 'https://commons.wikimedia.org/w/api.php';
@@ -719,6 +721,11 @@ function placeDetailsPatch(details) {
         : null,
       opening_hours_updated_at: new Date().toISOString(),
       google_maps_uri: details.googleMapsUri?.trim() || null,
+      google_rating: Number.isFinite(details.rating) ? details.rating : null,
+      google_user_rating_count: Number.isInteger(details.userRatingCount)
+        ? details.userRatingCount
+        : null,
+      google_rating_updated_at: new Date().toISOString(),
     },
     hasOpeningHours,
   };
@@ -1509,9 +1516,13 @@ async function readDiscoveryDestinations({ includeDetailsTimestamp = false } = {
 
 async function runPlaceDetailsRefresh() {
   const destinations = await readDiscoveryDestinations({ includeDetailsTimestamp: true });
-  const selected = chooseDestinations(destinations);
+  const eligible = destinations.filter((destination) =>
+    ['exact', 'high_confidence'].includes(destination.google_match_status) &&
+      destination.google_place_id,
+  );
+  const selected = chooseDestinations(eligible);
   console.log(
-    `${dryRun ? '[DRY RUN] ' : ''}Place Details refresh selected ${selected.length} of ${destinations.length} destinations.`,
+    `${dryRun ? '[DRY RUN] ' : ''}Place Details refresh selected ${selected.length} Google-matched destinations.`,
   );
   console.log(`Field mask: ${PLACE_DETAILS_FIELD_MASK}`);
   for (const destination of selected) {
@@ -1555,6 +1566,12 @@ async function runPlaceDetailsRefresh() {
     } catch (error) {
       placeDetailStats.failures += 1;
       console.error(`  Failed: ${error.message}`);
+      if (/403 Forbidden|API_KEY_SERVICE_BLOCKED|has not been used.*disabled/i.test(error.message)) {
+        console.error(
+          '  Stopping: enable Places API (New) and permit places.googleapis.com for this key before retrying.',
+        );
+        break;
+      }
     }
   }
   console.log('\nGoogle Place Details refresh summary');

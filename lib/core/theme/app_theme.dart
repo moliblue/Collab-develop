@@ -7,9 +7,9 @@ abstract final class AppColors {
   static const teal = Color(0xFF14A68A);
   static const tealDark = Color(0xFF087565);
   static const pink = Color(0xFFE95B79);
-  static const background = Color(0xFFFFF8EE);
-  static const surface = Color(0xFFFFFEFB);
-  static const elevated = Color(0xFFF4EEE3);
+  static const background = Color(0xFFFFF6E8);
+  static const surface = Color(0xFFFFFCF6);
+  static const elevated = Color(0xFFF8EBD8);
   static const softBlue = Color(0xFFDFF4F2);
   static const borderSubtle = Color(0xFFF2E7D8);
   static const border = Color(0xFFE8DCCB);
@@ -34,9 +34,15 @@ abstract final class AppColors {
   );
 
   static const backgroundGradient = LinearGradient(
-    colors: [Color(0xFFFFF8EE), Color(0xFFEAF8F4)],
+    colors: [Color(0xFFFFF3DF), Color(0xFFE2F6F0), Color(0xFFFFF8EE)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
+  );
+
+  static const travelSunsetGradient = LinearGradient(
+    colors: [Color(0xFFFFC765), Color(0xFFFF765A), Color(0xFF0A8790)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 }
 

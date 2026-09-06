@@ -71,8 +71,10 @@ class _AppShellViewState extends State<AppShellView> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 430),
-                      child: ColoredBox(
-                        color: AppColors.background,
+                      child: DecoratedBox(
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.backgroundGradient,
+                        ),
                         child: Stack(
                           children: <Widget>[
                             Column(
@@ -152,7 +154,7 @@ class _Header extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
     decoration: const BoxDecoration(
       gradient: LinearGradient(
-        colors: <Color>[Color(0xFFFFFEFB), Color(0xFFEAF8F4)],
+        colors: <Color>[Color(0xFFFFF4DD), Color(0xFFE1F5EF)],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
@@ -176,9 +178,9 @@ class _Header extends StatelessWidget {
         else ...<Widget>[
           const CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.secondary,
+            backgroundColor: AppColors.primary,
             child: Icon(
-              Icons.flight_takeoff_rounded,
+              Icons.travel_explore_rounded,
               color: Colors.white,
               size: 19,
             ),
@@ -275,7 +277,7 @@ class _BottomNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     decoration: const BoxDecoration(
-      color: AppColors.surface,
+      color: Color(0xFFFFFBF3),
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       boxShadow: <BoxShadow>[
         BoxShadow(
@@ -290,8 +292,8 @@ class _BottomNavigation extends StatelessWidget {
       child: NavigationBar(
         height: 70,
         selectedIndex: viewModel.tab.index,
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.softBlue,
+        backgroundColor: const Color(0xFFFFFBF3),
+        indicatorColor: const Color(0xFFFFDFC0),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (int index) =>
             viewModel.selectTab(MainTab.values[index]),

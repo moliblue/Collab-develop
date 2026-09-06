@@ -29,9 +29,9 @@ class AppCard extends StatelessWidget {
         borderRadius: borderRadius,
         boxShadow: const <BoxShadow>[
           BoxShadow(
-            color: Color(0x17135E64),
-            blurRadius: 22,
-            offset: Offset(0, 9),
+            color: Color(0x1F8A4B2A),
+            blurRadius: 20,
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -39,7 +39,7 @@ class AppCard extends StatelessWidget {
         color: color ?? AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: borderRadius,
-          side: BorderSide(color: borderColor ?? AppColors.border),
+          side: BorderSide(color: borderColor ?? const Color(0xFFE9D6BC)),
         ),
         clipBehavior: Clip.antiAlias,
         child: onTap == null

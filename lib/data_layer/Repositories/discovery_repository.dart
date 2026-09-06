@@ -141,6 +141,9 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
           '${row['opening_hours_updated_at'] ?? ''}',
         ),
         googleMapsUri: row['google_maps_uri']?.toString(),
+        googleRating: (row['google_rating'] as num?)?.toDouble(),
+        googleUserRatingCount: (row['google_user_rating_count'] as num?)
+            ?.toInt(),
         images: covers[id] == null
             ? const <DestinationImage>[]
             : <DestinationImage>[covers[id]!],

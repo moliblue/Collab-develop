@@ -133,6 +133,8 @@ class HeritageCatalogService {
       address: address,
       hours: '${row['opening_hours'] ?? ''}',
       osmTags: tags,
+      googleRating: (row['google_rating'] as num?)?.toDouble(),
+      googleUserRatingCount: (row['google_user_rating_count'] as num?)?.toInt(),
     );
   }
 }

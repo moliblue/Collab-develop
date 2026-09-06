@@ -151,7 +151,15 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
       Container(
         height: 198,
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F3EA),
+          gradient: const LinearGradient(
+            colors: <Color>[
+              Color(0xFFFFE3A6),
+              Color(0xFFFFB078),
+              Color(0xFF7ED6C4),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(AppTokens.cardRadius),
           border: Border.all(color: const Color(0xFFDCE4D8)),
         ),
@@ -165,7 +173,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               child: Icon(
                 Icons.explore_rounded,
                 size: 190,
-                color: AppColors.teal.withValues(alpha: .07),
+                color: Colors.white.withValues(alpha: .18),
               ),
             ),
             Positioned(
@@ -180,8 +188,8 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                   border: Border.all(color: AppColors.border),
                 ),
                 child: const Icon(
-                  Icons.route_rounded,
-                  color: AppColors.tealDark,
+                  Icons.luggage_rounded,
+                  color: AppColors.primaryDark,
                   size: 24,
                 ),
               ),
@@ -193,7 +201,10 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Eyebrow('Mystery Journey', color: AppColors.tealDark),
+                  const Eyebrow(
+                    'Your surprise trip',
+                    color: AppColors.primaryDark,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     'Follow the clue.\nFind the story.',
@@ -1027,7 +1038,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
           width: 138,
           height: 196,
           decoration: BoxDecoration(
-            color: AppColors.primaryDark,
+            gradient: AppColors.travelSunsetGradient,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.white, width: 5),
             boxShadow: const <BoxShadow>[
@@ -1038,10 +1049,21 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
               ),
             ],
           ),
-          child: const Icon(
-            Icons.explore_rounded,
-            color: Colors.white,
-            size: 72,
+          child: const Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              Positioned(
+                top: 24,
+                left: 20,
+                child: Icon(Icons.location_on_rounded, color: Colors.white54),
+              ),
+              Icon(Icons.flight_takeoff_rounded, color: Colors.white, size: 72),
+              Positioned(
+                bottom: 24,
+                right: 20,
+                child: Icon(Icons.flag_rounded, color: Colors.white70),
+              ),
+            ],
           ),
         ),
       ),

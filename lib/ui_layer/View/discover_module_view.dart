@@ -540,9 +540,9 @@ class _DestinationCard extends StatelessWidget {
                 bottom: 11,
                 child: _ImagePill(
                   icon: Icons.star_rounded,
-                  text: place.reviewsCount == 0
+                  text: place.displayRating <= 0
                       ? 'New'
-                      : '${place.rating.toStringAsFixed(1)} (${place.reviewsCount})',
+                      : '${place.displayRating.toStringAsFixed(1)} (${place.displayRatingCount})',
                   color: AppColors.warning,
                 ),
               ),
@@ -1073,9 +1073,9 @@ class _LocationDetailState extends State<_LocationDetail> {
                           size: 16,
                         ),
                         Text(
-                          p.reviewsCount == 0
+                          p.displayRating <= 0
                               ? ' No ratings yet'
-                              : ' ${p.rating.toStringAsFixed(1)} (${p.reviewsCount})',
+                              : ' ${p.displayRating.toStringAsFixed(1)} (${p.displayRatingCount})',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,

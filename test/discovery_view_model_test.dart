@@ -148,6 +148,30 @@ void main() {
     ]);
   });
 
+  test('Google Places aggregate is preferred over app review aggregate', () {
+    final place = HeritagePlace(
+      id: 'google-rated',
+      name: 'Google Rated Place',
+      category: 'Traditional Heritage Site',
+      state: 'Penang',
+      shortDescription: '',
+      description: '',
+      image: '',
+      distanceKm: 1,
+      rating: 3,
+      reviewsCount: 2,
+      latitude: 5.4,
+      longitude: 100.3,
+      address: 'Penang',
+      hours: '',
+      googleRating: 4.7,
+      googleUserRatingCount: 312,
+    );
+
+    expect(place.displayRating, 4.7);
+    expect(place.displayRatingCount, 312);
+  });
+
   group('DiscoveryViewModel', () {
     testWidgets('detail hero pages through three destination images', (
       tester,
