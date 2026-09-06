@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 
 import '../../core/localization/app_localization.dart';
+import '../../core/localization/localized_text.dart';
 import '../../core/theme/app_theme.dart';
 import '../ViewModel/app_view_model.dart';
 import '../ViewModel/collaborative_planning_view_model.dart';

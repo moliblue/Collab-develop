@@ -3,7 +3,8 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
+import '../../core/localization/localized_text.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -1601,12 +1602,12 @@ class _RouteModeSelector extends StatelessWidget {
                               ? Icons.directions_car_rounded
                               : Icons.directions_walk_rounded,
                           size: 13,
-                            color:
-                                enabled &&
-                                    (value != _RouteMode.walking ||
-                                        walkingEnabled)
-                                ? AppColors.primary
-                                : AppColors.muted,
+                          color:
+                              enabled &&
+                                  (value != _RouteMode.walking ||
+                                      walkingEnabled)
+                              ? AppColors.primary
+                              : AppColors.muted,
                         ),
                         const SizedBox(width: 3),
                         Flexible(
