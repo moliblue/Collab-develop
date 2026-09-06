@@ -74,7 +74,7 @@ class HeritageLocationNormalizer {
       final index = result.indexWhere(
         (current) =>
             _nameKey(current.name) == _nameKey(candidate.name) &&
-            _distanceMetres(current, candidate) <= 150,
+            _distanceMetres(current, candidate) <= 200,
       );
       if (index < 0) {
         result.add(candidate);
