@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart' as material;
 
+import '../../features/collaborative_planner/services/google_translate_service.dart';
 import 'app_localization.dart';
 
 /// Drop-in Text widget that routes every static UI string through the active
 /// app locale. Dynamic place names and user content remain unchanged unless a
 /// matching translation exists in the catalogue.
-class Text extends material.StatelessWidget {
+class Text extends material.StatefulWidget {
   const Text(
     this.data, {
     super.key,
@@ -59,40 +60,87 @@ class Text extends material.StatelessWidget {
   final material.Color? selectionColor;
 
   @override
+  material.State<Text> createState() => _LocalizedTextState();
+}
+
+class _LocalizedTextState extends material.State<Text> {
+  static final GoogleTranslateService _translator = GoogleTranslateService();
+  static final Map<String, String> _cache = <String, String>{};
+  String? _translated;
+  String? _requestKey;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _translateIfNeeded();
+  }
+
+  @override
+  void didUpdateWidget(covariant Text oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data != widget.data) _translateIfNeeded();
+  }
+
+  void _translateIfNeeded() {
+    final source = widget.data;
+    final language = material.Localizations.localeOf(context).languageCode;
+    final fallback = source == null ? null : context.tr(source);
+    if (source == null || language == 'en' || source.trim().isEmpty) {
+      _translated = fallback;
+      return;
+    }
+    final key = '$language\u0000$source';
+    _requestKey = key;
+    _translated = _cache[key] ?? fallback;
+    if (_cache.containsKey(key) || !_translator.isConfigured) return;
+    _translator
+        .translate(source, target: language)
+        .then((value) {
+          _cache[key] = value;
+          if (mounted && _requestKey == key) {
+            setState(() => _translated = value);
+          }
+        })
+        .catchError((_) {
+          // Keep the built-in translation or source text when the API is offline.
+        });
+  }
+
+  @override
   material.Widget build(material.BuildContext context) {
-    if (textSpan != null) {
+    if (widget.textSpan != null) {
       return material.Text.rich(
-        textSpan!,
-        style: style,
-        strutStyle: strutStyle,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        locale: locale,
-        softWrap: softWrap,
-        overflow: overflow,
-        textScaler: textScaler,
-        maxLines: maxLines,
-        semanticsLabel: semanticsLabel,
-        textWidthBasis: textWidthBasis,
-        textHeightBehavior: textHeightBehavior,
-        selectionColor: selectionColor,
+        widget.textSpan!,
+        style: widget.style,
+        strutStyle: widget.strutStyle,
+        textAlign: widget.textAlign,
+        textDirection: widget.textDirection,
+        locale: widget.locale,
+        softWrap: widget.softWrap,
+        overflow: widget.overflow,
+        textScaler: widget.textScaler,
+        maxLines: widget.maxLines,
+        semanticsLabel: widget.semanticsLabel,
+        textWidthBasis: widget.textWidthBasis,
+        textHeightBehavior: widget.textHeightBehavior,
+        selectionColor: widget.selectionColor,
       );
     }
     return material.Text(
-      context.tr(data!),
-      style: style,
-      strutStyle: strutStyle,
-      textAlign: textAlign,
-      textDirection: textDirection,
-      locale: locale,
-      softWrap: softWrap,
-      overflow: overflow,
-      textScaler: textScaler,
-      maxLines: maxLines,
-      semanticsLabel: semanticsLabel,
-      textWidthBasis: textWidthBasis,
-      textHeightBehavior: textHeightBehavior,
-      selectionColor: selectionColor,
+      _translated ?? context.tr(widget.data!),
+      style: widget.style,
+      strutStyle: widget.strutStyle,
+      textAlign: widget.textAlign,
+      textDirection: widget.textDirection,
+      locale: widget.locale,
+      softWrap: widget.softWrap,
+      overflow: widget.overflow,
+      textScaler: widget.textScaler,
+      maxLines: widget.maxLines,
+      semanticsLabel: widget.semanticsLabel,
+      textWidthBasis: widget.textWidthBasis,
+      textHeightBehavior: widget.textHeightBehavior,
+      selectionColor: widget.selectionColor,
     );
   }
 }

@@ -51,7 +51,7 @@ abstract class ProfileRepository {
   });
   Future<UserProfileData> removeAvatar();
   Future<List<BadgeData>> getAchievements();
-  Future<List<PassportStampData>> getPassportStamps({int limit = 5});
+  Future<List<PassportStampData>> getPassportStamps();
 }
 
 class SupabaseProfileRepository implements ProfileRepository {
@@ -242,14 +242,13 @@ class SupabaseProfileRepository implements ProfileRepository {
   }
 
   @override
-  Future<List<PassportStampData>> getPassportStamps({int limit = 5}) async {
+  Future<List<PassportStampData>> getPassportStamps() async {
     final id = _supabase.requireCurrentUserId();
     final rows = await _supabase.client
         .from('user_passport_stamps')
         .select('id, earned_at, destinations!inner(name)')
         .eq('user_id', id)
-        .order('earned_at', ascending: false)
-        .limit(limit);
+        .order('earned_at', ascending: false);
 
     return (rows as List<dynamic>).map((dynamic value) {
       final row = value as Map<String, dynamic>;

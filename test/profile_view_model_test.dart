@@ -70,16 +70,19 @@ void main() {
     },
   );
 
-  test('passport exposes only the latest five stamps', () async {
+  test('passport separates latest five stamps from older history', () async {
     final repository = _FakeProfileRepository();
     final viewModel = ProfileViewModel(repository: repository);
     addTearDown(viewModel.dispose);
 
     await viewModel.loadProfile();
 
-    expect(viewModel.passportStamps, hasLength(5));
-    expect(viewModel.passportStamps.first.destinationName, 'Destination 1');
-    expect(viewModel.passportStamps.last.destinationName, 'Destination 5');
+    expect(viewModel.passportStamps, hasLength(6));
+    expect(viewModel.latestPassportStamps, hasLength(5));
+    expect(viewModel.latestPassportStamps.first.destinationName, 'Destination 1');
+    expect(viewModel.latestPassportStamps.last.destinationName, 'Destination 5');
+    expect(viewModel.passportStampHistory, hasLength(1));
+    expect(viewModel.passportStampHistory.single.destinationName, 'Destination 6');
   });
 }
 
@@ -113,7 +116,7 @@ class _FakeProfileRepository implements ProfileRepository {
   ];
 
   @override
-  Future<List<PassportStampData>> getPassportStamps({int limit = 5}) async =>
+  Future<List<PassportStampData>> getPassportStamps() async =>
       List<PassportStampData>.generate(
         6,
         (index) => PassportStampData(
@@ -121,7 +124,7 @@ class _FakeProfileRepository implements ProfileRepository {
           destinationName: 'Destination ${index + 1}',
           earnedAt: DateTime(2026, 9, 5).subtract(Duration(days: index)),
         ),
-      ).take(limit).toList();
+      );
 
   @override
   Future<UserProfileData> removeAvatar() => getCurrentProfile();

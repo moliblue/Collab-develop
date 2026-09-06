@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../Models/app_models.dart';
 import 'osm_heritage_service.dart';
+import 'heritage_location_normalizer.dart';
 
 /// Reads the curated catalogue first and falls back to live OSM/Overpass data.
 class HeritageCatalogService {
@@ -110,20 +111,7 @@ class HeritageCatalogService {
   }
 
   List<HeritagePlace> _mergePlaces(Iterable<HeritagePlace> values) {
-    final unique = <String, HeritagePlace>{};
-    for (final place in values) {
-      final nameKey = place.name.trim().toLowerCase();
-      final coordinateKey =
-          '${place.latitude.toStringAsFixed(4)}|'
-          '${place.longitude.toStringAsFixed(4)}';
-      final key = nameKey.isEmpty ? coordinateKey : nameKey;
-      final current = unique[key];
-      if (current == null ||
-          place.description.length > current.description.length) {
-        unique[key] = place;
-      }
-    }
-    return unique.values.toList();
+    return HeritageLocationNormalizer.deduplicate(values);
   }
 
   HeritagePlace _fromRow(
@@ -144,13 +132,22 @@ class HeritageCatalogService {
             math.sin(dLon / 2);
     final distance =
         earthRadiusKm * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
-    final osmId = '${row['osm_id']}';
+    final osmId = HeritageLocationNormalizer.clean(row['osm_id']);
+    final tags = Map<String, String>.from(row['osm_tags'] as Map? ?? const {});
+    final name = HeritageLocationNormalizer.clean(row['name']);
+    final state = HeritageLocationNormalizer.stateFor(row, tags);
+    final address = HeritageLocationNormalizer.addressFor(
+      row,
+      tags,
+      name: name,
+      state: state,
+    );
     return HeritagePlace(
       id: osmId,
       osmId: osmId,
-      name: '${row['name']}',
+      name: name,
       category: '${row['category']}',
-      state: '${row['state'] ?? ''}',
+      state: state,
       shortDescription: '${row['category']}',
       description: '${row['description'] ?? ''}',
       image: '${row['image_url'] ?? ''}',
@@ -159,9 +156,9 @@ class HeritageCatalogService {
       reviewsCount: 0,
       latitude: placeLatitude,
       longitude: placeLongitude,
-      address: '${row['address'] ?? ''}',
+      address: address,
       hours: '${row['opening_hours'] ?? ''}',
-      osmTags: Map<String, String>.from(row['osm_tags'] as Map? ?? const {}),
+      osmTags: tags,
     );
   }
 }

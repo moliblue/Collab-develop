@@ -32,7 +32,10 @@ class ProfileModuleView extends StatelessWidget {
     animation: Listenable.merge(<Listenable>[viewModel, authViewModel]),
     builder: (BuildContext context, _) => switch (viewModel.stage) {
       ProfileStage.badges => _BadgesView(viewModel: viewModel, notify: notify),
-      ProfileStage.passport => _PassportView(viewModel: viewModel),
+      ProfileStage.passport => _PassportView(
+        viewModel: viewModel,
+        notify: notify,
+      ),
       ProfileStage.login => _LoginView(
         profile: viewModel,
         auth: authViewModel,
@@ -289,7 +292,7 @@ class _Dashboard extends StatelessWidget {
               context.tr('Passport stamps'),
               viewModel.passportStamps.isEmpty
                   ? context.tr('Your verified destination collection')
-                  : '${viewModel.passportStamps.length} recent stamps',
+                  : '${viewModel.passportStamps.length} collected stamps',
               AppColors.primaryDark,
               () => viewModel.setStage(ProfileStage.passport),
               key: const Key('open_passport'),
@@ -637,9 +640,10 @@ class _Dashboard extends StatelessWidget {
 }
 
 class _PassportView extends StatelessWidget {
-  const _PassportView({required this.viewModel});
+  const _PassportView({required this.viewModel, required this.notify});
 
   final ProfileViewModel viewModel;
+  final void Function(String, Color) notify;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -713,7 +717,7 @@ class _PassportView extends StatelessWidget {
               ),
             ),
             Text(
-              '${viewModel.passportStamps.length}/5',
+              '${viewModel.latestPassportStamps.length}/5',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,
@@ -724,7 +728,19 @@ class _PassportView extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 16),
-      const Eyebrow('Latest 5 stamps'),
+      Row(
+        children: <Widget>[
+          const Expanded(child: Eyebrow('Latest 5 stamps')),
+          FilledButton.icon(
+            key: const Key('share_passport_stamps'),
+            onPressed: viewModel.passportStamps.isEmpty
+                ? null
+                : () => _showStampPicker(context),
+            icon: const Icon(Icons.share_rounded, size: 18),
+            label: const Text('Share'),
+          ),
+        ],
+      ),
       const SizedBox(height: 8),
       if (viewModel.passportStamps.isEmpty)
         const AppCard(
@@ -767,7 +783,7 @@ class _PassportView extends StatelessWidget {
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: viewModel.passportStamps.length,
+              itemCount: viewModel.latestPassportStamps.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: columns,
                 crossAxisSpacing: 10,
@@ -776,19 +792,301 @@ class _PassportView extends StatelessWidget {
               ),
               itemBuilder: (BuildContext context, int index) =>
                   _PassportStampCard(
-                    stamp: viewModel.passportStamps[index],
+                    stamp: viewModel.latestPassportStamps[index],
                     index: index,
                   ),
             );
           },
         ),
       const SizedBox(height: 12),
-      const Text(
-        'Only your five most recent destination stamps are shown here.',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 10, color: AppColors.muted),
-      ),
+      if (viewModel.passportStampHistory.isNotEmpty) ...<Widget>[
+        const Divider(height: 28),
+        const Eyebrow('Stamp history'),
+        const SizedBox(height: 4),
+        const Text(
+          'Older stamps stay in your collection and can still be shared.',
+          style: TextStyle(fontSize: 10, color: AppColors.muted),
+        ),
+        const SizedBox(height: 8),
+        ...viewModel.passportStampHistory.asMap().entries.map(
+          (entry) => _PassportHistoryTile(
+            stamp: entry.value,
+            colorIndex: entry.key + 5,
+          ),
+        ),
+      ],
     ],
+  );
+
+  Future<void> _showStampPicker(BuildContext context) async {
+    final selectedIds = viewModel.latestPassportStamps
+        .map((stamp) => stamp.id)
+        .toSet();
+    final cardKey = GlobalKey();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) {
+          final selected = viewModel.passportStamps
+              .where((stamp) => selectedIds.contains(stamp.id))
+              .toList(growable: false);
+          return AlertDialog(
+            backgroundColor: const Color(0xFFEEF4FA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: Text('Choose stamps · ${selected.length}/5'),
+            content: SizedBox(
+              width: 390,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (selected.isNotEmpty)
+                      RepaintBoundary(
+                        key: cardKey,
+                        child: _ShareablePassportCard(
+                          travellerName: viewModel.name,
+                          stamps: selected,
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+                    ...viewModel.passportStamps.map(
+                      (stamp) => CheckboxListTile(
+                        key: Key('share_stamp_${stamp.id}'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        value: selectedIds.contains(stamp.id),
+                        title: Text(stamp.destinationName),
+                        subtitle: Text(_formatStampDate(stamp.earnedAt)),
+                        onChanged: (checked) {
+                          if (checked == true && selectedIds.length >= 5) {
+                            notify(
+                              'You can share up to 5 stamps.',
+                              AppColors.warning,
+                            );
+                            return;
+                          }
+                          setState(() {
+                            if (checked == true) {
+                              selectedIds.add(stamp.id);
+                            } else {
+                              selectedIds.remove(stamp.id);
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              Builder(
+                builder: (buttonContext) => FilledButton.icon(
+                  key: const Key('share_selected_stamps'),
+                  onPressed: selected.isEmpty
+                      ? null
+                      : () =>
+                            _shareStampImage(cardKey, buttonContext, selected),
+                  icon: const Icon(Icons.share_rounded),
+                  label: Text('Share ${selected.length}'),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _shareStampImage(
+    GlobalKey cardKey,
+    BuildContext buttonContext,
+    List<PassportStampData> stamps,
+  ) async {
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary = cardKey.currentContext?.findRenderObject();
+      if (boundary is! RenderRepaintBoundary) {
+        throw StateError('Passport image is not ready yet.');
+      }
+      final image = await boundary.toImage(pixelRatio: 3);
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (data == null) throw StateError('Could not generate passport image.');
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      if (!buttonContext.mounted) return;
+      final box = buttonContext.findRenderObject() as RenderBox?;
+      await SharePlus.instance.share(
+        ShareParams(
+          files: <XFile>[XFile.fromData(bytes, mimeType: 'image/png')],
+          fileNameOverrides: const <String>['exploremy_passport_stamps.png'],
+          title: 'ExploreMY Passport Stamps',
+          text: 'My ExploreMY destination stamp collection!',
+          sharePositionOrigin: box == null
+              ? null
+              : box.localToGlobal(Offset.zero) & box.size,
+          downloadFallbackEnabled: true,
+        ),
+      );
+      notify(
+        '${stamps.length} passport stamp${stamps.length == 1 ? '' : 's'} ready to share!',
+        AppColors.teal,
+      );
+    } catch (error) {
+      notify('Could not share passport stamps: $error', AppColors.danger);
+    }
+  }
+}
+
+String _formatStampDate(DateTime value) {
+  final local = value.toLocal();
+  return '${local.day.toString().padLeft(2, '0')}/'
+      '${local.month.toString().padLeft(2, '0')}/${local.year}';
+}
+
+class _PassportHistoryTile extends StatelessWidget {
+  const _PassportHistoryTile({required this.stamp, required this.colorIndex});
+
+  final PassportStampData stamp;
+  final int colorIndex;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(
+          backgroundColor:
+              _passportSealColors[colorIndex % _passportSealColors.length].last,
+          child: const Icon(Icons.location_on_rounded, color: Colors.white),
+        ),
+        title: Text(
+          stamp.destinationName,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Text('Collected ${_formatStampDate(stamp.earnedAt)}'),
+        trailing: const Icon(Icons.history_rounded, color: AppColors.muted),
+      ),
+    ),
+  );
+}
+
+const _passportSealColors = <List<Color>>[
+  <Color>[AppColors.primaryDark, AppColors.primary],
+  <Color>[AppColors.tealDark, AppColors.teal],
+  <Color>[Color(0xFF6A43B8), Color(0xFF8C6BE8)],
+  <Color>[Color(0xFFC77A0A), AppColors.warning],
+  <Color>[Color(0xFF155F7A), Color(0xFF33A6C8)],
+];
+
+class _ShareablePassportCard extends StatelessWidget {
+  const _ShareablePassportCard({
+    required this.travellerName,
+    required this.stamps,
+  });
+
+  final String travellerName;
+  final List<PassportStampData> stamps;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 340,
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      gradient: AppColors.mysteryGradient,
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: const Color(0xFFFFD36A), width: 2),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const Text(
+          'EXPLOREMY · DIGITAL HERITAGE PASSPORT',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: .5,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          travellerName,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 9,
+          runSpacing: 9,
+          children: stamps.asMap().entries.map((entry) {
+            final colors =
+                _passportSealColors[entry.key % _passportSealColors.length];
+            return SizedBox(
+              width: stamps.length == 1 ? 180 : 135,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .94),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(colors: colors),
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      entry.value.destinationName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    Text(
+                      _formatStampDate(entry.value.earnedAt),
+                      style: const TextStyle(
+                        fontSize: 8,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    ),
   );
 }
 
@@ -800,17 +1098,8 @@ class _PassportStampCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const sealColors = <List<Color>>[
-      <Color>[AppColors.primaryDark, AppColors.primary],
-      <Color>[AppColors.tealDark, AppColors.teal],
-      <Color>[Color(0xFF6A43B8), Color(0xFF8C6BE8)],
-      <Color>[Color(0xFFC77A0A), AppColors.warning],
-      <Color>[Color(0xFF155F7A), Color(0xFF33A6C8)],
-    ];
-    final colors = sealColors[index % sealColors.length];
-    final local = stamp.earnedAt.toLocal();
-    final date =
-        '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year}';
+    final colors = _passportSealColors[index % _passportSealColors.length];
+    final date = _formatStampDate(stamp.earnedAt);
 
     return AppCard(
       padding: const EdgeInsets.all(13),

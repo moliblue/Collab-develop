@@ -83,6 +83,10 @@ class ProfileViewModel extends ChangeNotifier {
   String get badgeCategory => _badgeCategory;
   BadgeData? get selectedBadge => _selectedBadge;
   List<PassportStampData> get passportStamps => _passportStamps;
+  List<PassportStampData> get latestPassportStamps =>
+      _passportStamps.take(5).toList(growable: false);
+  List<PassportStampData> get passportStampHistory =>
+      _passportStamps.skip(5).toList(growable: false);
   List<BadgeData> get visibleBadges => _achievements
       .where(
         (BadgeData b) =>

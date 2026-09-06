@@ -55,6 +55,7 @@ const addressFor = tags => [
   tags['addr:housenumber'], tags['addr:street'], tags['addr:place'],
   tags['addr:city'] || tags['addr:town'], tags['addr:state'], tags['addr:postcode'],
 ].map(clean).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+const stateFor = tags => clean(tags['addr:state'] || tags['is_in:state'] || tags['addr:province']);
 const sqlLiteral = value => `'${clean(value).replaceAll("'", "''")}'`;
 const jsonLiteral = value => `${sqlLiteral(JSON.stringify(value))}::jsonb`;
 
@@ -74,10 +75,13 @@ for (const element of payload.elements) {
       'heritage', 'historic', 'tourism', 'amenity', 'religion', 'denomination',
       'building', 'architect', 'start_date', 'wikidata', 'wikipedia', 'website',
       'opening_hours', 'boundary', 'natural', 'protect_class',
+      'addr:housenumber', 'addr:street', 'addr:place', 'addr:suburb',
+      'addr:city', 'addr:town', 'addr:state', 'addr:province', 'addr:postcode',
+      'is_in:state',
     ].includes(key)));
   rows.push({
-    osmId, name, category: categoryFor(tags), state: clean(tags['addr:state']),
-    address: addressFor(tags), description: clean(tags.description || tags['description:en']),
+    osmId, name, category: categoryFor(tags), state: stateFor(tags),
+    address: addressFor(tags) || `${name}, ${stateFor(tags) || 'Malaysia'}`,
     latitude: point.lat, longitude: point.lon, openingHours: clean(tags.opening_hours),
     tags: usefulTags,
   });

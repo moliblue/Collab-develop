@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart' hide Text;
 import '../../core/localization/localized_text.dart';
+import '../../core/localization/app_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -1214,8 +1215,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
             const SizedBox(height: 9),
             TextField(
               controller: title,
-              decoration: const InputDecoration(
-                labelText: 'Activity Title *',
+              decoration: InputDecoration(
+                labelText: context.tr('Activity Title *'),
                 hintText: 'e.g. Visit Batu Caves Cathedral',
               ),
             ),
@@ -1237,10 +1238,10 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   locationSuggestions = _curatedLocationSuggestions(value);
                 });
               },
-              decoration: const InputDecoration(
-                labelText: 'Searchable / Selectable Location *',
-                hintText: 'Search any location in Malaysia',
-                prefixIcon: Icon(Icons.location_on_outlined),
+              decoration: InputDecoration(
+                labelText: context.tr('Searchable / Selectable Location *'),
+                hintText: context.tr('Search any location in Malaysia'),
+                prefixIcon: const Icon(Icons.location_on_outlined),
               ),
             ),
             if (locationSuggestions.isNotEmpty)
@@ -1308,9 +1309,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                 Expanded(
                   child: TextField(
                     controller: time,
-                    decoration: const InputDecoration(
-                      labelText: 'Start Time *',
-                      prefixIcon: Icon(Icons.schedule_rounded),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Start Time *'),
+                      prefixIcon: const Icon(Icons.schedule_rounded),
                     ),
                   ),
                 ),
@@ -1325,9 +1326,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      contentPadding: EdgeInsets.fromLTRB(10, 10, 6, 10),
+                    decoration: InputDecoration(
+                      labelText: context.tr('Category'),
+                      contentPadding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
                     ),
                     selectedItemBuilder: (context) =>
                         <String>{
@@ -1379,8 +1380,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
               controller: notes,
               minLines: 2,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Optional Description / Notes',
+              decoration: InputDecoration(
+                labelText: context.tr('Optional Description / Notes'),
                 hintText: 'e.g. Remember to buy ticket online in advance...',
               ),
             ),

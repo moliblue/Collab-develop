@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../Models/app_models.dart';
+import '../Service Managers/Remote Services/heritage_location_normalizer.dart';
 
 abstract class DiscoveryRepository {
   Future<List<HeritagePlace>> getDestinations();
@@ -66,17 +67,29 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
       final lat = (row['latitude'] as num?)?.toDouble();
       final lng = (row['longitude'] as num?)?.toDouble();
       if (id.isEmpty || name.isEmpty || lat == null || lng == null) continue;
-      final sourceCategory = '${row['category']}'.trim();
+      final sourceCategory = HeritageLocationNormalizer.clean(row['category']);
       final tags = Map<String, String>.from(
         row['osm_tags'] as Map? ?? const {},
       );
+      final state = HeritageLocationNormalizer.stateFor(row, tags);
+      final rawFormattedAddress = HeritageLocationNormalizer.clean(
+        row['formatted_address'],
+      );
+      final address = rawFormattedAddress.isNotEmpty
+          ? rawFormattedAddress
+          : HeritageLocationNormalizer.addressFor(
+              row,
+              tags,
+              name: name,
+              state: state,
+            );
       unique[id] = HeritagePlace(
         id: id,
         osmId: id,
         name: name,
         category: sourceCategory,
-        state: '${row['state'] ?? ''}'.trim(),
-        shortDescription: '${row['address'] ?? ''}'.trim(),
+        state: state,
+        shortDescription: address,
         description: '${row['description'] ?? ''}'.trim(),
         image: '${row['image_url'] ?? ''}'.trim(),
         distanceKm: 0,
@@ -84,13 +97,15 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         reviewsCount: 0,
         latitude: lat,
         longitude: lng,
-        address: '${row['address'] ?? ''}'.trim(),
+        address: address,
         hours: '${row['opening_hours'] ?? ''}'.trim(),
         osmTags: tags,
         googlePlaceId: row['google_place_id']?.toString(),
         googlePlaceName: row['google_place_name']?.toString(),
         googleMatchStatus: row['google_match_status']?.toString(),
-        formattedAddress: row['formatted_address']?.toString(),
+        formattedAddress: rawFormattedAddress.isEmpty
+            ? null
+            : rawFormattedAddress,
         openingHoursWeekdayText:
             (row['opening_hours_weekday_text'] as List? ?? const <dynamic>[])
                 .map((value) => '$value'.trim())
