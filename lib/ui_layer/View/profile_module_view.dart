@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/localization/app_localization.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
 import '../ViewModel/auth_view_model.dart';
@@ -267,16 +268,16 @@ class _Dashboard extends StatelessWidget {
           children: <Widget>[
             _action(
               Icons.edit_rounded,
-              'Edit profile',
-              'Photo, name and travel bio',
+              context.tr('Edit profile'),
+              context.tr('Photo, name and travel bio'),
               AppColors.primary,
               () => _editProfile(context),
             ),
             const Divider(height: 1),
             _action(
               Icons.workspace_premium_rounded,
-              'Achievements & badges',
-              'Challenges, progress and rewards',
+              context.tr('Achievements & badges'),
+              context.tr('Challenges, progress and rewards'),
               AppColors.warning,
               () => viewModel.setStage(ProfileStage.badges),
               key: const Key('open_badges'),
@@ -284,9 +285,9 @@ class _Dashboard extends StatelessWidget {
             const Divider(height: 1),
             _action(
               Icons.auto_stories_rounded,
-              'Passport stamps',
+              context.tr('Passport stamps'),
               viewModel.passportStamps.isEmpty
-                  ? 'Your verified destination collection'
+                  ? context.tr('Your verified destination collection')
                   : '${viewModel.passportStamps.length} recent stamps',
               AppColors.primaryDark,
               () => viewModel.setStage(ProfileStage.passport),
@@ -295,7 +296,7 @@ class _Dashboard extends StatelessWidget {
             const Divider(height: 1),
             _action(
               Icons.language_rounded,
-              'Language',
+              context.tr('Language'),
               viewModel.language,
               AppColors.teal,
               () => _language(context),
@@ -307,7 +308,7 @@ class _Dashboard extends StatelessWidget {
       OutlinedButton.icon(
         onPressed: () => _logout(context),
         icon: const Icon(Icons.logout_rounded),
-        label: const Text('Log out'),
+        label: Text(context.tr('Log out')),
       ),
     ],
   );
@@ -559,8 +560,8 @@ class _Dashboard extends StatelessWidget {
     context,
     SheetBody(
       children: <Widget>[
-        const ModalTitle(
-          title: 'Language Settings',
+        ModalTitle(
+          title: context.tr('Language Settings'),
           icon: Icons.language_rounded,
         ),
         const SizedBox(height: 10),
@@ -568,6 +569,7 @@ class _Dashboard extends StatelessWidget {
           'English (US)',
           'Bahasa Melayu',
           'Chinese (Simplified)',
+          'Tamil',
         ].map(
           (String lang) => Padding(
             padding: const EdgeInsets.only(bottom: 7),

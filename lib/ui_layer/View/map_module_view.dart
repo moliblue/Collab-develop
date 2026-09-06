@@ -70,6 +70,7 @@ class _MapModuleViewState extends State<MapModuleView> {
   static const Duration _headingUpdateInterval = Duration(milliseconds: 200);
   static const double _heritageLabelZoomThreshold = 15;
   static const double _questRadiusMeters = 1000;
+  static const double _maximumRecommendedWalkingMeters = 10000;
 
   @override
   void initState() {
@@ -445,8 +446,29 @@ class _MapModuleViewState extends State<MapModuleView> {
     return '$mode · $distance · about $minutes min';
   }
 
+  bool get _walkingRouteAllowed {
+    final points = _routeWaypoints();
+    if (points.length < 2) return false;
+    var directDistance = 0.0;
+    for (var index = 0; index < points.length - 1; index++) {
+      directDistance += const Distance().as(
+        LengthUnit.Meter,
+        points[index],
+        points[index + 1],
+      );
+    }
+    return directDistance <= _maximumRecommendedWalkingMeters;
+  }
+
   void _setRouteMode(_RouteMode mode) {
     if (_routeLoading || mode == _routeMode || !_hasRouteTarget) return;
+    if (mode == _RouteMode.walking && !_walkingRouteAllowed) {
+      widget.notify(
+        'Walking is not recommended for routes over 10 km. Choose Driving instead.',
+        AppColors.warning,
+      );
+      return;
+    }
     setState(() {
       _routeMode = mode;
       _guidanceMode = false;
@@ -914,7 +936,9 @@ class _MapModuleViewState extends State<MapModuleView> {
           ),
           Positioned(
             right: 12,
-            bottom: vm.directionTarget != null || vm.routeStops.isNotEmpty
+            bottom: vm.routeStops.isNotEmpty
+                ? 292
+                : vm.directionTarget != null
                 ? 178
                 : 22,
             child: Column(
@@ -988,6 +1012,7 @@ class _MapModuleViewState extends State<MapModuleView> {
                 loading: _routeLoading,
                 guidanceActive: _guidanceMode,
                 mode: _routeMode,
+                walkingEnabled: _walkingRouteAllowed,
                 onModeChanged: _setRouteMode,
                 liveStatus: _liveRouteStatus(vm.directionTarget!),
                 canJoinQuest:
@@ -1020,8 +1045,12 @@ class _MapModuleViewState extends State<MapModuleView> {
               bottom: 14,
               child: _DayRoutePanel(
                 stops: vm.routeStops,
+                detail: _routeDetail,
                 loading: _routeLoading,
                 guidanceActive: _guidanceMode,
+                mode: _routeMode,
+                walkingEnabled: _walkingRouteAllowed,
+                onModeChanged: _setRouteMode,
                 onGuide: _toggleGuidance,
                 onClose: vm.clearDayRoute,
                 onFocus: (ActivityItem a) =>
@@ -1379,6 +1408,7 @@ class _RoutePanel extends StatelessWidget {
     required this.loading,
     required this.guidanceActive,
     required this.mode,
+    required this.walkingEnabled,
     required this.onModeChanged,
     required this.liveStatus,
     required this.canJoinQuest,
@@ -1393,6 +1423,7 @@ class _RoutePanel extends StatelessWidget {
   final bool loading;
   final bool guidanceActive;
   final _RouteMode mode;
+  final bool walkingEnabled;
   final ValueChanged<_RouteMode> onModeChanged;
   final String? liveStatus;
   final bool canJoinQuest;
@@ -1452,6 +1483,7 @@ class _RoutePanel extends StatelessWidget {
                   _RouteModeSelector(
                     mode: mode,
                     enabled: !loading,
+                    walkingEnabled: walkingEnabled,
                     onChanged: onModeChanged,
                   ),
                 ],
@@ -1523,11 +1555,13 @@ class _RouteModeSelector extends StatelessWidget {
   const _RouteModeSelector({
     required this.mode,
     required this.enabled,
+    required this.walkingEnabled,
     required this.onChanged,
   });
 
   final _RouteMode mode;
   final bool enabled;
+  final bool walkingEnabled;
   final ValueChanged<_RouteMode> onChanged;
 
   @override
@@ -1552,7 +1586,10 @@ class _RouteModeSelector extends StatelessWidget {
                     ),
                   ),
                   child: InkWell(
-                    onTap: enabled && mode != value
+                    onTap:
+                        enabled &&
+                            (value != _RouteMode.walking || walkingEnabled) &&
+                            mode != value
                         ? () => onChanged(value)
                         : null,
                     borderRadius: BorderRadius.circular(9),
@@ -1564,7 +1601,12 @@ class _RouteModeSelector extends StatelessWidget {
                               ? Icons.directions_car_rounded
                               : Icons.directions_walk_rounded,
                           size: 13,
-                          color: enabled ? AppColors.primary : AppColors.muted,
+                            color:
+                                enabled &&
+                                    (value != _RouteMode.walking ||
+                                        walkingEnabled)
+                                ? AppColors.primary
+                                : AppColors.muted,
                         ),
                         const SizedBox(width: 3),
                         Flexible(
@@ -1592,15 +1634,23 @@ class _RouteModeSelector extends StatelessWidget {
 class _DayRoutePanel extends StatelessWidget {
   const _DayRoutePanel({
     required this.stops,
+    required this.detail,
     required this.loading,
     required this.guidanceActive,
+    required this.mode,
+    required this.walkingEnabled,
+    required this.onModeChanged,
     required this.onGuide,
     required this.onClose,
     required this.onFocus,
   });
   final List<ActivityItem> stops;
+  final String detail;
   final bool loading;
   final bool guidanceActive;
+  final _RouteMode mode;
+  final bool walkingEnabled;
+  final ValueChanged<_RouteMode> onModeChanged;
   final VoidCallback onGuide;
   final VoidCallback onClose;
   final ValueChanged<ActivityItem> onFocus;
@@ -1669,6 +1719,35 @@ class _DayRoutePanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            detail,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 7),
+        _RouteModeSelector(
+          mode: mode,
+          enabled: !loading,
+          walkingEnabled: walkingEnabled,
+          onChanged: onModeChanged,
+        ),
+        if (!walkingEnabled) ...<Widget>[
+          const SizedBox(height: 5),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Walking is not recommended for routes over 10 km.',
+              style: TextStyle(fontSize: 9, color: AppColors.warning),
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(

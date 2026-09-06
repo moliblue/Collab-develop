@@ -197,4 +197,85 @@ void main() {
     expect(plan?.members.single.isAdmin, isTrue);
     repository.dispose();
   });
+
+  test('repository create, update, and delete target Plan tables', () async {
+    final requests = <http.Request>[];
+    final client = MockClient((request) async {
+      requests.add(request);
+      if (request.url.path.endsWith('/rpc/claim_plan_revision')) {
+        return http.Response('1', 200);
+      }
+      return http.Response('', 204);
+    });
+    final repository = CollaborativePlannerRepository(
+      supabase: SupabasePlannerService(
+        url: 'https://example.supabase.co',
+        anonKey: 'test-key',
+        client: client,
+      ),
+    );
+    final plan = TravelPlan(
+      id: '20000000-0000-4000-8000-000000000001',
+      ownerId: '10000000-0000-4000-8000-000000000001',
+      name: 'CRUD plan',
+      startDate: DateTime(2026, 9, 10),
+      endDate: DateTime(2026, 9, 10),
+      inviteCode: 'CRUD-PLAN',
+      days: <PlannerDay>[
+        PlannerDay(
+          id: '30000000-0000-4000-8000-000000000001',
+          date: DateTime(2026, 9, 10),
+          activities: <PlannerActivity>[
+            PlannerActivity(
+              id: '40000000-0000-4000-8000-000000000001',
+              dayId: '30000000-0000-4000-8000-000000000001',
+              title: 'Batu Caves',
+              location: 'Gombak, Selangor, Malaysia',
+              startTime: '09:00 AM',
+              category: 'Traditional Heritage Site',
+              point: const GeoPoint(3.2379, 101.684),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await repository.savePlan(plan, accessToken: 'token', create: true);
+    plan.name = 'Updated CRUD plan';
+    await repository.savePlan(plan, accessToken: 'token', create: false);
+    await repository.deleteCard(
+      '40000000-0000-4000-8000-000000000001',
+      accessToken: 'token',
+    );
+    await repository.deleteDay(
+      '30000000-0000-4000-8000-000000000001',
+      accessToken: 'token',
+    );
+    await repository.deletePlan(
+      '20000000-0000-4000-8000-000000000001',
+      accessToken: 'token',
+    );
+
+    expect(
+      requests.map((request) => '${request.method} ${request.url.path}'),
+      containsAll(<String>[
+        'POST /rest/v1/travel_plans',
+        'POST /rest/v1/plan_days',
+        'POST /rest/v1/itinerary_cards',
+        'POST /rest/v1/rpc/claim_plan_revision',
+        'PATCH /rest/v1/travel_plans',
+        'DELETE /rest/v1/itinerary_cards',
+        'DELETE /rest/v1/plan_days',
+        'DELETE /rest/v1/travel_plans',
+      ]),
+    );
+    final planPatch = requests.firstWhere(
+      (request) =>
+          request.method == 'PATCH' &&
+          request.url.path.endsWith('/travel_plans'),
+    );
+    expect(jsonDecode(planPatch.body)['name'], 'Updated CRUD plan');
+    expect(jsonDecode(planPatch.body)['revision'], 1);
+    repository.dispose();
+  });
 }

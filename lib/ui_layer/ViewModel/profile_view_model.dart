@@ -1,12 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Models/mock_data.dart';
 import '../../data_layer/Repositories/profile_repository.dart';
 
 class ProfileViewModel extends ChangeNotifier {
+  static final ValueNotifier<Locale> appLocale = ValueNotifier<Locale>(
+    const Locale('en'),
+  );
   ProfileViewModel({ProfileRepository? repository})
-    : _repository = repository ?? SupabaseProfileRepository();
+    : _repository = repository ?? SupabaseProfileRepository() {
+    unawaited(_restoreLanguage());
+  }
 
   final ProfileRepository _repository;
   ProfileStage _stage = ProfileStage.dashboard;
@@ -145,7 +154,31 @@ class ProfileViewModel extends ChangeNotifier {
 
   void setLanguage(String value) {
     _language = value;
+    appLocale.value = switch (value) {
+      'Bahasa Melayu' => const Locale('ms'),
+      'Chinese (Simplified)' => const Locale('zh'),
+      'Tamil' => const Locale('ta'),
+      _ => const Locale('en'),
+    };
+    unawaited(_saveLanguage(value));
     notifyListeners();
+  }
+
+  Future<void> _restoreLanguage() async {
+    try {
+      final saved = await SharedPreferencesAsync().getString('app_language');
+      if (saved != null && saved != _language) setLanguage(saved);
+    } catch (_) {
+      // Preferences are unavailable in a few unit-test environments.
+    }
+  }
+
+  Future<void> _saveLanguage(String value) async {
+    try {
+      await SharedPreferencesAsync().setString('app_language', value);
+    } catch (_) {
+      // Keep the in-memory locale active if device storage is unavailable.
+    }
   }
 
   void setBadgeStatus(String value) {

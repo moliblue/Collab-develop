@@ -196,6 +196,12 @@ class CollaborativePlannerRepository {
         );
       }
       plan.revision = (claimed as num).toInt();
+      await supabase.update(
+        'travel_plans',
+        'id=eq.${plan.id}',
+        plan.toJson(),
+        accessToken: active,
+      );
     }
     for (final day in plan.days) {
       await supabase.upsert('plan_days', <String, dynamic>{

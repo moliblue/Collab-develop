@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'ui_layer/View/app_shell_view.dart';
 import 'ui_layer/ViewModel/app_view_model.dart';
 import 'ui_layer/ViewModel/auth_view_model.dart';
+import 'ui_layer/ViewModel/profile_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -105,7 +107,7 @@ Map<String, String> _fragmentParameters(String fragment) {
   }
 }
 
-class FindItMyApp extends StatelessWidget {
+class FindItMyApp extends StatefulWidget {
   const FindItMyApp({
     super.key,
     this.viewModel,
@@ -124,20 +126,36 @@ class FindItMyApp extends StatelessWidget {
   final bool initialRecoveryError;
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Explore My · FindIt',
-    debugShowCheckedModeBanner: false,
-    theme: AppTheme.light,
-    home: AppShellView(
-      viewModel:
-          appViewModel ??
-          AppViewModel(
-            authViewModel: AuthViewModel(
-              initialNotice: initialAuthNotice,
-              initialPasswordRecovery: initialPasswordRecovery,
-              initialRecoveryError: initialRecoveryError,
-            ),
-          ),
+  State<FindItMyApp> createState() => _FindItMyAppState();
+}
+
+class _FindItMyAppState extends State<FindItMyApp> {
+  late final AppViewModel _appViewModel =
+      widget.appViewModel ??
+      AppViewModel(
+        authViewModel: AuthViewModel(
+          initialNotice: widget.initialAuthNotice,
+          initialPasswordRecovery: widget.initialPasswordRecovery,
+          initialRecoveryError: widget.initialRecoveryError,
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<Locale>(
+    valueListenable: ProfileViewModel.appLocale,
+    builder: (context, locale, _) => MaterialApp(
+      title: 'Explore My · FindIt',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      locale: locale,
+      supportedLocales: const <Locale>[
+        Locale('en'),
+        Locale('ms'),
+        Locale('zh'),
+        Locale('ta'),
+      ],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: AppShellView(viewModel: _appViewModel),
     ),
   );
 }
