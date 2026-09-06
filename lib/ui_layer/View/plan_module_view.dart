@@ -1134,6 +1134,10 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     final location = TextEditingController(text: item?.location);
     final notes = TextEditingController(text: item?.notes);
     HeritagePlace? selected;
+    // A place can arrive through both the built-in catalogue and Supabase.
+    // DropdownButton requires exactly one item for each selected value, so
+    // remove repeated object instances before building its menu.
+    final savedPlaces = widget.bookmarks.toSet().toList();
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
     String? successMessage;
@@ -1177,9 +1181,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                     initialValue: selected,
                     isExpanded: true,
                     hint: Text(
-                      'Choose from ${widget.bookmarks.length} saved heritage places',
+                      'Choose from ${savedPlaces.length} saved heritage places',
                     ),
-                    items: widget.bookmarks
+                    items: savedPlaces
                         .map(
                           (p) => DropdownMenuItem<HeritagePlace>(
                             value: p,
