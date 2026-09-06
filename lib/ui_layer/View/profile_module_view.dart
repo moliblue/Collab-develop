@@ -1706,6 +1706,7 @@ class _LoginViewState extends State<_LoginView> {
   final email = TextEditingController();
   final password = TextEditingController();
   bool submitted = false;
+  bool obscurePassword = true;
   String? loginError;
   @override
   void dispose() {
@@ -1807,16 +1808,28 @@ class _LoginViewState extends State<_LoginView> {
                 onChanged: (_) {
                   if (loginError != null) setState(() => loginError = null);
                 },
-                obscureText: true,
+                obscureText: obscurePassword,
                 validator: (String? value) {
                   if (value == null || value.isEmpty) {
                     return 'Password is required.';
                   }
                   return null;
                 },
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password *',
-                  prefixIcon: Icon(Icons.lock_outline_rounded),
+                  prefixIcon: const Icon(Icons.lock_outline_rounded),
+                  suffixIcon: IconButton(
+                    key: const Key('login_password_visibility'),
+                    tooltip: obscurePassword ? 'Show password' : 'Hide password',
+                    onPressed: () => setState(
+                      () => obscurePassword = !obscurePassword,
+                    ),
+                    icon: Icon(
+                      obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
+                  ),
                 ),
               ),
               if (loginError != null) ...<Widget>[

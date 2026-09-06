@@ -36,6 +36,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   bool _saving = false;
   Timer? _realtimeDebounce;
   RealtimeChannel? _realtimeChannel;
+  String? _sessionUserId;
   bool get supabaseReady => _supabaseReady;
   String? get supabaseError => _supabaseError;
 
@@ -49,6 +50,29 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     try {
       _supabaseError = null;
       final session = await repository.authenticate();
+      if (_sessionUserId != session?.userId) {
+        await repository.unwatchPlan(_realtimeChannel);
+        _realtimeChannel = null;
+        _realtimeDebounce?.cancel();
+        _planId = null;
+        _inviteCode = null;
+        _planPersisted = false;
+        _planRevision = 0;
+        _availablePlans = <planner.TravelPlan>[];
+        _travellers = <Traveller>[];
+        _days = <PlanDay>[
+          PlanDay(
+            id: 'empty-day',
+            label: 'Day 1',
+            date: DateTime.now(),
+            activities: <ActivityItem>[],
+          ),
+        ];
+        _section = PlanSection.history;
+        _dayIndex = 0;
+        _sessionUserId = session?.userId;
+        notifyListeners();
+      }
       _supabaseReady = session != null;
       _availablePlans = await repository.loadPlans(
         accessToken: session?.accessToken,
@@ -187,6 +211,16 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
+
+  bool activeDayContains(HeritagePlace place) {
+    final targetName = place.name.trim().toLowerCase();
+    return activeDay.activities.any(
+      (activity) =>
+          activity.title.trim().toLowerCase() == targetName &&
+          (activity.latitude - place.latitude).abs() < 0.00001 &&
+          (activity.longitude - place.longitude).abs() < 0.00001,
+    );
+  }
   String get planName => _planName;
   String get inviteCode =>
       _inviteCode ??

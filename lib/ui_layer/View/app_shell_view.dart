@@ -3,6 +3,7 @@ import 'package:flutter/material.dart' hide Text;
 import '../../core/localization/app_localization.dart';
 import '../../core/localization/localized_text.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data_layer/Models/app_models.dart';
 import '../ViewModel/app_view_model.dart';
 import '../ViewModel/collaborative_planning_view_model.dart';
 import 'discover_module_view.dart';
@@ -20,6 +21,34 @@ class AppShellView extends StatefulWidget {
 }
 
 class _AppShellViewState extends State<AppShellView> {
+  Future<void> _addToPlan(HeritagePlace place) async {
+    final plan = widget.viewModel.plan;
+    if (plan.activeDayContains(place)) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Add this place again?'),
+          content: Text(
+            '${place.name} is already in ${plan.activeDay.label}. '
+            'Add another visit only if you plan to return.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Keep one visit'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Add again'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    await widget.viewModel.addToPlan(place);
+  }
+
   @override
   void dispose() {
     widget.viewModel.dispose();
@@ -90,7 +119,7 @@ class _AppShellViewState extends State<AppShellView> {
                                       DiscoverModuleView(
                                         viewModel: vm.discovery,
                                         onDirections: vm.showDirections,
-                                        onAddToPlan: vm.addToPlan,
+                                        onAddToPlan: _addToPlan,
                                         notify: vm.showToast,
                                       ),
                                       MapModuleView(
@@ -98,7 +127,7 @@ class _AppShellViewState extends State<AppShellView> {
                                         active: vm.tab == MainTab.map,
                                         onBack: vm.back,
                                         onXpReward: vm.rewardXp,
-                                        onAddToPlan: vm.addToPlan,
+                                        onAddToPlan: _addToPlan,
                                         notify: vm.showToast,
                                       ),
                                       MysteryJourneyView(

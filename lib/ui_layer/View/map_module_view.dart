@@ -510,6 +510,9 @@ class _MapModuleViewState extends State<MapModuleView> {
   String _liveRouteStatus(HeritagePlace target) {
     final distance = _routeOriginDistance(target);
     if (distance == null) return 'Waiting for live GPS position…';
+    if (distance <= 50) {
+      return 'You have arrived · destination is within 50 m';
+    }
     if (distance <= _questRadiusMeters) {
       return 'Live GPS · within 1 km · Quest available';
     }
@@ -534,17 +537,10 @@ class _MapModuleViewState extends State<MapModuleView> {
         .toList();
   }
 
-  String _mapCategory(HeritagePlace p) => switch (p.category) {
-    'Traditional Heritage Site' => 'Historical Monument',
-    'Local Craft' => 'Cultural Heritage',
-    'Local Food' => 'Cultural Heritage',
-    'Architecture' ||
-    'Historical Monument' ||
-    'Cultural Heritage' ||
-    'Temple & Sacred' ||
-    'Museum' => p.category,
-    _ => 'Architecture',
-  };
+  String _mapCategory(HeritagePlace p) {
+    final category = p.category.trim();
+    return category.isEmpty ? 'Other Heritage' : category;
+  }
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(

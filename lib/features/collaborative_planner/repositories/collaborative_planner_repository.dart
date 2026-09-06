@@ -120,7 +120,30 @@ class CollaborativePlannerRepository {
       query: 'select=*&plan_id=eq.$planId&order=joined_at.asc',
       accessToken: active,
     );
-    plan.members.addAll(memberRows.map(PlannerMember.fromJson));
+    final memberIds = memberRows
+        .map((row) => '${row['user_id']}')
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final profilesById = <String, Map<String, dynamic>>{};
+    if (memberIds.isNotEmpty) {
+      final profileRows = await supabase.select(
+        'profiles',
+        query:
+            'select=id,full_name,username&id=in.(${memberIds.join(',')})',
+        accessToken: active,
+      );
+      for (final profile in profileRows) {
+        profilesById['${profile['id']}'] = profile;
+      }
+    }
+    plan.members.addAll(memberRows.map((row) {
+      final enriched = Map<String, dynamic>.from(row);
+      final profile = profilesById['${row['user_id']}'];
+      final fullName = '${profile?['full_name'] ?? ''}'.trim();
+      final username = '${profile?['username'] ?? ''}'.trim();
+      enriched['display_name'] = fullName.isNotEmpty ? fullName : username;
+      return PlannerMember.fromJson(enriched);
+    }));
     return plan;
   }
 

@@ -208,24 +208,6 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: vm.availableCategories.map((String category) {
-                  final selected = vm.categories.contains(category);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: AppChip(
-                      label: category,
-                      selected: selected,
-                      onTap: () => vm.toggleCategory(category),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
             if (vm.filtersOpen) ...<Widget>[
               const SizedBox(height: 10),
               AppCard(
@@ -834,21 +816,6 @@ class _LocationDetailState extends State<_LocationDetail> {
   }
 
   Future<void> _openDirections() async {
-    final googleMapsUri = Uri.tryParse(
-      widget.place.googleMapsUri?.trim() ?? '',
-    );
-    if (googleMapsUri != null) {
-      try {
-        if (await launchUrl(
-          googleMapsUri,
-          mode: LaunchMode.externalApplication,
-        )) {
-          return;
-        }
-      } catch (_) {
-        // Fall through to the existing in-app Map handoff.
-      }
-    }
     widget.onDirections(widget.place);
   }
 

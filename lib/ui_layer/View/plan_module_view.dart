@@ -1140,10 +1140,15 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     final notes = TextEditingController(text: item?.notes);
     HeritagePlace? selected;
     String? selectedPlaceId;
-    // A place can arrive through both the built-in catalogue and Supabase.
-    // DropdownButton requires exactly one item for each selected value, so
-    // remove repeated object instances before building its menu.
-    final savedPlaces = widget.bookmarks.toSet().toList()
+    // Editing may select any verified catalogue location; creating highlights
+    // bookmarks first while still making the complete catalogue searchable.
+    final savedPlaces = <String, HeritagePlace>{
+      for (final place in <HeritagePlace>[
+        ...widget.bookmarks,
+        ...widget.recommendations,
+      ])
+        place.id: place,
+    }.values.toList()
       ..sort(compareHeritagePlacesForListing);
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
@@ -1169,13 +1174,19 @@ class _PlanModuleViewState extends State<PlanModuleView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  const Row(
+                  Row(
                     children: <Widget>[
-                      Icon(Icons.bookmark, size: 15, color: Color(0xFF9A4400)),
-                      SizedBox(width: 6),
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 15,
+                        color: Color(0xFF9A4400),
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        'Add a bookmarked location',
-                        style: TextStyle(
+                        item == null
+                            ? 'Choose a verified heritage location'
+                            : 'Change to a verified heritage location',
+                        style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF7A3500),
@@ -1188,7 +1199,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                     initialValue: selectedPlaceId,
                     isExpanded: true,
                     hint: Text(
-                      'Choose from ${savedPlaces.length} saved heritage places',
+                      'Choose from ${savedPlaces.length} heritage places',
                     ),
                     items: savedPlaces.indexed
                         .map(
@@ -1758,7 +1769,28 @@ class _PlanModuleViewState extends State<PlanModuleView> {
 
   Future<void> _createPlan() async {
     final name = TextEditingController();
-    final areas = TextEditingController();
+    final selectedAreas = <String>{};
+    final areaOptions = <String>{
+      'Johor',
+      'Kedah',
+      'Kelantan',
+      'Kuala Lumpur',
+      'Labuan',
+      'Melaka',
+      'Negeri Sembilan',
+      'Pahang',
+      'Penang',
+      'Perak',
+      'Perlis',
+      'Putrajaya',
+      'Sabah',
+      'Sarawak',
+      'Selangor',
+      'Terengganu',
+      ...widget.recommendations
+          .map((place) => place.state.trim())
+          .where((state) => state.isNotEmpty),
+    }.toList()..sort();
     DateTime start = DateTime.now();
     DateTime end = DateTime.now().add(const Duration(days: 3));
     await showPlannerDialog<void>(
@@ -1781,13 +1813,46 @@ class _PlanModuleViewState extends State<PlanModuleView> {
               ),
             ),
             const SizedBox(height: 9),
-            TextField(
-              controller: areas,
-              onChanged: (_) => sheetSet(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Trip Areas / Regions *',
-                hintText: 'Search Malaysian city or state',
-                prefixIcon: Icon(Icons.place_rounded),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Row(
+                    children: <Widget>[
+                      Icon(Icons.place_rounded, color: AppColors.primary),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Trip Areas / Regions *',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Choose one or more Malaysian states or territories.',
+                    style: TextStyle(fontSize: 11, color: AppColors.muted),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: areaOptions
+                        .map(
+                          (area) => AppChip(
+                            label: area,
+                            selected: selectedAreas.contains(area),
+                            onTap: () => sheetSet(() {
+                              selectedAreas.contains(area)
+                                  ? selectedAreas.remove(area)
+                                  : selectedAreas.add(area);
+                            }),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 9),
@@ -1838,7 +1903,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${end.difference(start).inDays + 1} days · ${areas.text.trim().isEmpty ? 0 : areas.text.split(',').length} trip areas · ${end.difference(start).inDays + 1} Day tabs will be created',
+                      '${end.difference(start).inDays + 1} days · ${selectedAreas.length} trip areas · ${end.difference(start).inDays + 1} Day tabs will be created',
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1863,7 +1928,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   child: FilledButton(
                     key: const Key('create_plan_confirm'),
                     onPressed:
-                        name.text.trim().isEmpty || areas.text.trim().isEmpty
+                        name.text.trim().isEmpty || selectedAreas.isEmpty
                         ? null
                         : () async {
                             final days = end.difference(start).inDays + 1;
@@ -1897,7 +1962,6 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       ),
     );
     name.dispose();
-    areas.dispose();
   }
 
   Future<void> _deleteDay(PlanDay day) async {
