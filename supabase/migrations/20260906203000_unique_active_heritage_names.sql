@@ -26,14 +26,12 @@ set is_active = false,
 from ranked
 where location.osm_id = ranked.osm_id
   and ranked.name_rank > 1;
-
 drop index if exists public.heritage_locations_one_active_name_idx;
 create unique index heritage_locations_one_active_name_idx
   on public.heritage_locations (
     regexp_replace(lower(btrim(name)), '[^a-z0-9]+', '', 'g')
   )
   where is_active;
-
 -- Future imports with an already-active normalized name are retained as
 -- inactive records instead of creating another visible duplicate.
 create or replace function public.normalize_heritage_location_before_write()
@@ -69,4 +67,3 @@ begin
   return new;
 end;
 $$;
-

@@ -1,0 +1,5378 @@
+{
+  "generated_at": "2026-09-06T12:50:37.265Z",
+  "total_locations": 1447,
+  "locations_with_images": 910,
+  "locations_without_images": 537,
+  "missing_image_search_contexts": [
+    {
+      "osm_id": "node/10296610479",
+      "name": "Kluang Crown",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.0332753,
+      "longitude": 103.3272935,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10559779204",
+      "name": "Batu Belah",
+      "state": "Selangor",
+      "formatted_address": "Bukit Batu Pahat Trail via, Jalan, 44000 Kuala Kubu Baru, Selangor",
+      "latitude": 3.5610199,
+      "longitude": 101.6741873,
+      "category": "Natural Heritage",
+      "google_place_id": "ChIJi-NN84FzzDER9Z_SHAwgJ5k"
+    },
+    {
+      "osm_id": "node/10592131275",
+      "name": "Our Lady of Lourdes",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3579285,
+      "longitude": 116.1232559,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10592131357",
+      "name": "Santos Francis Xavier",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3324453,
+      "longitude": 116.1534569,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10673354907",
+      "name": "B89",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 3.986815,
+      "longitude": 101.3736932,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10729013171",
+      "name": "Rock graffiti",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3411828,
+      "longitude": 100.2860731,
+      "category": "Natural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10729013172",
+      "name": "Rock graffiti",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3411648,
+      "longitude": 100.2859329,
+      "category": "Natural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10729013173",
+      "name": "Rock graffiti",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.34153,
+      "longitude": 100.2853543,
+      "category": "Natural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10729013174",
+      "name": "Selamat mendaki",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3421582,
+      "longitude": 100.2838831,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10803259505",
+      "name": "Oil well",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.1990594,
+      "longitude": 114.0307386,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10867481346",
+      "name": "Medan Perwira",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.3431794,
+      "longitude": 101.249131,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10933992220",
+      "name": "12 Zodiacs",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.6913295,
+      "longitude": 103.512801,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/10964037552",
+      "name": "丹斯里颜清文铜像",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.2583098,
+      "longitude": 100.725241,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11049175263",
+      "name": "赵明福墓碑",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0486775,
+      "longitude": 101.8655193,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11051037974",
+      "name": "Buddhist/Taoist Columbarium",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0522746,
+      "longitude": 101.8636686,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11051216607",
+      "name": "Oriental Villa (Columbarium)",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0486811,
+      "longitude": 101.8675552,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11129505677",
+      "name": "Harmony Fly",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3896486,
+      "longitude": 100.3192887,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11169113671",
+      "name": "San Choi Wreck",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.933905,
+      "longitude": 102.715836,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11169135239",
+      "name": "Kapal Polis",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.912943,
+      "longitude": 102.7491243,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11197668711",
+      "name": "Bicycle",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.7116091,
+      "longitude": 101.9062098,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11215212754",
+      "name": "Tugu Keris",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.6021031,
+      "longitude": 102.123,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571870",
+      "name": "Dinosaur Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2857044,
+      "longitude": 101.7211059,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571871",
+      "name": "Dinosaur Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2856218,
+      "longitude": 101.7209426,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571872",
+      "name": "Dinosaur Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2855709,
+      "longitude": 101.7209319,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571873",
+      "name": "Dinosaur Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2854765,
+      "longitude": 101.7208615,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571874",
+      "name": "Dinosaur Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2852964,
+      "longitude": 101.7207947,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571875",
+      "name": "Mammoth Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2853279,
+      "longitude": 101.7206392,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11226571876",
+      "name": "Ruined Nissan Van",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2825824,
+      "longitude": 101.7208001,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11255243812",
+      "name": "BUKIT RAKA (Large sign)",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5267111,
+      "longitude": 101.9252817,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11256876948",
+      "name": "We ❤ Bukit DO",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5274513,
+      "longitude": 101.9086754,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11264396631",
+      "name": "Human Photo Booth",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0222203,
+      "longitude": 101.5134332,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11264402943",
+      "name": "Human Photo Booth",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0238334,
+      "longitude": 101.5143169,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11264402957",
+      "name": "I ♥ Alam Impian",
+      "state": "Selangor",
+      "formatted_address": "Jalan Tun Teja 35/15A, Alam Impian, 40470 Shah Alam, Selangor",
+      "latitude": 3.024047,
+      "longitude": 101.5143934,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJcUHqMgCtzTERY3M8ljgUWjo"
+    },
+    {
+      "osm_id": "node/11264605330",
+      "name": "Roller Paint Seating",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0240028,
+      "longitude": 101.5167387,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11264608153",
+      "name": "Terracotta Sculpture",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0222189,
+      "longitude": 101.5149943,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11264608156",
+      "name": "Terracotta Sculpture",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0221232,
+      "longitude": 101.5149003,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875179",
+      "name": "Dorje Shugden Grotto",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5217798,
+      "longitude": 101.874773,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875199",
+      "name": "Loma Gyonma",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5215783,
+      "longitude": 101.8770991,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875256",
+      "name": "Buddha Nageshvaraja",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5222287,
+      "longitude": 101.8745929,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875258",
+      "name": "Medicine Buddha",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5223012,
+      "longitude": 101.8747281,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875259",
+      "name": "Dream Manjushri",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5216038,
+      "longitude": 101.8754965,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875295",
+      "name": "Four-Armed Manjushri",
+      "state": "Pahang",
+      "formatted_address": "GVCG+WP, 28700 Bentong, Pahang, Malaysia",
+      "latitude": 3.5222543,
+      "longitude": 101.8767504,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJhTo1OQAPzDERVhVEcX6_CWU"
+    },
+    {
+      "osm_id": "node/11295875300",
+      "name": "Manjushri Nagaraksha",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5208448,
+      "longitude": 101.8761416,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875302",
+      "name": "Mumu Memorial",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5219317,
+      "longitude": 101.8748065,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875305",
+      "name": "Buddha Shakyamuni",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5214518,
+      "longitude": 101.8748917,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11295875307",
+      "name": "Lama Tsongkhapa",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5219846,
+      "longitude": 101.8751559,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11297577709",
+      "name": "Giant Mangosteen Replica",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5356801,
+      "longitude": 101.8700416,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11297577715",
+      "name": "Giant Ginger Replica",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5355021,
+      "longitude": 101.8711185,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11297577842",
+      "name": "Giant Durian Replica",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5359023,
+      "longitude": 101.8717756,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11323003075",
+      "name": "Human Photo Booth",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0248994,
+      "longitude": 101.5162146,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11332965710",
+      "name": "FERRET SCOUT CAR",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.4332945,
+      "longitude": 101.1229519,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11351969593",
+      "name": "Rumah Pengarah",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.4616816,
+      "longitude": 102.1677197,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11419742455",
+      "name": "Bersih Budaya Besut",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.7362088,
+      "longitude": 102.6549538,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11526632812",
+      "name": "Seratok Memorial Hill",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.759484,
+      "longitude": 111.3939718,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11637223069",
+      "name": "Mural",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1964076,
+      "longitude": 102.2470464,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11649671741",
+      "name": "I ❤️ Pasir Mas",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.0427265,
+      "longitude": 102.1433086,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11682826955",
+      "name": "WWII ammo box remnants",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.3032704,
+      "longitude": 101.1971615,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11693284676",
+      "name": "Tugu Peringatan Starcevich",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.343237,
+      "longitude": 115.7467268,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11707611122",
+      "name": "The Mother Tree",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.3654247,
+      "longitude": 99.7919699,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11707611125",
+      "name": "Portal of Dreams",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.3645681,
+      "longitude": 99.7907172,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11768520014",
+      "name": "DJI drone crash site",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8039169,
+      "longitude": 103.3715147,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11771363552",
+      "name": "Chinese Shrine",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4190538,
+      "longitude": 114.0159537,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11807387298",
+      "name": "Bulatan Roundabout Oil Well Replica",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4176971,
+      "longitude": 114.016198,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11811723153",
+      "name": "Hibiscus Sculpture",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9888519,
+      "longitude": 116.0800735,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11816232044",
+      "name": "Rotary International Monument",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4355856,
+      "longitude": 114.0151077,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11822035426",
+      "name": "缘",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.7892784,
+      "longitude": 102.3983688,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11840211401",
+      "name": "Muzium Tawau",
+      "state": "Sabah",
+      "formatted_address": "Jalan Okk Abu Bakar, 91000 Tawau, Sabah",
+      "latitude": 4.2555842,
+      "longitude": 117.8840751,
+      "category": "Museum",
+      "google_place_id": "ChIJw2mqnradFTIRWPj9AtdBAUA"
+    },
+    {
+      "osm_id": "node/11846341413",
+      "name": "Public Service Memorial",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.2450698,
+      "longitude": 117.8816072,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11848096669",
+      "name": "Todak",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.2411168,
+      "longitude": 117.8872142,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11887882141",
+      "name": "Kota Biawak Busuk",
+      "state": "Johor",
+      "formatted_address": "Jln Salleh, 84000 Muar, Johor Darul Ta'zim, Malaysia",
+      "latitude": 2.0511566,
+      "longitude": 102.5702772,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJ1YiCAgC50TERvE5khwGR91o"
+    },
+    {
+      "osm_id": "node/11887898412",
+      "name": "Tapak Sejarah Kota Buruk",
+      "state": "Johor",
+      "formatted_address": "4J83+6X muar, 84000 Sungai Mati, Johor Darul Ta'zim, Malaysia",
+      "latitude": 2.1157176,
+      "longitude": 102.6050614,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJYRsYy2vH0TERvEfVd1d8Vyo"
+    },
+    {
+      "osm_id": "node/11930689952",
+      "name": "Tugu PKMT",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.2446284,
+      "longitude": 117.8926023,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11946865176",
+      "name": "Tugu Peringatan Mat Salleh",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.7150779,
+      "longitude": 116.3962118,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11951852580",
+      "name": "Muzium Tun Mustapha",
+      "state": "Sabah",
+      "formatted_address": "Jln Lintas, 89050 Kudat, Sabah",
+      "latitude": 6.8861232,
+      "longitude": 116.8560722,
+      "category": "Museum",
+      "google_place_id": "ChIJY8tVKgILOjIRIY1zOKlg8mE"
+    },
+    {
+      "osm_id": "node/11953997081",
+      "name": "KENNY GREEN",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1744213,
+      "longitude": 101.6793083,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11953997082",
+      "name": "TUNKU PLAZA",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1742163,
+      "longitude": 101.6794406,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11955917731",
+      "name": "LakePoint Park @ Setia AlamImpian",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0249798,
+      "longitude": 101.5168905,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11957789925",
+      "name": "Old Tawau Airport",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.262993,
+      "longitude": 117.8850177,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/11979131490",
+      "name": "南海观音",
+      "state": "Sabah",
+      "formatted_address": "3G9W+2V, Kampong Merintaman, 98850 Sipitang, Sabah",
+      "latitude": 5.0674242,
+      "longitude": 115.5473533,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJp5dz8InRIjIRq9XOLyBVpRo"
+    },
+    {
+      "osm_id": "node/11987705416",
+      "name": "Tapak Arkeologi (Archaeological Site)",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.7259613,
+      "longitude": 118.0803035,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12002277695",
+      "name": "Chinese Shrine",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.3900526,
+      "longitude": 113.9957356,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12005043667",
+      "name": "The Post Box",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.5057717,
+      "longitude": 101.8329634,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12007039447",
+      "name": "Seahorse statue",
+      "state": "Sarawak",
+      "formatted_address": "9X8H+HJ, Taman Awam Miri, 98000 Miri, Sarawak, Malaysia",
+      "latitude": 4.3663135,
+      "longitude": 113.9790976,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJr9o7JoFJHzIRtVUW7y019BQ"
+    },
+    {
+      "osm_id": "node/12009539961",
+      "name": "Chinese Shrine",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4190399,
+      "longitude": 114.0160269,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12012299169",
+      "name": "Bunga Raya",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.2438873,
+      "longitude": 117.8881678,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12012299170",
+      "name": "Burung Helang Merah",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.2434934,
+      "longitude": 117.8853517,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12029457297",
+      "name": "Hornbills",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4202803,
+      "longitude": 114.0133797,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12053312746",
+      "name": "Chinese Shrine",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.449195,
+      "longitude": 114.0175097,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12098088511",
+      "name": "Lloyd Smith Crash Site 1972",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 4.6015622,
+      "longitude": 102.2543344,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12110292814",
+      "name": "Bukit Jawa",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.1286665,
+      "longitude": 100.9924315,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12110292816",
+      "name": "Gua Gunung Runtuh",
+      "state": "Perak",
+      "formatted_address": "33400 Lenggong, Perak, Malaysia",
+      "latitude": 5.1263533,
+      "longitude": 100.9700337,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJvYQEUABdtTERv1lsoaekHNo"
+    },
+    {
+      "osm_id": "node/12142288594",
+      "name": "Seahorse statue",
+      "state": "Sarawak",
+      "formatted_address": "98000 Miri, Sarawak",
+      "latitude": 4.3735409,
+      "longitude": 113.971234,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJQ6lBhE1JHzIRqLqTDAqQY1g"
+    },
+    {
+      "osm_id": "node/12142288595",
+      "name": "Seahorse statue",
+      "state": "Sarawak",
+      "formatted_address": "98000 Miri, Sarawak",
+      "latitude": 4.3735238,
+      "longitude": 113.9712556,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJQ6lBhE1JHzIRqLqTDAqQY1g"
+    },
+    {
+      "osm_id": "node/12152113915",
+      "name": "Datuk Gong",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.5109892,
+      "longitude": 103.6502169,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12157982298",
+      "name": "Maigold tiny shrine",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4969126,
+      "longitude": 114.0084671,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12160080415",
+      "name": "雪蘭莪華僑機工回國抗戰殉難紀念碑",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1235617,
+      "longitude": 101.6975762,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12162304383",
+      "name": "Istana Melaka",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.2404804,
+      "longitude": 102.2838822,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12183668318",
+      "name": "Datuk Gong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3143909,
+      "longitude": 100.4466983,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12183668319",
+      "name": "Datuk Gong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3129192,
+      "longitude": 100.4463068,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12197689869",
+      "name": "I ♥ Perlis @ Bukit Jernih",
+      "state": "Perlis",
+      "formatted_address": "G7W9+FH, 02450 Kangar, Perlis",
+      "latitude": 6.5468916,
+      "longitude": 100.2694514,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJQVsnoLG9TDARYLlkuzM8wBE"
+    },
+    {
+      "osm_id": "node/12219111282",
+      "name": "Rumah D'Kramat",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 4.2272806,
+      "longitude": 103.4256336,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12230761797",
+      "name": "Miri-Belait",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.5858214,
+      "longitude": 114.0758751,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12281391293",
+      "name": "Frontier Pillar no 30",
+      "state": "Penang",
+      "formatted_address": "4HV2+66, 34950 Sungai Jawi, Penang",
+      "latitude": 5.1430651,
+      "longitude": 100.5504703,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJzWUhMwCzSjARFpKRdpPO4Jg"
+    },
+    {
+      "osm_id": "node/12282876142",
+      "name": "Muzium Cina Malaysia",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.004765,
+      "longitude": 101.7262698,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12347226036",
+      "name": "Papan Salam Etnik",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4216729,
+      "longitude": 114.0116148,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12347267814",
+      "name": "dragon statue",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4214647,
+      "longitude": 114.0025554,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12347267815",
+      "name": "dragon statue",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4212063,
+      "longitude": 114.002526,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12441123403",
+      "name": "星洲日报（3名毕业生（例子））",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.1172942,
+      "longitude": 101.6312239,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12545801523",
+      "name": "Bretzel Bus",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.152633,
+      "longitude": 101.7247048,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12545801524",
+      "name": "Apa Khabar - Guten Tag",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1526379,
+      "longitude": 101.7247585,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12545801547",
+      "name": "Bear",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1528472,
+      "longitude": 101.7245904,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12577828801",
+      "name": "Tree of Success - Pokok Kejayaan",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.6030655,
+      "longitude": 101.0827204,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12633158584",
+      "name": "The Jetty (Ruins)",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1862442,
+      "longitude": 102.2476631,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12696226535",
+      "name": "Laman Pendaratan Jepun 1941 Kuala Pak Amat",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.1819222,
+      "longitude": 102.3048991,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12724641128",
+      "name": "落叶归根",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.9975812,
+      "longitude": 102.0764661,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12778201263",
+      "name": "3 Boundaries Stone",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.2597832,
+      "longitude": 101.9143032,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12897293153",
+      "name": "LOVE",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.3178182,
+      "longitude": 101.5361037,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12926408461",
+      "name": "Bristol 171 Sycamore HR14 XJ381 Helicopter Crash Site",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 4.4546623,
+      "longitude": 101.5054408,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12958138701",
+      "name": "bougainvillia inn",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.3129424,
+      "longitude": 99.8620374,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/12976239709",
+      "name": "Memorial Pulau Maida",
+      "state": "Labuan",
+      "formatted_address": "Jalan Merdeka, Bandar Labuan, 87000 Victoria, Wilayah Persekutuan Labuan",
+      "latitude": 5.2766346,
+      "longitude": 115.2453032,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJSdV4HI4ZIzIRQ0VRLjBByus"
+    },
+    {
+      "osm_id": "node/12993638806",
+      "name": "吉打司南马日月庵拿督公",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.2323213,
+      "longitude": 100.6847528,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13037476839",
+      "name": "Kento Nanami Memorial Shrine",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.7487662,
+      "longitude": 103.3254869,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13077404535",
+      "name": "Gallery KEV",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.1157434,
+      "longitude": 101.3248622,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13105096691",
+      "name": "Simpang Long Beyak",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 2.6664991,
+      "longitude": 113.521742,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13251408636",
+      "name": "Turtles",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8998403,
+      "longitude": 102.7317287,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13276975401",
+      "name": "NZ STUDIO EMPIRE",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.562175,
+      "longitude": 101.1076172,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13302972993",
+      "name": "Muzium RTM",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1128638,
+      "longitude": 101.6707053,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099265",
+      "name": "190",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.1329828,
+      "longitude": 110.2052869,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099301",
+      "name": "188",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.136053,
+      "longitude": 110.2059093,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099326",
+      "name": "186",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.1383793,
+      "longitude": 110.2061293,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099439",
+      "name": "175",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.1500245,
+      "longitude": 110.2127302,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099615",
+      "name": "156",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.1678575,
+      "longitude": 110.2022105,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13313099651",
+      "name": "191",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.132192,
+      "longitude": 110.2066074,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13347414578",
+      "name": "Golden Pegasus Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.1666123,
+      "longitude": 101.6152598,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13356867537",
+      "name": "Bull And Bear",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1478817,
+      "longitude": 101.7010467,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13394373012",
+      "name": "刘公善邦神位",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.4490157,
+      "longitude": 110.2068523,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13406979086",
+      "name": "观音娘娘雕像",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, : Siniawan, 马来西亚砂拉越石隆门邮政编码: 94000",
+      "latitude": 1.4460375,
+      "longitude": 110.2175034,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJW9-zUQAN-zERV5wbU3Dbw_M"
+    },
+    {
+      "osm_id": "node/13428966985",
+      "name": "Chan Lok Hung Commemorative Hall",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1975287,
+      "longitude": 101.7201924,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13429686456",
+      "name": "Galeri Warisan Fuzhou Dunia",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 2.2637754,
+      "longitude": 111.8651163,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13463331103",
+      "name": "ANDAMAN",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4419477,
+      "longitude": 100.3116826,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13472560242",
+      "name": "森美兰华人文史馆",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.7277162,
+      "longitude": 101.9263274,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13484498887",
+      "name": "Kong Zi",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0116262,
+      "longitude": 101.4203064,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13514170652",
+      "name": "霹靂州抗日殉難僑胞公墓",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8372488,
+      "longitude": 100.7545134,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13514176353",
+      "name": "纪念中华民国男女侨胞惨死坟",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1262138,
+      "longitude": 101.6984971,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13516114034",
+      "name": "九一烈士纪念碑",
+      "state": "Negeri Sembilan",
+      "formatted_address": "VQ3R+W6, 71800 Nilai, Negeri Sembilan",
+      "latitude": 2.8548068,
+      "longitude": 101.790503,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJGYHoJgDHzTERSbUkPg4o134"
+    },
+    {
+      "osm_id": "node/13518351147",
+      "name": "Kubur Kadi Padang Genting",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.9388502,
+      "longitude": 102.0744045,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13518352915",
+      "name": "Makham Moyang Salley",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.9422617,
+      "longitude": 102.0808461,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13523430488",
+      "name": "雪隆茶阳（大埔）总坟",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Bukit Seputeh, 50460 Kuala Lumpur, Federal Territory of Kuala Lumpur",
+      "latitude": 3.1259226,
+      "longitude": 101.7003925,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJt8B2DABJzDERkBCOVsZXPRc"
+    },
+    {
+      "osm_id": "node/13565867809",
+      "name": "新山南方大学学院文物与艺术馆",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.5336731,
+      "longitude": 103.6819021,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13565867810",
+      "name": "郑良树教授书画珍藏馆",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.5337558,
+      "longitude": 103.6818343,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13565867818",
+      "name": "霹雳洞中山文物馆",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.6436637,
+      "longitude": 101.0999019,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13565867821",
+      "name": "One Art Gallery",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8655543,
+      "longitude": 100.7313525,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13681527601",
+      "name": "Birdge to Island closed by gate",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.8789217,
+      "longitude": 100.3540481,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13691653535",
+      "name": "Woman in Yellow",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1536737,
+      "longitude": 101.6966575,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13707104519",
+      "name": "吉隆坡广东义山历史文物馆",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1299412,
+      "longitude": 101.7051578,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13717549706",
+      "name": "Orchids Sculpture",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3335382,
+      "longitude": 116.153905,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13717549707",
+      "name": "Masjid Sculpture",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3316816,
+      "longitude": 116.1523199,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13717549708",
+      "name": "Farmers Sculpture",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3373653,
+      "longitude": 116.1566469,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13874847801",
+      "name": "abandoned houses",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5917237,
+      "longitude": 101.0803336,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13886055350",
+      "name": "Two Big Prawns",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.6580508,
+      "longitude": 101.5656849,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13900982231",
+      "name": "Malaysia China Wangkang Museum",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1892319,
+      "longitude": 102.2581619,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/13955481416",
+      "name": "We ♥︎ Sungai Chiling",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.5927625,
+      "longitude": 101.7377996,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/14058570090",
+      "name": "I ♥ RPP",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.7218349,
+      "longitude": 101.7420908,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/14065541177",
+      "name": "Datuk Gong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.2631405,
+      "longitude": 100.2731969,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/14118101918",
+      "name": "The Leap",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.2189589,
+      "longitude": 101.6712974,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/14140505602",
+      "name": "Jomok home base",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.0348033,
+      "longitude": 101.0148432,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/1524273574",
+      "name": "Muzium Petaling Jaya",
+      "state": "Selangor",
+      "formatted_address": "1, Jalan 10/7, Taman Jaya, 46000 Petaling Jaya, Selangor",
+      "latitude": 3.1053254,
+      "longitude": 101.6503601,
+      "category": "Museum",
+      "google_place_id": "ChIJExGRZdBLzDERqU7Krbh_zZs"
+    },
+    {
+      "osm_id": "node/1696988220",
+      "name": "Traditional House",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2358985,
+      "longitude": 101.6284947,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/1804697961",
+      "name": "Where Borneo Begins",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 2.0787787,
+      "longitude": 109.6459562,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/1813341162",
+      "name": "Makam Sultan Tengah",
+      "state": "Sarawak",
+      "formatted_address": "426, 1101, 93050 Kuching, Sarawak",
+      "latitude": 1.7192254,
+      "longitude": 110.3254797,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJuSOdcf7_-jERMT0accp4Jyk"
+    },
+    {
+      "osm_id": "node/1819670408",
+      "name": "NN Gallery Sdn Bhd",
+      "state": "Selangor",
+      "formatted_address": "No. 53A, 1, Jalan Sulaiman 1, Taman Putra Sulaiman, 68000 Ampang, Selangor, Malaysia",
+      "latitude": 3.1509823,
+      "longitude": 101.7483333,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJHTRLNKs3zDER1EgjOsNru6c"
+    },
+    {
+      "osm_id": "node/1928907661",
+      "name": "Muzium Perang Penang",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.2812421,
+      "longitude": 100.2889311,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2138337478",
+      "name": "Galeri Sate",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.9945961,
+      "longitude": 101.7847977,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2217201572",
+      "name": "The Heritage Museum",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 4.183943,
+      "longitude": 102.0502698,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2309665577",
+      "name": "P04",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.3899194,
+      "longitude": 102.9409842,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2453773636",
+      "name": "Statue of St. John Baptist de La Salle",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9530646,
+      "longitude": 116.052539,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/250270162",
+      "name": "Pulau Langkawi",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.3761081,
+      "longitude": 99.7943776,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2725100863",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1766928,
+      "longitude": 100.4058281,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2739129033",
+      "name": "Malaysia's Largest Sundial",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.2577417,
+      "longitude": 100.4286184,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2825602804",
+      "name": "Patung Konfusius",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.4690864,
+      "longitude": 103.7785813,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/2854344985",
+      "name": "Gopeng Museum - Heritage House",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.4741033,
+      "longitude": 101.1675959,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/315729961",
+      "name": "War Memorial",
+      "state": "Labuan",
+      "formatted_address": "Jalan Tanjung Batu , 87000 Labuan , Wilayah Persekutuan, 87000 Victoria, Labuan Federal Territory",
+      "latitude": 5.2870301,
+      "longitude": 115.2618738,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJ2604EJMYIzIRHHXpQRPDBQQ"
+    },
+    {
+      "osm_id": "node/317159844",
+      "name": "The Chimney",
+      "state": "Labuan",
+      "formatted_address": "Labuan, Malaysia",
+      "latitude": 5.3806645,
+      "longitude": 115.2488915,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3457467263",
+      "name": "Jambatan Sungai Simpang Endap",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.3738231,
+      "longitude": 110.3871143,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3592612107",
+      "name": "Cat Statue",
+      "state": "Sarawak",
+      "formatted_address": "Jalan Tunku Abdul Rahman, 93100 Kuching, Sarawak, Malaysia",
+      "latitude": 1.5577429,
+      "longitude": 110.3526296,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJqZ64J-qn-zERdOvQeAfXhAU"
+    },
+    {
+      "osm_id": "node/3622853793",
+      "name": "Sampan Monument",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.5661552,
+      "longitude": 110.3857384,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3656214518",
+      "name": "Tanjung Lobang World War 2 Victims Memorial",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.3615768,
+      "longitude": 113.9625955,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3739994926",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.2047504,
+      "longitude": 100.4039776,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3739994927",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.2049383,
+      "longitude": 100.4048125,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3991630115",
+      "name": "Martin and Osa Johnson Camp",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.6862997,
+      "longitude": 118.3946507,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3998399409",
+      "name": "Tapak Kuburan Pengiran Indor",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.6618963,
+      "longitude": 118.4032596,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/3998399410",
+      "name": "Manggis Memodou",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.6991582,
+      "longitude": 118.3827374,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4047321689",
+      "name": "Rosli Dhobi Warriors Memorial",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 2.2966186,
+      "longitude": 111.82151,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4142073689",
+      "name": "Muzium Kota Tinggi",
+      "state": "Johor",
+      "formatted_address": "Kampung Makam, 81900 Kota Tinggi, Johor Darul Ta'zim",
+      "latitude": 1.7373305,
+      "longitude": 103.9122258,
+      "category": "Museum",
+      "google_place_id": "ChIJfTGpsYFg2jER0-F7D-jajGo"
+    },
+    {
+      "osm_id": "node/4198286993",
+      "name": "Cat artwork",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.5576969,
+      "longitude": 110.3469189,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4227733032",
+      "name": "Cat Statue",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.5602301,
+      "longitude": 110.3425438,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4241588189",
+      "name": "Istana Diraja Perlis",
+      "state": "Perlis",
+      "formatted_address": "Arau, 02600 Arau, Perlis",
+      "latitude": 6.4309834,
+      "longitude": 100.2716503,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJIX07V5-jTDAR85rH34CNihA"
+    },
+    {
+      "osm_id": "node/4270980293",
+      "name": "Paip Besar Gopeng",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.4682703,
+      "longitude": 101.16445,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4286179992",
+      "name": "Tugu Pahlawan",
+      "state": "Kedah",
+      "formatted_address": "49WF+W5, Bandar Alor Setar, 05250 Alor Setar, Kedah",
+      "latitude": 6.1473248,
+      "longitude": 100.3729048,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJbSxUBQBbSzARu3Quvx03Gb8"
+    },
+    {
+      "osm_id": "node/4297922789",
+      "name": "Malang Rock",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.9034899,
+      "longitude": 104.1043968,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4312087393",
+      "name": "Pelabuhan Feri Kuala Lawas",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.9386673,
+      "longitude": 115.44567,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4329437500",
+      "name": "居銮中华纪念馆",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.033469,
+      "longitude": 103.3298343,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4380679591",
+      "name": "Istana Lama Raja Muda Perak",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.025666,
+      "longitude": 101.0244799,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4396340190",
+      "name": "Skippy Giant Cat",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4141547,
+      "longitude": 100.3387315,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4396340191",
+      "name": "\"Love Me Like Your Fortune Cat\" mural",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4137701,
+      "longitude": 100.3388759,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4407659564",
+      "name": "Hakka Culture Museum",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.2957586,
+      "longitude": 103.1304588,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4420170042",
+      "name": "WW2 Broken Bridge Memorial",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.5821701,
+      "longitude": 102.617463,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4443332991",
+      "name": "The monument at the grave of Russian sailors from the cruiser \"Zhemchug\"",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4261193,
+      "longitude": 100.2997501,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4466392596",
+      "name": "FRIM Sign",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.2272888,
+      "longitude": 101.6364724,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4528144692",
+      "name": "furniture second",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.1141644,
+      "longitude": 101.5893305,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4543888789",
+      "name": "باتونغ بيتش لنكاوي",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.2865757,
+      "longitude": 99.7275855,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4559476593",
+      "name": "Marking George Town - \"Cheating Husband\"",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4184785,
+      "longitude": 100.3363398,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4561190691",
+      "name": "Kubur Lama Taman Sabariah",
+      "state": "Kelantan",
+      "formatted_address": "15400 Kota Bharu, Kelantan, Malaysia",
+      "latitude": 6.1499448,
+      "longitude": 102.2641314,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJA7OV7tqxtjER2rhgx_Y_V2E"
+    },
+    {
+      "osm_id": "node/4574621491",
+      "name": "House of bees",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.6762761,
+      "longitude": 101.8669027,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4640044642",
+      "name": "PUJ 2 La Tuk Kong",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0212357,
+      "longitude": 101.6809735,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4653004339",
+      "name": "Muzium Daerah Dungun",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 4.7678863,
+      "longitude": 103.4209054,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4661264031",
+      "name": "Jadi Batik Gallery",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1457108,
+      "longitude": 101.7190427,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4663292640",
+      "name": "南无阿弥佗佛",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 3.0012402,
+      "longitude": 102.0787565,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4664870591",
+      "name": "Tua Peh Kong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3060471,
+      "longitude": 100.2531114,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4670504387",
+      "name": "Istana Sri Angkasa",
+      "state": "Pahang",
+      "formatted_address": "F9RM+VH, Brinchang, 39000 Brinchang, Pahang, Malaysia",
+      "latitude": 4.4901214,
+      "longitude": 101.3839717,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJn89TNwBZyjERLtConRo7Jh0"
+    },
+    {
+      "osm_id": "node/4683146489",
+      "name": "Gallery",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4171752,
+      "longitude": 100.3375571,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4776350022",
+      "name": "Street Art",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5959948,
+      "longitude": 101.0780238,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4788891821",
+      "name": "Believe 5D Art Museum",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.3113443,
+      "longitude": 99.8561662,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4792759211",
+      "name": "Kek Lok Seah Monument",
+      "state": "Perak",
+      "formatted_address": "19, Jalan Sri Adika, TAMAN ROSE, 31650 Ipoh, Perak",
+      "latitude": 4.57985,
+      "longitude": 101.0774633,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJv6tiQXPsyjER8BkxxZyUMHw"
+    },
+    {
+      "osm_id": "node/4806246591",
+      "name": "Muzium Pulau Besar",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1136477,
+      "longitude": 102.3333961,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4817168621",
+      "name": "Taksu Gallery",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1720659,
+      "longitude": 101.7326832,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4851185622",
+      "name": "Overseas Chinese Anti-War Memorial",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4056284,
+      "longitude": 100.2825888,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4908676924",
+      "name": "Street Art Greedy Boy",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4150196,
+      "longitude": 100.3263339,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4908696921",
+      "name": "Street Art Nostalgic Meal Order",
+      "state": "Penang",
+      "formatted_address": "9A, Lrg Kinta, 10400 George Town, Pulau Pinang, Malaysia",
+      "latitude": 5.4156914,
+      "longitude": 100.3267832,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJPWeX_L3DSjARCj-UZWfAfbA"
+    },
+    {
+      "osm_id": "node/4916804926",
+      "name": "Marking George Town - \"High Counter\"",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4182483,
+      "longitude": 100.3363501,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4917104524",
+      "name": "\"Yeoh Only\" Sculpture",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4150032,
+      "longitude": 100.3399792,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4954607734",
+      "name": "Mini Aircraft",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.739044,
+      "longitude": 100.730472,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/4973495753",
+      "name": "Bungalow at Bukit Kutu",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.5428829,
+      "longitude": 101.7177734,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5020565424",
+      "name": "Sleeping Little Whale",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.4231463,
+      "longitude": 99.7875432,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5042131723",
+      "name": "Hornbill statues",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.3929869,
+      "longitude": 113.9862934,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5050000721",
+      "name": "StaRT-P IPD SANDAKAN",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.860648,
+      "longitude": 118.1153036,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5054997121",
+      "name": "Mohd amin kg lela kuala pegang",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.639228,
+      "longitude": 100.8163964,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5071493727",
+      "name": "Burung Walet",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.8369629,
+      "longitude": 118.1122231,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5071494722",
+      "name": "Udang Galah",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.8305118,
+      "longitude": 118.0879399,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5132767322",
+      "name": "Sea Horse Statue",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.3591089,
+      "longitude": 113.9816855,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5135650322",
+      "name": "Kuyubin Castle",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.4791674,
+      "longitude": 116.2765607,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5147854722",
+      "name": "Kubu Pertahanan Askar British Perang Dunia Ke-2",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.2035906,
+      "longitude": 102.1495155,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5147918026",
+      "name": "Jeti Pendaratan Askar Jepun Perang Dunia Ke-2",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.2072252,
+      "longitude": 102.1488024,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5224380567",
+      "name": "Barong-Barong",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1493105,
+      "longitude": 101.6846374,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5224380568",
+      "name": "Pertumbuhan",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1495175,
+      "longitude": 101.684729,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5235998021",
+      "name": "Orangutan",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.8830307,
+      "longitude": 118.027529,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5253879660",
+      "name": "Kite Museum Pasir Gudang",
+      "state": "Johor",
+      "formatted_address": "Taman Bandar, 81700 Pasir Gudang, Johor",
+      "latitude": 1.4740442,
+      "longitude": 103.9060608,
+      "category": "Museum",
+      "google_place_id": "ChIJKZEsA1AV2jERkwpFvUgKnq8"
+    },
+    {
+      "osm_id": "node/5258285471",
+      "name": "Chun May Treding Co. 精美画框",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3618961,
+      "longitude": 100.4444333,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5287341250",
+      "name": "Menara Jam Kampar",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.3089561,
+      "longitude": 101.1534611,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5307945221",
+      "name": "二奶巷寓所博物館",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5980223,
+      "longitude": 101.0784653,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5321266522",
+      "name": "Street art \"Railway Taiping\"",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8538333,
+      "longitude": 100.7416214,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5337303707",
+      "name": "Batu Peringatan Tsunami di Kuala Sala",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.9724408,
+      "longitude": 100.3523552,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5346038886",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "5CX6+FQ, 06550 Kepala Batas, Kedah, Malaysia",
+      "latitude": 6.1985843,
+      "longitude": 100.4121101,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJp-vi_oVbSzARBL5deBJ673o"
+    },
+    {
+      "osm_id": "node/5366047394",
+      "name": "'KUANTAN' Sign",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.7997606,
+      "longitude": 103.3261357,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5404610323",
+      "name": "Muzium Nanas",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.5073057,
+      "longitude": 103.4467965,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5426334413",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1754196,
+      "longitude": 100.4028645,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5434992890",
+      "name": "Pineapples Statue",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.480401,
+      "longitude": 103.3884118,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5455084577",
+      "name": "Tugu Sabah 100 Tahun",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9530874,
+      "longitude": 116.6642593,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5508468324",
+      "name": "streetart",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.5595419,
+      "longitude": 110.3427546,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5570220251",
+      "name": "Cherating Sea Turtle Sanctuary",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 4.1496257,
+      "longitude": 103.4088509,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5636399321",
+      "name": "Suhaizah",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.6979983,
+      "longitude": 100.7193581,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5655516944",
+      "name": "Footreflexology Circle Walkway",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8128416,
+      "longitude": 103.3515028,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5660326704",
+      "name": "\"Giant Rat\" mural",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4141161,
+      "longitude": 100.3387748,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5660326982",
+      "name": "\"Cats Walking For Animal Awareness\" Mural",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4151926,
+      "longitude": 100.3395283,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5674016921",
+      "name": "Commonwealth Games 1998 Statue",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.8334097,
+      "longitude": 101.6612479,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5735666921",
+      "name": "Ladang kerbau tobiar",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.0602383,
+      "longitude": 100.4868096,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5737944780",
+      "name": "Labu Giant Pumpkin",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.7529559,
+      "longitude": 101.8218215,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5759789461",
+      "name": "\"Even If Handicapped, Still Love Me\" sculpture",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4138892,
+      "longitude": 100.3393229,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5759789462",
+      "name": "\"Fine 500 For Littering, Sterilize Intead\" sculpture",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4135668,
+      "longitude": 100.339047,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5831817391",
+      "name": "street art",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5997608,
+      "longitude": 101.0843766,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5855900491",
+      "name": "Old Field Station",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.3242244,
+      "longitude": 101.7502305,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5855931296",
+      "name": "Temple",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.3238434,
+      "longitude": 101.751399,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5860151563",
+      "name": "Armoured Personnel Carrier GMC 15 CWT",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.8360005,
+      "longitude": 101.4127187,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5862639885",
+      "name": "Street Art",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5923643,
+      "longitude": 101.0829177,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5864542485",
+      "name": "Carcassa Escavatore",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.8464037,
+      "longitude": 104.1590532,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5870565586",
+      "name": "Boy and Girl on Bicycle",
+      "state": "Penang",
+      "formatted_address": "27, Lebuh Keng Kwee, George Town, 10450 George Town, Pulau Pinang",
+      "latitude": 5.4166019,
+      "longitude": 100.3313917,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJBxcVdwDDSjARmA8PBBl6RZU"
+    },
+    {
+      "osm_id": "node/5907470485",
+      "name": "Jeff’s Art Deco",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4165078,
+      "longitude": 100.3278646,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5923733886",
+      "name": "Old Dutch House",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.0429618,
+      "longitude": 102.5641709,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/5928578725",
+      "name": "Traditional Fishing Wooden Boat",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.8853308,
+      "longitude": 101.2847538,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6054228520",
+      "name": "WW2 RAF B-24 Libertor (KL654R) Crash Site",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.8192178,
+      "longitude": 102.0659079,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6086944085",
+      "name": "The Commonwealth War Grave",
+      "state": "Labuan",
+      "formatted_address": "Labuan, Malaysia",
+      "latitude": 5.291246,
+      "longitude": 115.2522912,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6112029777",
+      "name": "Firefly Nibong Tebal",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.1701773,
+      "longitude": 100.4785197,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6112029778",
+      "name": "Boat",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.1705929,
+      "longitude": 100.4786904,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6113792459",
+      "name": "Aeroplane",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.2275096,
+      "longitude": 102.2661822,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6157715728",
+      "name": "Roundbout Kuda",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 6.1741466,
+      "longitude": 116.1984791,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6192272088",
+      "name": "Sejarah Tok Pasai",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1061401,
+      "longitude": 100.2904718,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6248488393",
+      "name": "Mural-Chendol Boy",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4171291,
+      "longitude": 100.3306653,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6330125486",
+      "name": "Istana Bunian",
+      "state": "Kelantan",
+      "formatted_address": "Kg Tok Burung, 16300 Bachok, Kelantan",
+      "latitude": 6.0654972,
+      "longitude": 102.3978526,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJU9ohKG65tjERVSxZfVMu5HY"
+    },
+    {
+      "osm_id": "node/6431992711",
+      "name": "Istana Kinta",
+      "state": "Perak",
+      "formatted_address": "14B, Jln Sultan Nazrin Shah, 30250 Ipoh, Perak, Malaysia",
+      "latitude": 4.58823,
+      "longitude": 101.0998188,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJ531x2DDtyjERS3kj2yoHz8A"
+    },
+    {
+      "osm_id": "node/6465902658",
+      "name": "Gigi siung",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.7857586,
+      "longitude": 100.8923972,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6465902659",
+      "name": "Gigi siung",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.7857746,
+      "longitude": 100.8922979,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6487597708",
+      "name": "Smile of Mona Lisa",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8930743,
+      "longitude": 103.3549316,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6517812687",
+      "name": "The Eng Choon Communal Ritual Tomb",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1985561,
+      "longitude": 102.2571161,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6565337288",
+      "name": "Kubur Awam Pasir Gogok",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.4299441,
+      "longitude": 104.1035277,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6570145987",
+      "name": "Street Art Men",
+      "state": "Penang",
+      "formatted_address": "316, Beach St, Georgetown, 10300 George Town, Penang",
+      "latitude": 5.4128117,
+      "longitude": 100.3346207,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJ-cCMa5LDSjARF1sg9FiPauc"
+    },
+    {
+      "osm_id": "node/6601347690",
+      "name": "Street Art \"Bus\"",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4180027,
+      "longitude": 100.3362313,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6604351487",
+      "name": "Street Art",
+      "state": "Terengganu",
+      "formatted_address": "51, Jalan Kampung Cina, Kampung Banggul, 20100 Kuala Terengganu, Terengganu",
+      "latitude": 5.3348407,
+      "longitude": 103.1347365,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJfyBZjSi_tzER3FTU_EIog6Y"
+    },
+    {
+      "osm_id": "node/6605271186",
+      "name": "Street Art",
+      "state": "Terengganu",
+      "formatted_address": "51, Jalan Kampung Cina, Kampung Banggul, 20100 Kuala Terengganu, Terengganu",
+      "latitude": 5.3307115,
+      "longitude": 103.1332334,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJfyBZjSi_tzER3FTU_EIog6Y"
+    },
+    {
+      "osm_id": "node/6620645723",
+      "name": "Muzium Kemaman",
+      "state": "Terengganu",
+      "formatted_address": "Kampung Dusun Nyior, 24000 Chukai, Terengganu",
+      "latitude": 4.2315725,
+      "longitude": 103.427578,
+      "category": "Museum",
+      "google_place_id": "ChIJf4B_Z-eGyDERKJuhHbm9zqQ"
+    },
+    {
+      "osm_id": "node/6919473685",
+      "name": "Street art \"Orang utan\" monkey",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4148423,
+      "longitude": 100.3405771,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/6984039057",
+      "name": "Kilim Geoforest Park Sign",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.4281072,
+      "longitude": 99.8675315,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7132902788",
+      "name": "双溪威新村 Kg. Baru Sg. Way",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0871453,
+      "longitude": 101.6234694,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7174772433",
+      "name": "高渊历史文物馆",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.1657801,
+      "longitude": 100.4772625,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7180094929",
+      "name": "Lorong Jog Tua Pek Kong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3925099,
+      "longitude": 100.2615794,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7213798515",
+      "name": "Replika Pintu Gerbang Kacapuri",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1365825,
+      "longitude": 100.3691411,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7252102885",
+      "name": "Flowers Ice Cream",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4131698,
+      "longitude": 100.3370725,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7252106985",
+      "name": "Ah Ma & Ah Soon",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4127235,
+      "longitude": 100.3398176,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7379552271",
+      "name": "Pontian Bersih Indah Menarik",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.4887669,
+      "longitude": 103.3881987,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7495812398",
+      "name": "Kuala Kedah Bandar Maritim",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1060063,
+      "longitude": 100.2917057,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7509007695",
+      "name": "Kampung Baru Sang Lee",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.6502035,
+      "longitude": 101.8500283,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7561944537",
+      "name": "Perai 1",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3659716,
+      "longitude": 100.3941273,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7592062594",
+      "name": "Bukit Kepala Gajah",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.1242884,
+      "longitude": 100.9707885,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7592062989",
+      "name": "Gua Harimau",
+      "state": "Perak",
+      "formatted_address": "Kampung Gua Badak, 33400 Lenggong, Perak",
+      "latitude": 5.1485508,
+      "longitude": 100.9807842,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJnVPWVwBptTERhomsHYEaohc"
+    },
+    {
+      "osm_id": "node/7630957158",
+      "name": "Laman Sepadu Sign",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4857571,
+      "longitude": 100.4964442,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7638380222",
+      "name": "Statue of Lim Lean Teng",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4071985,
+      "longitude": 100.3051074,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7814120085",
+      "name": "Home 1",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 5.8164965,
+      "longitude": 102.1125736,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/7837573032",
+      "name": "Pintu Gerbang British",
+      "state": "Kedah",
+      "formatted_address": "06600 Kuala Kedah, Kedah",
+      "latitude": 6.1086485,
+      "longitude": 100.2878869,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJi-qbcABDSzAR9WOt4my5hzQ"
+    },
+    {
+      "osm_id": "node/8015462610",
+      "name": "IPOH Sign",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.4774305,
+      "longitude": 101.1733695,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8170033021",
+      "name": "Tarat Gold Cup",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.2056859,
+      "longitude": 110.5343896,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8281218149",
+      "name": "Piano",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0208268,
+      "longitude": 101.5144859,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307717318",
+      "name": "kantin",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1255678,
+      "longitude": 118.1537124,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307717319",
+      "name": "ofice",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1253317,
+      "longitude": 118.153604,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307717320",
+      "name": "s15",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1284303,
+      "longitude": 118.1477317,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307717321",
+      "name": "ss06",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1283959,
+      "longitude": 118.1479363,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307717322",
+      "name": "ss08",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1286742,
+      "longitude": 118.1469645,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307728617",
+      "name": "rumah",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1255734,
+      "longitude": 118.1539946,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307728618",
+      "name": "Rumah Kongsi",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1283801,
+      "longitude": 118.1467068,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307730017",
+      "name": "ss07",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.128452,
+      "longitude": 118.1472608,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307928417",
+      "name": "ss09",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1290755,
+      "longitude": 118.1479208,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307928517",
+      "name": "S15",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1287711,
+      "longitude": 118.1478978,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8307928518",
+      "name": "ss10",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1268832,
+      "longitude": 118.1500093,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290118",
+      "name": "ss03",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1280344,
+      "longitude": 118.1492482,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290119",
+      "name": "Baja Kompos",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1255958,
+      "longitude": 118.1529696,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290120",
+      "name": "LAB",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1242501,
+      "longitude": 118.1538753,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290121",
+      "name": "ss13",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1268596,
+      "longitude": 118.1485256,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290122",
+      "name": "ss14",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1274042,
+      "longitude": 118.1486038,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290123",
+      "name": "ss01",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1239903,
+      "longitude": 118.1611261,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290124",
+      "name": "ss16",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1244075,
+      "longitude": 118.1566299,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290125",
+      "name": "ss17",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1257213,
+      "longitude": 118.1554733,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290126",
+      "name": "ss18",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1264928,
+      "longitude": 118.1554238,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290127",
+      "name": "s02-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1123969,
+      "longitude": 118.16931,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290128",
+      "name": "G01-a1",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1131553,
+      "longitude": 118.1704821,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290129",
+      "name": "G01-a5",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1134089,
+      "longitude": 118.1705938,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290130",
+      "name": "G02-a1",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1135101,
+      "longitude": 118.1707492,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290131",
+      "name": "sempadan",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1133571,
+      "longitude": 118.1704969,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308290132",
+      "name": "G06-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1138669,
+      "longitude": 118.171787,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298317",
+      "name": "QL01&02",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.123728,
+      "longitude": 118.1623544,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298318",
+      "name": "ss04",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1279577,
+      "longitude": 118.1489492,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298319",
+      "name": "ss19",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1260655,
+      "longitude": 118.1547954,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298320",
+      "name": "s01-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1125979,
+      "longitude": 118.1697481,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298417",
+      "name": "QL03",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1279879,
+      "longitude": 118.1475115,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298418",
+      "name": "S12",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.127742,
+      "longitude": 118.1498204,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298419",
+      "name": "S14",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1283796,
+      "longitude": 118.1491927,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298420",
+      "name": "ss12",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1273903,
+      "longitude": 118.1481455,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298421",
+      "name": "ss15",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.124004,
+      "longitude": 118.1608644,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298422",
+      "name": "s02-a1",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1124524,
+      "longitude": 118.1695805,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298423",
+      "name": "s01-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1126143,
+      "longitude": 118.1698729,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298424",
+      "name": "s01-a3",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1127272,
+      "longitude": 118.1700426,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298425",
+      "name": "s01",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1126455,
+      "longitude": 118.1698979,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298426",
+      "name": "s01-a4",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1127768,
+      "longitude": 118.170239,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298427",
+      "name": "G01-a3",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1129264,
+      "longitude": 118.1702958,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298428",
+      "name": "G01-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1130259,
+      "longitude": 118.1704772,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298429",
+      "name": "G01-a4",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1132956,
+      "longitude": 118.1705177,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298430",
+      "name": "G02-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.113575,
+      "longitude": 118.1709855,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298517",
+      "name": "S13",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.127245,
+      "longitude": 118.1496574,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298518",
+      "name": "G02-a4",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1135328,
+      "longitude": 118.1713195,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298717",
+      "name": "ss02",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1274976,
+      "longitude": 118.1495211,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298718",
+      "name": "ss05",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1287132,
+      "longitude": 118.1484032,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298719",
+      "name": "ss11",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1279944,
+      "longitude": 118.1470754,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298720",
+      "name": "UN",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1272038,
+      "longitude": 118.1550597,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298721",
+      "name": "s01-a1",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1126544,
+      "longitude": 118.1699495,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298722",
+      "name": "s02-05",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1122732,
+      "longitude": 118.1695373,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298817",
+      "name": "G05",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1280977,
+      "longitude": 118.147305,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298818",
+      "name": "PREHEATER",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1240116,
+      "longitude": 118.1540455,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298819",
+      "name": "Rumah Kampung Long Danau",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.007148,
+      "longitude": 118.457898,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298820",
+      "name": "G01",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1133788,
+      "longitude": 118.1705448,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298821",
+      "name": "ss20",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1275303,
+      "longitude": 118.153215,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298822",
+      "name": "G02-a3",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1135763,
+      "longitude": 118.1711084,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8308298917",
+      "name": "KiLN",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1240237,
+      "longitude": 118.1542969,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326247218",
+      "name": "G06-a1",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1139514,
+      "longitude": 118.1719361,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326247219",
+      "name": "S10",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1124981,
+      "longitude": 118.1686254,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326247220",
+      "name": "ss22",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.126426,
+      "longitude": 118.1533548,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326248917",
+      "name": "s10-a3",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.112465,
+      "longitude": 118.1679371,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326248918",
+      "name": "PJ SABAHAN",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.8798831,
+      "longitude": 118.0479298,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326248919",
+      "name": "ss21",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1271826,
+      "longitude": 118.1537081,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8326249017",
+      "name": "s10-a2",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1124996,
+      "longitude": 118.1684599,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8411143649",
+      "name": "Old Ferry Point",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 2.1307519,
+      "longitude": 111.5260736,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8444550517",
+      "name": "SDP10",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1261047,
+      "longitude": 118.1564979,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8547300218",
+      "name": "Crusher",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1239688,
+      "longitude": 118.15318,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8620527517",
+      "name": "QuatersRumah",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.1266809,
+      "longitude": 118.1541192,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8632037768",
+      "name": "rumah aku",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.0553264,
+      "longitude": 102.6556543,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8745832600",
+      "name": "Selamat Jalan Kuala Pilah",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.7369278,
+      "longitude": 102.2078448,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8761963315",
+      "name": "Parit Botak",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.7412688,
+      "longitude": 103.1067874,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8872795758",
+      "name": "I ♥ Senggarang",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.7486548,
+      "longitude": 103.0526912,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8891515466",
+      "name": "Kuala Sg. Baru Di ❤ Ku",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.3612217,
+      "longitude": 102.0383949,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8892931056",
+      "name": "I ♥ Koris",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.75301,
+      "longitude": 103.0039736,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8892957847",
+      "name": "كوريس",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.7530362,
+      "longitude": 103.0045603,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8927085932",
+      "name": "Selamat Datang ke Port Dickson",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.3986978,
+      "longitude": 101.9814141,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8927761947",
+      "name": "Selamat Datang ke Kuala Dungun",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 4.7779279,
+      "longitude": 103.4248874,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8954573933",
+      "name": "Boat",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 5.890099,
+      "longitude": 102.4824982,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8954652941",
+      "name": "Kampung Lak Lok",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.74357,
+      "longitude": 102.4465831,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8955818137",
+      "name": "Di sini lahirnya sebuah nama Kampung Telaga Papan",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 5.8366974,
+      "longitude": 102.5138146,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8959923811",
+      "name": "Kuala Besut Visit Beautiful Terengganu",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8296649,
+      "longitude": 102.5562501,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8959923813",
+      "name": "Kampung Boy",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8311559,
+      "longitude": 102.5573379,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8959954420",
+      "name": "Selamat Datang Ke Kuala Besut",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8310258,
+      "longitude": 102.5581872,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8959954421",
+      "name": "Super Mario",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.831198,
+      "longitude": 102.5578305,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8960591953",
+      "name": "Octopus",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8326622,
+      "longitude": 102.5578064,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8960591954",
+      "name": "Diving Helmet",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.831267,
+      "longitude": 102.5578123,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8960591955",
+      "name": "Octobus and Whale",
+      "state": "Terengganu",
+      "formatted_address": "Terengganu, Malaysia",
+      "latitude": 5.8310236,
+      "longitude": 102.5579173,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8962866165",
+      "name": "Kapal",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 5.8965349,
+      "longitude": 102.477126,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/8968260848",
+      "name": "Guan Yin",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.1090799,
+      "longitude": 102.3719072,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9109636525",
+      "name": "Rhythm of Light",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3967036,
+      "longitude": 100.3288227,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9109636526",
+      "name": "Rhythm of Light",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3963793,
+      "longitude": 100.3284875,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9124047953",
+      "name": "Istana Serting",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Kampung Kuala Sialang, 72100 Bahau, Negeri Sembilan, Malaysia",
+      "latitude": 2.8089883,
+      "longitude": 102.3730488,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJzXZinEZpzjERacdTSM8A9Gg"
+    },
+    {
+      "osm_id": "node/9144054333",
+      "name": "Penang Chinese Relief Memorial",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4056439,
+      "longitude": 100.2827633,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9144054335",
+      "name": "World Peace Memorial",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4055216,
+      "longitude": 100.2825359,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9328895193",
+      "name": "Koo S Art Gallery",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.6113892,
+      "longitude": 101.1110938,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9409586058",
+      "name": "Pasar Tani & Ikan Batu 4 (Discontinued)",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.7153209,
+      "longitude": 114.9894147,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9480698258",
+      "name": "Perai 2",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3562597,
+      "longitude": 100.4062911,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9505728378",
+      "name": "Archaeological Site A",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4124549,
+      "longitude": 100.3332965,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9551480925",
+      "name": "Mesin Padi",
+      "state": "Kedah",
+      "formatted_address": "Tikam Batu, 08600 Sungai Petani, Kedah",
+      "latitude": 5.56785,
+      "longitude": 100.4288225,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJr_al9tjXSjARtSV5UJLCMck"
+    },
+    {
+      "osm_id": "node/9776577424",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.2024347,
+      "longitude": 100.4040796,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9793143772",
+      "name": "Muzium Warisan India",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4212438,
+      "longitude": 100.3040368,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9808469094",
+      "name": "Selamat Datang Ke Kong Kong Laut",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.5185865,
+      "longitude": 103.9977625,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788558",
+      "name": "Wing",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8048079,
+      "longitude": 103.3268914,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788559",
+      "name": "Helang",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8051108,
+      "longitude": 103.3271303,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788561",
+      "name": "Belon Panas",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8050655,
+      "longitude": 103.3270911,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788562",
+      "name": "Terowong Sg Lembing",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.805142,
+      "longitude": 103.3271605,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788564",
+      "name": "Harimau",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8049486,
+      "longitude": 103.326981,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788565",
+      "name": "Vespa",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8051614,
+      "longitude": 103.3271811,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788566",
+      "name": "Merak",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8051293,
+      "longitude": 103.327212,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788567",
+      "name": "Kebun Kota",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8052261,
+      "longitude": 103.3272439,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9810788569",
+      "name": "Todak",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8049567,
+      "longitude": 103.3270412,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9855010191",
+      "name": "Tapak Arkeologi Kota Tampan",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.0550068,
+      "longitude": 100.9735135,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9855010192",
+      "name": "POV-BUKIT BUNUH",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.0591421,
+      "longitude": 100.978016,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9862285189",
+      "name": "Gate A",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9904555,
+      "longitude": 116.1044279,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9862304422",
+      "name": "Gate C",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9908706,
+      "longitude": 116.1052841,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9862306453",
+      "name": "Gate B",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9904844,
+      "longitude": 116.1052487,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9878473126",
+      "name": "Shiva Statue of Balathandayuthapani Temple",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4327118,
+      "longitude": 100.2958166,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9909944974",
+      "name": "Datuk Gong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.2833305,
+      "longitude": 100.285067,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9914374033",
+      "name": "Second World War Memorial",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.8404943,
+      "longitude": 118.1164781,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9916288770",
+      "name": "Datuk Gong",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.2843549,
+      "longitude": 100.2811121,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9923931417",
+      "name": "Noor’s tree",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 4.6635789,
+      "longitude": 117.7751169,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9924039770",
+      "name": "Rooster Bowl",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0093238,
+      "longitude": 101.4163313,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9935735303",
+      "name": "Remains of Old Staircase",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.8442851,
+      "longitude": 118.110332,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9939455765",
+      "name": "Sompoton",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.6677498,
+      "longitude": 116.3664164,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9949223448",
+      "name": "Ranau 1st P.O.W. Camp",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9579491,
+      "longitude": 116.674518,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9951243386",
+      "name": "Batu Sumpah",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.3448763,
+      "longitude": 116.1581044,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "node/9958919188",
+      "name": "Kopi Tenom",
+      "state": "Sabah",
+      "formatted_address": "89900 Tenom, Sabah",
+      "latitude": 5.1231542,
+      "longitude": 115.9430904,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJK_Pcgp8nPTIRipWcF_lEd1w"
+    },
+    {
+      "osm_id": "relation/14725880",
+      "name": "Gunung Mulu National Park",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak",
+      "latitude": 4.0868682,
+      "longitude": 114.8946944,
+      "category": "Natural Heritage",
+      "google_place_id": "ChIJHZzYUbYDGTIRKZ8z74xqVcw"
+    },
+    {
+      "osm_id": "relation/15556733",
+      "name": "Crag Hotel",
+      "state": "Penang",
+      "formatted_address": "C7JC+6M, Bukit Bendera, Pulau Pinang",
+      "latitude": 5.430289,
+      "longitude": 100.2711745,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJ4_1YKwDDSjARsg6aOpIqdl8"
+    },
+    {
+      "osm_id": "relation/17934751",
+      "name": "Archaeological Heritage of the Lenggong Valley",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.1017788,
+      "longitude": 100.9812326,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "relation/8530141",
+      "name": "Tugu Negeri Selangor",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.0811044,
+      "longitude": 101.5157877,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "seed/sultan-abdul-samad",
+      "name": "Sultan Abdul Samad Building",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Jln Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia",
+      "latitude": 3.1488,
+      "longitude": 101.6942,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJ_Y2Rm81JzDERKAawVfuGOd8"
+    },
+    {
+      "osm_id": "way/1015253721",
+      "name": "St. Theresa's Church",
+      "state": "Melaka",
+      "formatted_address": "Church Of St Theresa, Jalan Gajah Berang, Kampung Tujuh, 75200 Melaka",
+      "latitude": 2.2067294,
+      "longitude": 102.2421043,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJrdp5ZgDx0TERuq5T5YU6t7Q"
+    },
+    {
+      "osm_id": "way/1028950531",
+      "name": "Leng Aun Koe",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.412959,
+      "longitude": 100.2943829,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1041660109",
+      "name": "I❤MALAYSIA",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.3325578,
+      "longitude": 103.5884193,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1068727459",
+      "name": "Private Gated House",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.327083,
+      "longitude": 100.2478091,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1068734878",
+      "name": "Private Gated House",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3269644,
+      "longitude": 100.2481537,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1095091665",
+      "name": "华城 WaterFront City",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.542467,
+      "longitude": 101.0344472,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1150173831",
+      "name": "SENAI AIRPORT CITY",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.6020546,
+      "longitude": 103.6725734,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1164352263",
+      "name": "Pasar Lama Teng Bukap",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 1.2077699,
+      "longitude": 110.3653001,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1174262961",
+      "name": "Arch of Virtue and Knowledge",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.3348485,
+      "longitude": 101.1351042,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1174262962",
+      "name": "Arch of Virtue and Knowledge",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.3373844,
+      "longitude": 101.1453517,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1185603314",
+      "name": "Istana Pantai Bahagia",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 2.7262434,
+      "longitude": 101.4553592,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1193450489",
+      "name": "Tumpongoh",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9088111,
+      "longitude": 116.6406018,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1252044158",
+      "name": "Assumption Chapel",
+      "state": "Melaka",
+      "formatted_address": "Jalan Melaka Raya 14, Taman Melaka Raya, 75000 Melaka",
+      "latitude": 2.1872383,
+      "longitude": 102.2589544,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJuTPwHxzu0TERbE49q7OwUOM"
+    },
+    {
+      "osm_id": "way/1254519303",
+      "name": "Kolam Renang Kemahkotaan",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8599977,
+      "longitude": 100.7595858,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1293541894",
+      "name": "Datuk Gong",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.4728817,
+      "longitude": 102.4195352,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1307511145",
+      "name": "Galeri Arkeologi Lembah Lenggong",
+      "state": "Perak",
+      "formatted_address": "Jabatan Warisan Negara Zon Tengah, Kota Tampan, 33400 Lenggong, Perak",
+      "latitude": 5.0549369,
+      "longitude": 100.9738969,
+      "category": "Museum",
+      "google_place_id": "ChIJWyheJuNntTERMmFrMJWf5xU"
+    },
+    {
+      "osm_id": "way/1307511146",
+      "name": "Galeri Lenggong Geopark",
+      "state": "Perak",
+      "formatted_address": "Kampung Baru Kota Tampan, 33400 Lenggong, Perak",
+      "latitude": 5.0534275,
+      "longitude": 100.9651166,
+      "category": "Cultural Heritage",
+      "google_place_id": "ChIJJxfWSwBdtTERfLFdb2_WqBU"
+    },
+    {
+      "osm_id": "way/1314692839",
+      "name": "Muzium Kapal Selam",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.2110072,
+      "longitude": 102.1972863,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1323886768",
+      "name": "Makam Datuk Permaisuri",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.4117382,
+      "longitude": 114.0316541,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1325531021",
+      "name": "Pusara Negara",
+      "state": "Putrajaya",
+      "formatted_address": "Putrajaya, Malaysia",
+      "latitude": 2.8847821,
+      "longitude": 101.6721622,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1351566546",
+      "name": "Buffalo #2",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.7557648,
+      "longitude": 115.0072385,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1370659387",
+      "name": "Lim Lian Geok Memorial",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Jalan Kerayong, Bukit Petaling, 50460 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur, Malaysia",
+      "latitude": 3.1274005,
+      "longitude": 101.700123,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJq6XNpOZJzDERibEOR9m95Xg"
+    },
+    {
+      "osm_id": "way/1413079823",
+      "name": "Istana Kedah",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 4.4830427,
+      "longitude": 101.3752871,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1417293111",
+      "name": "Istana Mahkota",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.5105231,
+      "longitude": 103.3938092,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1420921402",
+      "name": "Galeri Warisan Portugis",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1839597,
+      "longitude": 102.2665499,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1421454277",
+      "name": "CCIN",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.2043783,
+      "longitude": 102.223923,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1421930309",
+      "name": "怡力觀音堂",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1887215,
+      "longitude": 102.259324,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1488971757",
+      "name": "Rumah Api Tumpat",
+      "state": "Kelantan",
+      "formatted_address": "Kelantan, Malaysia",
+      "latitude": 6.2005469,
+      "longitude": 102.1670989,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1511781259",
+      "name": "Popular Cinema",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 5.1101964,
+      "longitude": 100.9681632,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1527852890",
+      "name": "华人甲必丹李为经之古墓",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1937512,
+      "longitude": 102.2580185,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1532994567",
+      "name": "惠安公會",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1962341,
+      "longitude": 102.2530761,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/1533948296",
+      "name": "Jirat Cina Bukit Cina",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.1953281,
+      "longitude": 102.2641254,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/158527518",
+      "name": "Pusat Sains Negara",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1494931,
+      "longitude": 101.64485,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/237483014",
+      "name": "Tun Mustapha Residential House",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 5.9522499,
+      "longitude": 116.052662,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/247175848",
+      "name": "Cheong Fatt Tze Mansion",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4215056,
+      "longitude": 100.3347742,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/276469375",
+      "name": "Rumah Kelahiran & Galeri P. Ramlee",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4102675,
+      "longitude": 100.3135195,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/295809206",
+      "name": "Muzium Negeri Kedah Darul Aman",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.1356088,
+      "longitude": 100.3688871,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/354527429",
+      "name": "Tapak Masjid Lama Hutan Kampung",
+      "state": "Kedah",
+      "formatted_address": "Jalan Hutan Kampung, Kampung Tok Sakar, 05350 Alor Setar, Kedah",
+      "latitude": 6.1622659,
+      "longitude": 100.394144,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJq6qqqqpFSzARiTLkRFCE5GE"
+    },
+    {
+      "osm_id": "way/355236587",
+      "name": "Tugu Pahlawan",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.4730652,
+      "longitude": 100.5070102,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/357346820",
+      "name": "Abandoned Shop Lot 2",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.7738129,
+      "longitude": 115.0147784,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/357346821",
+      "name": "Abandoned Shop Lot 1",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.7738646,
+      "longitude": 115.0152087,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/357346822",
+      "name": "Abandoned Shop Lot 3",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.77347,
+      "longitude": 115.0152889,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/357346823",
+      "name": "Abandoned Shop Lot 4",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.7730138,
+      "longitude": 115.0157413,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/357346824",
+      "name": "Abandoned Shop Lot 5",
+      "state": "Sarawak",
+      "formatted_address": "Sarawak, Malaysia",
+      "latitude": 4.772975,
+      "longitude": 115.0148917,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/370289667",
+      "name": "Kubu British",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 6.271875,
+      "longitude": 100.3995249,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/387592091",
+      "name": "Muzium Arkeologi Lembah Bujang",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.7380819,
+      "longitude": 100.4144826,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/387592106",
+      "name": "Tapak Arkeologi Sungai Batu",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.6947139,
+      "longitude": 100.4519612,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/387592107",
+      "name": "Tapak Arkeologi Sungai Batu",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.694081,
+      "longitude": 100.4547427,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/387592108",
+      "name": "Tapak Arkeologi Sungai Batu",
+      "state": "Kedah",
+      "formatted_address": "Kedah, Malaysia",
+      "latitude": 5.6960538,
+      "longitude": 100.4523869,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/449714746",
+      "name": "Insectarium",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.234453,
+      "longitude": 101.6339454,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/469530302",
+      "name": "Taman Peringatan Petagas",
+      "state": "Sabah",
+      "formatted_address": "Taman Peringatan Petagas, Kota Kinabalu, Sabah, Malaysia",
+      "latitude": 5.9211935,
+      "longitude": 116.0544479,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJK9gjQg9oOzIRkoiFyrkeEac"
+    },
+    {
+      "osm_id": "way/477022180",
+      "name": "Istana Hinggap Negeri Sembilan",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1378478,
+      "longitude": 101.6804263,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/480978259",
+      "name": "Muzium Perlombongan Bijih Timah Kinta",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.3258987,
+      "longitude": 101.1465162,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/489264811",
+      "name": "Istana Batu",
+      "state": "Kelantan",
+      "formatted_address": "Jalan Tengku Puteri, 15300, Kota Bharu, Bandar Kota Bharu, 15000 Kota Bharu, Kelantan, Malaysia",
+      "latitude": 6.1321161,
+      "longitude": 102.2373185,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJWa5F3MuvtjERaEtJy9M1YLw"
+    },
+    {
+      "osm_id": "way/499086161",
+      "name": "Taman Kinabalu",
+      "state": "Sabah",
+      "formatted_address": "Sabah, Malaysia",
+      "latitude": 6.2473491,
+      "longitude": 116.613429,
+      "category": "Natural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/504562130",
+      "name": "Muzium Perhutanan Gunung Jerai",
+      "state": "Kedah",
+      "formatted_address": "08300 Gurun, Kedah",
+      "latitude": 5.8058269,
+      "longitude": 100.4351582,
+      "category": "Museum",
+      "google_place_id": "ChIJcxtV26s6SzAR59nH1h6oP9A"
+    },
+    {
+      "osm_id": "way/532639357",
+      "name": "Little Millets atelier & gallery",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.4379324,
+      "longitude": 103.61856,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/536687451",
+      "name": "Masjid Ihsaniah Iskandariah",
+      "state": "Perak",
+      "formatted_address": "Kampung Kuala Dal, 33700 Padang Rengas, Perak",
+      "latitude": 4.7723719,
+      "longitude": 100.8936675,
+      "category": "Traditional Heritage Site",
+      "google_place_id": "ChIJYddBpoO8yjER1ouBM9LS0m0"
+    },
+    {
+      "osm_id": "way/553038463",
+      "name": "Muzium Kesenian Pahang",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8074115,
+      "longitude": 103.3258826,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/556503341",
+      "name": "Istana Abdul Aziz",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.8442443,
+      "longitude": 103.2853324,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/556610168",
+      "name": "Sun Wukong Statue",
+      "state": "Negeri Sembilan",
+      "formatted_address": "Negeri Sembilan, Malaysia",
+      "latitude": 2.929719,
+      "longitude": 101.9248563,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/563387137",
+      "name": "Pontian Crown statue",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 1.4887689,
+      "longitude": 103.3861792,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/571551068",
+      "name": "Istana Seri Menanti",
+      "state": "Negeri Sembilan",
+      "formatted_address": "P525+F4, Kampung Buyau, 71550 Seri Menanti, Negeri Sembilan",
+      "latitude": 2.7021926,
+      "longitude": 102.1585918,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJregVNAALzjERD5TdFKe9mt8"
+    },
+    {
+      "osm_id": "way/607843797",
+      "name": "Seh Tek Tong Cheah Kongsi",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4150519,
+      "longitude": 100.3383538,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/614406773",
+      "name": "Istana Kelantan",
+      "state": "Kuala Lumpur",
+      "formatted_address": "1314, Jalan Ampang Hilir 1, Desa Pahlawan, 55000 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur, Malaysia",
+      "latitude": 3.1558011,
+      "longitude": 101.7388314,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJHfeFHAA3zDERC6UogkQVfAs"
+    },
+    {
+      "osm_id": "way/620219254",
+      "name": "Muzium Insitu Jugra",
+      "state": "Selangor",
+      "formatted_address": "Kampung Permatang Pasir, Jugra Lama, 42700 Banting, Selangor",
+      "latitude": 2.8359391,
+      "longitude": 101.4127741,
+      "category": "Museum",
+      "google_place_id": "ChIJBdVqZ4umzTERvOJPHjxT2rw"
+    },
+    {
+      "osm_id": "way/649754915",
+      "name": "World's Bee Museum",
+      "state": "Melaka",
+      "formatted_address": "Melaka, Malaysia",
+      "latitude": 2.3000587,
+      "longitude": 102.311448,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/695914436",
+      "name": "Mimaland",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.2834863,
+      "longitude": 101.721883,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/704563220",
+      "name": "Geological Museum Ipoh",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.597758,
+      "longitude": 101.1193626,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/704782171",
+      "name": "Istana Flintstone",
+      "state": "Johor",
+      "formatted_address": "Johor, Malaysia",
+      "latitude": 2.3656207,
+      "longitude": 103.8973553,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/711934516",
+      "name": "Banglo Sri Selangor",
+      "state": "Selangor",
+      "formatted_address": "Selangor, Malaysia",
+      "latitude": 3.7056647,
+      "longitude": 101.7378784,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/713885332",
+      "name": "Banglo Jeranjut",
+      "state": "Pahang",
+      "formatted_address": "Pahang, Malaysia",
+      "latitude": 3.7209628,
+      "longitude": 101.7416113,
+      "category": "Traditional Heritage Site",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/722121450",
+      "name": "Surau Muzium",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8605716,
+      "longitude": 100.7456882,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/722229612",
+      "name": "Muzium Perak",
+      "state": "Perak",
+      "formatted_address": "Jalan Taming Sari, 34000 Taiping, Perak",
+      "latitude": 4.8604418,
+      "longitude": 100.7453043,
+      "category": "Museum",
+      "google_place_id": "ChIJFwxaMPeuyjER1PLyYIdc6c0"
+    },
+    {
+      "osm_id": "way/745554996",
+      "name": "DESA PARKCITY",
+      "state": "Kuala Lumpur",
+      "formatted_address": "Kuala Lumpur, Malaysia",
+      "latitude": 3.1818947,
+      "longitude": 101.6346037,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/778885769",
+      "name": "Istana Cempaka Sari",
+      "state": "Perak",
+      "formatted_address": "27, Lebuh 1, Taman Victoria, 30250 Ipoh, Perak, Malaysia",
+      "latitude": 4.5868414,
+      "longitude": 101.1124056,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJvfL8x03syjERiwbwxrPtSPI"
+    },
+    {
+      "osm_id": "way/808277518",
+      "name": "Kediaman Pegawai Daerah Daerah Barat Daya",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.3567767,
+      "longitude": 100.2260275,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/824860061",
+      "name": "Galeri Puo",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.5874428,
+      "longitude": 101.1249075,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/839896414",
+      "name": "Tapak Istana Lama Kota Kuala Kedah",
+      "state": "Kedah",
+      "formatted_address": "Kampung Seberang Kota, 06600 Kuala Kedah, Kedah",
+      "latitude": 6.109378,
+      "longitude": 100.2871773,
+      "category": "Historical Monument",
+      "google_place_id": "ChIJzcqMuO1CSzAR9U93LaUdHJw"
+    },
+    {
+      "osm_id": "way/921288308",
+      "name": "Dark Mansion - 3D Glow In The Dark Museum",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4163984,
+      "longitude": 100.3324326,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/962258024",
+      "name": "Tanah Perkuburan Perang Taiping",
+      "state": "Perak",
+      "formatted_address": "Perak, Malaysia",
+      "latitude": 4.8588114,
+      "longitude": 100.7572761,
+      "category": "Historical Monument",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/983525462",
+      "name": "Rumah Kelahiran P. Ramlee",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4100871,
+      "longitude": 100.3138065,
+      "category": "Museum",
+      "google_place_id": null
+    },
+    {
+      "osm_id": "way/989309415",
+      "name": "Memorial Park Mural",
+      "state": "Penang",
+      "formatted_address": "Penang, Malaysia",
+      "latitude": 5.4057083,
+      "longitude": 100.2824863,
+      "category": "Cultural Heritage",
+      "google_place_id": null
+    }
+  ]
+}

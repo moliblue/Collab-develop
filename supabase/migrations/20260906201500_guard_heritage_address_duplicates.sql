@@ -44,22 +44,18 @@ begin
   return new;
 end;
 $$;
-
 drop trigger if exists normalize_heritage_location_before_write
   on public.heritage_locations;
 create trigger normalize_heritage_location_before_write
 before insert or update of name, state, address, latitude, longitude, is_active
 on public.heritage_locations
 for each row execute function public.normalize_heritage_location_before_write();
-
 update public.heritage_locations
 set address = concat_ws(', ', name, nullif(btrim(state), ''), 'Malaysia'),
     updated_at = now()
 where btrim(address) = '';
-
 alter table public.heritage_locations
   drop constraint if exists heritage_locations_address_not_blank;
 alter table public.heritage_locations
   add constraint heritage_locations_address_not_blank
   check (btrim(address) <> '');
-

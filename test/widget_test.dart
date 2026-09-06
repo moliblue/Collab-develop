@@ -169,6 +169,20 @@ void main() {
       );
       expect(pool, destinations);
     });
+
+    test(
+      'temporarily excludes a rejected revisit when an alternative exists',
+      () {
+        final pool = mysteryDestinationSelectionPool(
+          destinations,
+          completedDestinationIds: const <String>{'a', 'b', 'c'},
+          recentDestinationIds: const <String>{'a', 'b', 'c'},
+          excludedDestinationId: 'a',
+        );
+        expect(pool.map((destination) => destination.id), isNot(contains('a')));
+        expect(pool, isNotEmpty);
+      },
+    );
   });
 
   test('completed Mystery pins refresh through the Map ViewModel', () async {
@@ -1654,6 +1668,90 @@ void main() {
     );
   });
 
+  testWidgets(
+    'provisional Solo revisit can be accepted without a second start',
+    (tester) async {
+      final repository = FakeShakeFindRepository();
+      repository.active = journey.Journey(
+        id: 'provisional:destination-1',
+        status: journey.JourneyStatus.active,
+        mode: journey.JourneyMode.solo,
+        clue: 'A fresh clue',
+        locationHint: 'Mystery area',
+        distanceMeters: 1000,
+        destination: repository.destination,
+        isRevisit: true,
+      );
+      final (model, _) = await pumpApp(tester, repository: repository);
+      model.mystery.resumeJourney();
+      await tester.pump();
+
+      expect(find.text('Play This Revisit'), findsOneWidget);
+      expect(find.text('Shake Again for a New Place'), findsOneWidget);
+      await tester.tap(find.text('Play This Revisit'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(repository.revisitAcceptCount, 1);
+      expect(repository.startCount, 0);
+      expect(model.mystery.journey?.id, 'accepted-revisit');
+    },
+  );
+
+  testWidgets(
+    'rejecting a provisional revisit returns to shake without writes',
+    (tester) async {
+      final repository = FakeShakeFindRepository();
+      repository.active = journey.Journey(
+        id: 'provisional:destination-1',
+        status: journey.JourneyStatus.active,
+        mode: journey.JourneyMode.solo,
+        clue: 'A fresh clue',
+        locationHint: 'Mystery area',
+        distanceMeters: 1000,
+        destination: repository.destination,
+        isRevisit: true,
+      );
+      final (model, _) = await pumpApp(tester, repository: repository);
+      model.mystery.resumeJourney();
+      await tester.pump();
+      await tester.tap(find.text('Shake Again for a New Place'));
+      await tester.pump();
+
+      expect(repository.revisitRejectCount, 1);
+      expect(repository.startCount, 0);
+      expect(model.mystery.journey, isNull);
+      expect(model.mystery.stage, MysteryStage.shake);
+    },
+  );
+
+  testWidgets('adjusting preferences discards the provisional revisit', (
+    tester,
+  ) async {
+    final repository = FakeShakeFindRepository();
+    repository.active = journey.Journey(
+      id: 'provisional:destination-1',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: 'A fresh clue',
+      locationHint: 'Mystery area',
+      distanceMeters: 1000,
+      destination: repository.destination,
+      isRevisit: true,
+    );
+    final (model, _) = await pumpApp(tester, repository: repository);
+    model.mystery.resumeJourney();
+    await tester.pump();
+    await tester.tap(find.text('Adjust Preferences'));
+    await tester.pump();
+
+    expect(repository.revisitRejectCount, 1);
+    expect(repository.startCount, 0);
+    expect(model.mystery.journey, isNull);
+    expect(model.mystery.stage, MysteryStage.home);
+    expect(model.mystery.journeyActive, isFalse);
+  });
+
   testWidgets('Solo arrival simulation completes once and awards XP once', (
     tester,
   ) async {
@@ -1958,6 +2056,8 @@ class FakeShakeFindRepository implements ShakeFindRepository {
   Object? startError;
   VoidCallback? shakeCallback;
   final Map<String, Set<String>> groupVotes = <String, Set<String>>{};
+  int revisitAcceptCount = 0;
+  int revisitRejectCount = 0;
 
   journey.JourneyDestination get destination =>
       const journey.JourneyDestination(
@@ -2057,6 +2157,32 @@ class FakeShakeFindRepository implements ShakeFindRepository {
       isHost: mode == journey.JourneyMode.group,
     );
     return active!;
+  }
+
+  @override
+  Future<journey.Journey> acceptSoloRevisit(
+    journey.Journey provisionalJourney,
+  ) async {
+    revisitAcceptCount++;
+    active = journey.Journey(
+      id: 'accepted-revisit',
+      participantId: 'participant-a',
+      status: journey.JourneyStatus.active,
+      mode: journey.JourneyMode.solo,
+      clue: provisionalJourney.clue,
+      locationHint: provisionalJourney.locationHint,
+      distanceMeters: provisionalJourney.distanceMeters,
+      destination: provisionalJourney.destination,
+      preferences: provisionalJourney.preferences,
+      isRevisit: true,
+    );
+    return active!;
+  }
+
+  @override
+  Future<void> rejectSoloRevisit(journey.Journey provisionalJourney) async {
+    revisitRejectCount++;
+    active = null;
   }
 
   @override

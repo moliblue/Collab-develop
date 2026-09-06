@@ -45,10 +45,13 @@ class DiscoveryViewModel extends ChangeNotifier {
           .toSet()
           .toList()
         ..sort());
-  List<String> get availableCategories => const <String>[
-    'Traditional Heritage Site',
-    'Heritage Workshops',
-  ];
+  List<String> get availableCategories =>
+      (_places
+          .map((place) => place.category)
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort());
   String? takeActionError() {
     final value = _actionError;
     _actionError = null;
@@ -111,7 +114,15 @@ class DiscoveryViewModel extends ChangeNotifier {
     _detailsLoading = true;
     notifyListeners();
     try {
-      final reviews = await _repository.getReviews(value.id);
+      final results = await Future.wait<dynamic>([
+        _repository.getDestinationImages(value.id),
+        _repository.getReviews(value.id),
+      ]);
+      final images = results[0] as List<DestinationImage>;
+      final reviews = results[1] as List<Review>;
+      value.images
+        ..clear()
+        ..addAll(images);
       value.reviews
         ..clear()
         ..addAll(reviews);

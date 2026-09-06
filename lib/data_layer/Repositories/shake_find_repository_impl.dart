@@ -40,6 +40,8 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   Journey? _activeJourney;
   bool _creatingJourney = false;
   bool _completingParticipant = false;
+  _PendingSoloSelection? _pendingSoloSelection;
+  String? _excludeFromNextSoloSelection;
 
   SupabaseClient get _client => _supabase.client;
 
@@ -198,6 +200,49 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       previouslyUsedClueIds: selection.previouslyUsedClueIds,
     );
     final totalHintCount = await _additionalHintCount(destination.id);
+    if (selection.isRevisit) {
+      final provisional = Journey(
+        id: 'provisional:${destination.id}',
+        participantId: '',
+        status: JourneyStatus.active,
+        mode: JourneyMode.solo,
+        clue: _clueText(clue),
+        locationHint: 'Within ${preferences.radiusKm.toStringAsFixed(0)} km',
+        distanceMeters: _location.distanceBetween(
+          location,
+          destination.latitude,
+          destination.longitude,
+        ),
+        destination: destination,
+        preferences: preferences,
+        totalHintCount: totalHintCount,
+        isRevisit: true,
+      );
+      _pendingSoloSelection = _PendingSoloSelection(
+        journey: provisional,
+        clueId: clue['id'].toString(),
+      );
+      _activeJourney = provisional;
+      return provisional;
+    }
+    return _persistSoloJourney(
+      preferences: preferences,
+      location: location,
+      selection: selection,
+      clue: clue,
+      totalHintCount: totalHintCount,
+    );
+  }
+
+  Future<Journey> _persistSoloJourney({
+    required TravelPreferences preferences,
+    required LocationReading location,
+    required _DestinationSelection selection,
+    required Map<String, dynamic> clue,
+    required int totalHintCount,
+  }) async {
+    final userId = _supabase.requireCurrentUserId();
+    final destination = selection.destination;
     String? journeyId;
     try {
       final journeyRow = await _client
@@ -251,6 +296,46 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
     }
   }
 
+  @override
+  Future<Journey> acceptSoloRevisit(Journey provisionalJourney) async {
+    final pending = _pendingSoloSelection;
+    if (pending == null || pending.journey.id != provisionalJourney.id) {
+      throw const JourneyDataException(
+        'This Revisit Challenge is no longer available.',
+      );
+    }
+    final location = await _location.getFreshLocation();
+    final result = await _persistSoloJourney(
+      preferences: provisionalJourney.preferences,
+      location: location,
+      selection: _DestinationSelection(
+        destination: provisionalJourney.destination!,
+        isRevisit: true,
+        previouslyUsedClueIds: const <String>{},
+      ),
+      clue: <String, dynamic>{
+        'id': pending.clueId,
+        'clue_text': provisionalJourney.clue,
+      },
+      totalHintCount: provisionalJourney.totalHintCount,
+    );
+    _pendingSoloSelection = null;
+    return result;
+  }
+
+  @override
+  Future<void> rejectSoloRevisit(Journey provisionalJourney) async {
+    if (!provisionalJourney.id.startsWith('provisional:') ||
+        provisionalJourney.mode != JourneyMode.solo) {
+      throw const JourneyDataException(
+        'Only a provisional Solo revisit can be changed.',
+      );
+    }
+    _excludeFromNextSoloSelection = provisionalJourney.destination!.id;
+    _pendingSoloSelection = null;
+    _activeJourney = null;
+  }
+
   Future<_DestinationSelection> _selectDestination(
     TravelPreferences preferences,
     LocationReading location, {
@@ -288,10 +373,13 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
       recentIds.add(visit.destinationId);
       if (recentIds.length == 5) break;
     }
+    final rejectedId = _excludeFromNextSoloSelection;
+    _excludeFromNextSoloSelection = null;
     final pool = mysteryDestinationSelectionPool(
       candidates,
       completedDestinationIds: visitedIds,
       recentDestinationIds: recentIds,
+      excludedDestinationId: rejectedId,
     );
     final destination = pool[_random.nextInt(pool.length)];
     return _DestinationSelection(
@@ -679,6 +767,11 @@ class ShakeFindRepositoryImpl implements ShakeFindRepository {
   Future<void> cancelJourney() async {
     final journey = _activeJourney ?? await getActiveJourney();
     if (journey == null) return;
+    if (journey.id.startsWith('provisional:')) {
+      _pendingSoloSelection = null;
+      _activeJourney = null;
+      return;
+    }
     if (journey.id.startsWith('waiting:') && journey.groupRoomId != null) {
       await _leaveGroupRoom(journey.groupRoomId!);
       _activeJourney = null;
@@ -1768,19 +1861,26 @@ List<JourneyDestination> mysteryDestinationSelectionPool(
   List<JourneyDestination> candidates, {
   required Set<String> completedDestinationIds,
   required Set<String> recentDestinationIds,
+  String? excludedDestinationId,
 }) {
-  final unvisited = candidates
+  final alternatives = excludedDestinationId == null
+      ? candidates
+      : candidates
+            .where((destination) => destination.id != excludedDestinationId)
+            .toList(growable: false);
+  final eligible = alternatives.isEmpty ? candidates : alternatives;
+  final unvisited = eligible
       .where((destination) => !completedDestinationIds.contains(destination.id))
       .toList(growable: false);
   if (unvisited.isNotEmpty) return unvisited;
-  final olderVisits = candidates
+  final olderVisits = eligible
       .where(
         (destination) =>
             completedDestinationIds.contains(destination.id) &&
             !recentDestinationIds.contains(destination.id),
       )
       .toList(growable: false);
-  return olderVisits.isNotEmpty ? olderVisits : candidates;
+  return olderVisits.isNotEmpty ? olderVisits : eligible;
 }
 
 class _DestinationSelection {
@@ -1793,6 +1893,12 @@ class _DestinationSelection {
   final JourneyDestination destination;
   final bool isRevisit;
   final Set<String> previouslyUsedClueIds;
+}
+
+class _PendingSoloSelection {
+  const _PendingSoloSelection({required this.journey, required this.clueId});
+  final Journey journey;
+  final String clueId;
 }
 
 class _CompletedDestinationVisit {

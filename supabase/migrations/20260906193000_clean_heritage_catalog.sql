@@ -12,7 +12,6 @@ set state = coalesce(
     ),
     updated_at = now()
 where lower(btrim(state)) in ('malaysia', 'my', 'unknown', 'n/a');
-
 -- Photo/geocoding providers need a non-empty location query. Coordinates stay
 -- authoritative for routing; this text is a safe searchable fallback.
 update public.heritage_locations
@@ -24,7 +23,6 @@ set address = concat_ws(
     ),
     updated_at = now()
 where btrim(address) = '';
-
 -- Deactivate likely duplicate OSM node/way representations of the same named
 -- place within roughly 150 metres. Do not delete rows or cascade user data.
 with ranked as (
@@ -50,7 +48,6 @@ set is_active = false,
 from ranked
 where location.osm_id = ranked.osm_id
   and ranked.duplicate_rank > 1;
-
 create index if not exists heritage_locations_active_normalized_name_idx
   on public.heritage_locations (
     regexp_replace(lower(btrim(name)), '[^a-z0-9]+', '', 'g')

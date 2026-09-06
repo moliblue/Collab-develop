@@ -50,4 +50,3 @@ set is_active = false,
     updated_at = now()
 from duplicate_losers
 where location.osm_id = duplicate_losers.osm_id;
-
