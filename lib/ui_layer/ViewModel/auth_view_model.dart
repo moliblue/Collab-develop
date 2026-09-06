@@ -288,7 +288,10 @@ class AuthViewModel extends ChangeNotifier {
     return error;
   }
 
+
   String get authRedirectUrl => AuthRedirectResolver.resolve();
+
+
 
   Future<void> _finishEmailConfirmation() async {
     await _supabase.signOutLocal();
