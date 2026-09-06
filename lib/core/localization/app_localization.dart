@@ -75,6 +75,26 @@ class AppLocalization {
       'Local Food': 'Makanan Tempatan',
       'Local Craft': 'Kraf Tempatan',
       'Historical Monument': 'Monumen Bersejarah',
+      'Explore Malaysia your way': 'Terokai Malaysia dengan cara anda',
+      'My trip': 'Perjalanan saya',
+      'Trips': 'Perjalanan',
+      'Travelers': 'Pengembara',
+      'UPCOMING TRIP': 'PERJALANAN AKAN DATANG',
+      'Manage date tabs': 'Urus tab tarikh',
+      'Current location': 'Lokasi semasa',
+      'auto-sorted by time': 'disusun automatik mengikut masa',
+      'activity cards': 'kad aktiviti',
+      'destinations': 'destinasi',
+      'scheduled stops': 'hentian dijadualkan',
+      'itinerary': 'jadual perjalanan',
+      'View Route': 'Lihat laluan',
+      'Create Itinerary Activity Card': 'Cipta kad aktiviti jadual perjalanan',
+      'Activity Title *': 'Tajuk aktiviti *',
+      'Searchable / Selectable Location *': 'Lokasi boleh dicari / dipilih *',
+      'Search any location in Malaysia': 'Cari mana-mana lokasi di Malaysia',
+      'Start Time *': 'Masa mula *',
+      'Category': 'Kategori',
+      'Optional Description / Notes': 'Penerangan / nota pilihan',
     },
     'zh': {
       'Discover': '探索',
@@ -142,6 +162,26 @@ class AppLocalization {
       'Local Food': '当地美食',
       'Local Craft': '当地工艺',
       'Historical Monument': '历史古迹',
+      'Explore Malaysia your way': '以您的方式探索马来西亚',
+      'My trip': '我的行程',
+      'Trips': '行程',
+      'Travelers': '旅行者',
+      'UPCOMING TRIP': '即将开始的行程',
+      'Manage date tabs': '管理日期页',
+      'Current location': '当前位置',
+      'auto-sorted by time': '按时间自动排序',
+      'activity cards': '活动卡',
+      'destinations': '目的地',
+      'scheduled stops': '个预定站点',
+      'itinerary': '行程安排',
+      'View Route': '查看路线',
+      'Create Itinerary Activity Card': '创建行程活动卡',
+      'Activity Title *': '活动标题 *',
+      'Searchable / Selectable Location *': '可搜索／可选择地点 *',
+      'Search any location in Malaysia': '搜索马来西亚的任何地点',
+      'Start Time *': '开始时间 *',
+      'Category': '类别',
+      'Optional Description / Notes': '可选说明／备注',
     },
     'ta': {
       'Discover': 'கண்டறியுங்கள்',
@@ -211,11 +251,47 @@ class AppLocalization {
       'Local Food': 'உள்ளூர் உணவு',
       'Local Craft': 'உள்ளூர் கைவினை',
       'Historical Monument': 'வரலாற்றுச் சின்னம்',
+      'Explore Malaysia your way': 'மலேசியாவை உங்கள் வழியில் ஆராயுங்கள்',
+      'My trip': 'என் பயணம்',
+      'Trips': 'பயணங்கள்',
+      'Travelers': 'பயணிகள்',
+      'UPCOMING TRIP': 'வரவிருக்கும் பயணம்',
+      'Manage date tabs': 'தேதி தாவல்களை நிர்வகி',
+      'Current location': 'தற்போதைய இடம்',
+      'auto-sorted by time': 'நேரப்படி தானாக வரிசைப்படுத்தப்பட்டது',
+      'activity cards': 'செயல்பாட்டு அட்டைகள்',
+      'destinations': 'இலக்குகள்',
+      'scheduled stops': 'திட்டமிட்ட நிறுத்தங்கள்',
+      'itinerary': 'பயண அட்டவணை',
+      'View Route': 'வழியைக் காண்க',
+      'Create Itinerary Activity Card': 'பயணச் செயல்பாட்டு அட்டையை உருவாக்கு',
+      'Activity Title *': 'செயல்பாட்டுத் தலைப்பு *',
+      'Searchable / Selectable Location *':
+          'தேடக்கூடிய / தேர்ந்தெடுக்கக்கூடிய இடம் *',
+      'Search any location in Malaysia':
+          'மலேசியாவில் எந்த இடத்தையும் தேடுங்கள்',
+      'Start Time *': 'தொடக்க நேரம் *',
+      'Category': 'வகை',
+      'Optional Description / Notes': 'விருப்ப விளக்கம் / குறிப்புகள்',
     },
   };
 
-  String text(String english) =>
-      _values[locale.languageCode]?[english] ?? english;
+  String text(String english) {
+    final values = _values[locale.languageCode];
+    if (values == null) return english;
+    final exact = values[english];
+    if (exact != null) return exact;
+    final lower = english.toLowerCase();
+    for (final entry in values.entries) {
+      if (entry.key.toLowerCase() == lower) return entry.value;
+    }
+    var result = english;
+    for (final entry in values.entries) {
+      if (entry.key.length < 5) continue;
+      result = result.replaceAll(entry.key, entry.value);
+    }
+    return result;
+  }
 }
 
 extension LocalizedBuildContext on BuildContext {
