@@ -1201,7 +1201,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         final index = int.parse(placeId.split('#').last);
                         final p = savedPlaces[index];
                         selected = p;
-                        location.text = p.address;
+                        location.text = _placeLocation(p);
                         if (title.text.isEmpty) title.text = p.name;
                         category = _plannerCategoryForPlace(p);
                       }
@@ -1291,7 +1291,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         ),
                         onTap: () => sheetSet(() {
                           selected = place;
-                          location.text = place.address;
+                          location.text = _placeLocation(place);
                           if (title.text.isEmpty) title.text = place.name;
                           category = _plannerCategoryForPlace(place);
                           locationSuggestions = <HeritagePlace>[];
@@ -1396,13 +1396,22 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                 Expanded(
                   child: FilledButton(
                     onPressed: () async {
-                      if (time.text.trim().isEmpty ||
-                          title.text.trim().isEmpty ||
-                          location.text.trim().isEmpty) {
+                      if (title.text.trim().isEmpty) {
                         widget.notify(
-                          PlannerMessages.requiredField,
+                          'Enter an activity title.',
                           AppColors.danger,
                         );
+                        return;
+                      }
+                      if (location.text.trim().isEmpty) {
+                        widget.notify(
+                          'Select or search for a location in Malaysia.',
+                          AppColors.danger,
+                        );
+                        return;
+                      }
+                      if (time.text.trim().isEmpty) {
+                        widget.notify('Select a start time.', AppColors.danger);
                         return;
                       }
                       if (!_validPlannerTime(time.text)) {
@@ -1441,7 +1450,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                             id: 'a-${DateTime.now().millisecondsSinceEpoch}',
                             time: time.text.trim(),
                             title: title.text.trim(),
-                            location: selected!.address,
+                            location: _placeLocation(selected!),
                             category: category,
                             latitude: selected!.latitude,
                             longitude: selected!.longitude,
@@ -1518,7 +1527,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         var resolvedLatitude = item.latitude;
                         var resolvedLongitude = item.longitude;
                         if (selected != null) {
-                          resolvedLocation = selected!.address;
+                          resolvedLocation = _placeLocation(selected!);
                           resolvedLatitude = selected!.latitude;
                           resolvedLongitude = selected!.longitude;
                         } else if (location.text.trim() != item.location) {
@@ -1635,6 +1644,12 @@ class _PlanModuleViewState extends State<PlanModuleView> {
 
   bool _containsCjk(String value) =>
       RegExp(r'[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]').hasMatch(value);
+
+  String _placeLocation(HeritagePlace place) {
+    final address = place.address.trim();
+    if (address.isNotEmpty) return address;
+    return place.name.trim();
+  }
 
   String _plannerCategoryForPlace(HeritagePlace place) {
     if (place.category == 'Food' || place.category == 'Local Food') {

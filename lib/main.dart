@@ -107,7 +107,7 @@ Map<String, String> _fragmentParameters(String fragment) {
   }
 }
 
-class FindItMyApp extends StatelessWidget {
+class FindItMyApp extends StatefulWidget {
   const FindItMyApp({
     super.key,
     this.viewModel,
@@ -126,6 +126,21 @@ class FindItMyApp extends StatelessWidget {
   final bool initialRecoveryError;
 
   @override
+  State<FindItMyApp> createState() => _FindItMyAppState();
+}
+
+class _FindItMyAppState extends State<FindItMyApp> {
+  late final AppViewModel _appViewModel =
+      widget.appViewModel ??
+      AppViewModel(
+        authViewModel: AuthViewModel(
+          initialNotice: widget.initialAuthNotice,
+          initialPasswordRecovery: widget.initialPasswordRecovery,
+          initialRecoveryError: widget.initialRecoveryError,
+        ),
+      );
+
+  @override
   Widget build(BuildContext context) => ValueListenableBuilder<Locale>(
     valueListenable: ProfileViewModel.appLocale,
     builder: (context, locale, _) => MaterialApp(
@@ -137,19 +152,10 @@ class FindItMyApp extends StatelessWidget {
         Locale('en'),
         Locale('ms'),
         Locale('zh'),
+        Locale('ta'),
       ],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      home: AppShellView(
-        viewModel:
-            appViewModel ??
-            AppViewModel(
-              authViewModel: AuthViewModel(
-                initialNotice: initialAuthNotice,
-                initialPasswordRecovery: initialPasswordRecovery,
-                initialRecoveryError: initialRecoveryError,
-              ),
-            ),
-      ),
+      home: AppShellView(viewModel: _appViewModel),
     ),
   );
 }
