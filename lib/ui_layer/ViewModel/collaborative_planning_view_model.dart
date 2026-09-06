@@ -24,6 +24,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   PlanSection _section = PlanSection.workspace;
   int _dayIndex = 0;
   String _planName = 'Malaysia UNESCO Heritage Tour';
+  List<String> _planRegions = const <String>[];
   bool _exporting = false;
   final PlannerPdfService _pdfService = PlannerPdfService();
   final CollaborativePlannerRepository repository;
@@ -36,12 +37,14 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   bool _saving = false;
   Timer? _realtimeDebounce;
   RealtimeChannel? _realtimeChannel;
+  int _loadGeneration = 0;
   bool get supabaseReady => _supabaseReady;
   String? get supabaseError => _supabaseError;
 
   Future<void> refreshAuthenticatedSession() => _initializeSupabase();
 
   Future<void> _initializeSupabase() async {
+    final generation = ++_loadGeneration;
     if (!repository.supabase.isConfigured) {
       notifyListeners();
       return;
@@ -49,10 +52,12 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     try {
       _supabaseError = null;
       final session = await repository.authenticate();
-      _supabaseReady = session != null;
-      _availablePlans = await repository.loadPlans(
+      final plans = await repository.loadPlans(
         accessToken: session?.accessToken,
       );
+      if (generation != _loadGeneration) return;
+      _supabaseReady = session != null;
+      _availablePlans = plans;
       if (_availablePlans.isNotEmpty) {
         await _loadPlan(_availablePlans.first.id, notify: false);
       } else {
@@ -83,6 +88,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _planId = loaded.id;
       _inviteCode = loaded.inviteCode;
       _planName = loaded.name;
+      _planRegions = List<String>.from(loaded.regions);
       _planPersisted = true;
       _planRevision = loaded.revision;
       _days = loaded.days.indexed.map((entry) {
@@ -184,6 +190,8 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
 
   List<String> get history =>
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
+  List<planner.TravelPlan> get availablePlans =>
+      List<planner.TravelPlan>.unmodifiable(_availablePlans);
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
@@ -475,11 +483,20 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     return _persistCurrentPlan();
   }
 
-  Future<bool> createPlan(String name, DateTime start, int dayCount) async {
+  Future<bool> createPlan(
+    String name,
+    DateTime start,
+    int dayCount, {
+    required List<String> regions,
+  }) async {
+    // Invalidate an older initialization/realtime load before creating a new
+    // authoritative plan so a slow response cannot overwrite the new card.
+    _loadGeneration++;
     final previousPlanId = _planId;
     final previousInviteCode = _inviteCode;
     final previousRevision = _planRevision;
     final previousPlanName = _planName;
+    final previousPlanRegions = _planRegions;
     final previousDays = _days;
     final previousSection = _section;
     final previousPersisted = _planPersisted;
@@ -488,6 +505,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     _planRevision = 0;
     _planPersisted = false;
     _planName = name.trim();
+    _planRegions = List<String>.unmodifiable(regions);
     _days = List<PlanDay>.generate(
       dayCount,
       (int i) => PlanDay(
@@ -499,13 +517,13 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     );
     _dayIndex = 0;
     _section = PlanSection.workspace;
-    notifyListeners();
     final saved = await _persistCurrentPlan();
     if (!saved) {
       _planId = previousPlanId;
       _inviteCode = previousInviteCode;
       _planRevision = previousRevision;
       _planName = previousPlanName;
+      _planRegions = previousPlanRegions;
       _days = previousDays;
       _section = previousSection;
       _planPersisted = previousPersisted;
@@ -582,6 +600,8 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
           startDate: mappedDays.first.date,
           endDate: mappedDays.last.date,
           inviteCode: 'HERITAGE-${_planId!.substring(0, 6).toUpperCase()}',
+          regions: _planRegions,
+          primaryRegion: _planRegions.firstOrNull,
           revision: _planRevision,
           days: mappedDays,
         ),
@@ -592,9 +612,11 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _inviteCode = 'HERITAGE-${_planId!.substring(0, 6).toUpperCase()}';
       _supabaseReady = true;
       _supabaseError = null;
-      _availablePlans = await repository.loadPlans(
+      final generation = ++_loadGeneration;
+      final plans = await repository.loadPlans(
         accessToken: session.accessToken,
       );
+      if (generation == _loadGeneration) _availablePlans = plans;
       notifyListeners();
       return true;
     } catch (error) {
@@ -665,6 +687,22 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  Future<bool> isCurrentUserMemberOfPlan(String name) async {
+    final matching = _availablePlans.where((plan) => plan.name == name);
+    if (matching.isEmpty) return false;
+    try {
+      final session = await repository.authenticate();
+      return repository.isCurrentUserMember(
+        matching.first.id,
+        accessToken: session?.accessToken,
+      );
+    } catch (error) {
+      _supabaseError = '$error';
+      notifyListeners();
+      rethrow;
+    }
   }
 
   Future<bool> updateRole(Traveller value) async {
@@ -829,6 +867,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   void reset() {
     _days = createPlanDays();
     _planName = 'Malaysia UNESCO Heritage Tour';
+    _planRegions = const <String>[];
     _section = PlanSection.workspace;
     _dayIndex = 0;
     notifyListeners();

@@ -4,6 +4,16 @@ import '../services/osrm_service.dart';
 import '../services/supabase_planner_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+class PlanMembershipRequiredException implements Exception {
+  const PlanMembershipRequiredException();
+
+  static const message =
+      'You are still a member of this travel plan. Please exit the group first before deleting the plan.';
+
+  @override
+  String toString() => message;
+}
+
 class CollaborativePlannerRepository {
   CollaborativePlannerRepository({
     SupabasePlannerService? supabase,
@@ -226,7 +236,17 @@ class CollaborativePlannerRepository {
     return plan.revision;
   }
 
+  Future<bool> isCurrentUserMember(String planId, {String? accessToken}) async {
+    final result = await supabase.rpc('is_plan_member', <String, dynamic>{
+      'target_plan': planId,
+    }, accessToken: accessToken);
+    return result == true;
+  }
+
   Future<void> deletePlan(String planId, {String? accessToken}) async {
+    if (await isCurrentUserMember(planId, accessToken: accessToken)) {
+      throw const PlanMembershipRequiredException();
+    }
     await supabase.delete(
       'travel_plans',
       'id=eq.$planId',

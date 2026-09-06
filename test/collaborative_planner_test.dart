@@ -6,6 +6,9 @@ import 'package:findit_my/features/collaborative_planner/services/osm_service.da
 import 'package:findit_my/features/collaborative_planner/services/osrm_service.dart';
 import 'package:findit_my/features/collaborative_planner/services/supabase_planner_service.dart';
 import 'package:findit_my/features/collaborative_planner/repositories/collaborative_planner_repository.dart';
+import 'package:findit_my/ui_layer/View/plan_module_view.dart';
+import 'package:findit_my/ui_layer/ViewModel/collaborative_planning_view_model.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -41,9 +44,13 @@ void main() {
       startDate: DateTime(2026, 8, 20),
       endDate: DateTime(2026, 8, 23),
       inviteCode: 'HERITAGE-2026',
+      regions: const <String>['Johor', 'Melaka'],
     );
     expect(plan.encodeSharePayload(), isNotEmpty);
     expect(plan.activityCount, 0);
+    expect(plan.primaryRegion, 'Johor');
+    expect(plan.coverAsset, 'assets/discovery_placeholder.png');
+    expect(plan.toJson()['trip_regions'], <String>['Johor', 'Melaka']);
   });
 
   test('general OSM search is restricted to Malaysia', () async {
@@ -138,6 +145,8 @@ void main() {
             'start_date': '2026-09-10',
             'end_date': '2026-09-10',
             'invite_code': 'TEST-PLAN',
+            'trip_regions': <String>['Penang', 'Kuala Lumpur'],
+            'primary_region': 'Penang',
             'revision': 4,
           },
         ],
@@ -193,6 +202,8 @@ void main() {
 
     expect(plan?.name, 'Persisted plan');
     expect(plan?.revision, 4);
+    expect(plan?.primaryRegion, 'Penang');
+    expect(plan?.coverAsset, 'assets/blue_mansion.png');
     expect(plan?.days.single.activities.single.title, 'Batu Caves');
     expect(plan?.members.single.isAdmin, isTrue);
     repository.dispose();
@@ -204,6 +215,9 @@ void main() {
       requests.add(request);
       if (request.url.path.endsWith('/rpc/claim_plan_revision')) {
         return http.Response('1', 200);
+      }
+      if (request.url.path.endsWith('/rpc/is_plan_member')) {
+        return http.Response('false', 200);
       }
       return http.Response('', 204);
     });
@@ -221,6 +235,7 @@ void main() {
       startDate: DateTime(2026, 9, 10),
       endDate: DateTime(2026, 9, 10),
       inviteCode: 'CRUD-PLAN',
+      regions: const <String>['Selangor'],
       days: <PlannerDay>[
         PlannerDay(
           id: '30000000-0000-4000-8000-000000000001',
@@ -276,6 +291,113 @@ void main() {
     );
     expect(jsonDecode(planPatch.body)['name'], 'Updated CRUD plan');
     expect(jsonDecode(planPatch.body)['revision'], 1);
+    expect(jsonDecode(planPatch.body)['primary_region'], 'Selangor');
     repository.dispose();
   });
+
+  test(
+    'repository blocks deletion while the current user is a member',
+    () async {
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+        if (request.url.path.endsWith('/rpc/is_plan_member')) {
+          return http.Response('true', 200);
+        }
+        return http.Response('', 204);
+      });
+      final repository = CollaborativePlannerRepository(
+        supabase: SupabasePlannerService(
+          url: 'https://example.supabase.co',
+          anonKey: 'test-key',
+          client: client,
+        ),
+      );
+
+      await expectLater(
+        repository.deletePlan('20000000-0000-4000-8000-000000000001'),
+        throwsA(isA<PlanMembershipRequiredException>()),
+      );
+      expect(requests.where((request) => request.method == 'DELETE'), isEmpty);
+      repository.dispose();
+    },
+  );
+
+  testWidgets(
+    'create dialog closes before shared plan state updates and persists first region',
+    (tester) async {
+      final repository = _MemoryPlannerRepository();
+      final viewModel = CollaborativePlanningViewModel(repository: repository);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PlanModuleView(
+              viewModel: viewModel,
+              bookmarks: const [],
+              recommendations: const [],
+              onDiscover: () {},
+              onViewRoute: (_) {},
+              notify: (_, _) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('open_create_plan')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'e.g. Penang Heritage Getaway'),
+        'Johor escape',
+      );
+      await tester.tap(find.byKey(const Key('plan_region_Johor')));
+      await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('create_plan_confirm')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('create_plan_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(repository.savedPlan?.primaryRegion, 'Johor');
+      expect(repository.savedPlan?.regions, <String>['Johor']);
+      expect(viewModel.section, PlanSection.workspace);
+      viewModel.dispose();
+    },
+  );
+}
+
+class _MemoryPlannerRepository extends CollaborativePlannerRepository {
+  _MemoryPlannerRepository()
+    : super(
+        supabase: SupabasePlannerService(
+          url: 'https://example.supabase.co',
+          anonKey: 'test-key',
+          client: MockClient((_) async => http.Response('[]', 200)),
+        ),
+      );
+
+  TravelPlan? savedPlan;
+
+  @override
+  Future<SupabaseSession?> authenticate() async => const SupabaseSession(
+    accessToken: 'test-token',
+    userId: '10000000-0000-4000-8000-000000000001',
+  );
+
+  @override
+  Future<List<TravelPlan>> loadPlans({String? accessToken}) async =>
+      savedPlan == null ? <TravelPlan>[] : <TravelPlan>[savedPlan!];
+
+  @override
+  Future<int> savePlan(
+    TravelPlan plan, {
+    String? accessToken,
+    required bool create,
+  }) async {
+    savedPlan = plan;
+    return plan.revision;
+  }
+
+  @override
+  void dispose() {}
 }

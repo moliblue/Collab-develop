@@ -7,6 +7,8 @@ abstract final class PlannerMessages {
   static String deletePlan(String title) =>
       'Are you sure you want to delete "$title"? All associated itinerary cards, date tabs, and group data will be permanently removed.';
   static const planDeleted = 'Travel plan and associated data deleted';
+  static const exitGroupBeforeDelete =
+      'You are still a member of this travel plan. Please exit the group first before deleting the plan.';
   static const planJoined = 'New plan added to your list';
   static const invalidCode = 'Invalid code, please try again';
   static const dateAdded = 'New date tab added chronologically!';

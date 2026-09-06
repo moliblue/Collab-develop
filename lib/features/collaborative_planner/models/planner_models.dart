@@ -160,10 +160,15 @@ class TravelPlan {
     required this.startDate,
     required this.endDate,
     required this.inviteCode,
+    this.regions = const <String>[],
+    String? primaryRegion,
     this.revision = 0,
     List<PlannerDay>? days,
     List<PlannerMember>? members,
-  }) : days = days ?? <PlannerDay>[],
+  }) : primaryRegion = primaryRegion?.trim().isNotEmpty == true
+           ? primaryRegion!.trim()
+           : (regions.isEmpty ? '' : regions.first),
+       days = days ?? <PlannerDay>[],
        members = members ?? <PlannerMember>[];
   final String id;
   final String ownerId;
@@ -171,6 +176,8 @@ class TravelPlan {
   DateTime startDate;
   DateTime endDate;
   final String inviteCode;
+  final List<String> regions;
+  final String primaryRegion;
   int revision;
   final List<PlannerDay> days;
   final List<PlannerMember> members;
@@ -183,6 +190,8 @@ class TravelPlan {
     'start_date': startDate.toIso8601String().substring(0, 10),
     'end_date': endDate.toIso8601String().substring(0, 10),
     'invite_code': inviteCode,
+    'trip_regions': regions,
+    'primary_region': primaryRegion.isEmpty ? null : primaryRegion,
     'revision': revision,
   };
   String encodeSharePayload() => base64Url.encode(
@@ -196,6 +205,37 @@ class TravelPlan {
     startDate: DateTime.parse('${json['start_date']}'),
     endDate: DateTime.parse('${json['end_date']}'),
     inviteCode: '${json['invite_code']}',
+    regions: (json['trip_regions'] as List<dynamic>? ?? const <dynamic>[])
+        .map((value) => '$value'.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false),
+    primaryRegion: '${json['primary_region'] ?? ''}',
     revision: (json['revision'] as num?)?.toInt() ?? 0,
   );
+
+  static const supportedRegions = <String>[
+    'Johor',
+    'Kedah',
+    'Kelantan',
+    'Melaka',
+    'Negeri Sembilan',
+    'Pahang',
+    'Penang',
+    'Perak',
+    'Perlis',
+    'Sabah',
+    'Sarawak',
+    'Selangor',
+    'Terengganu',
+    'Kuala Lumpur',
+    'Putrajaya',
+    'Labuan',
+  ];
+
+  String get coverAsset => switch (primaryRegion) {
+    'Penang' => 'assets/blue_mansion.png',
+    'Kuala Lumpur' => 'assets/sultan_abdul_samad.png',
+    'Selangor' => 'assets/batu_caves.png',
+    _ => 'assets/discovery_placeholder.png',
+  };
 }
