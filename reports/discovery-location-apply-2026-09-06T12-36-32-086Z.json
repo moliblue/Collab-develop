@@ -1,0 +1,34 @@
+{
+  "applied_at": "2026-09-06T12:36:36.574Z",
+  "backup_path": "reports/backups/discovery-backup-2026-09-06T12-36-32-086Z.json",
+  "stats": {
+    "processed": 1460,
+    "patched": 0,
+    "states": 0,
+    "categories": 0,
+    "googleMatched": 0,
+    "googleRejected": 0,
+    "formattedAddresses": 0,
+    "openingHours": 0,
+    "googleMapsUris": 0,
+    "descriptions": 0,
+    "failures": 0
+  },
+  "validation": {
+    "total_locations": 1460,
+    "valid_states": 1460,
+    "blank_states": 0,
+    "canonical_categories": 1460,
+    "noncanonical_categories": 0,
+    "google_matched": 590,
+    "formatted_addresses": 1460,
+    "opening_hours_available": 356,
+    "descriptions_available": 1460,
+    "malformed_formatted_addresses": 0,
+    "orphan_destination_images": 0,
+    "heritage_row_count_unchanged": true,
+    "opening_hours_unavailable": 1104,
+    "descriptions_unavailable": 0
+  },
+  "changes": []
+}

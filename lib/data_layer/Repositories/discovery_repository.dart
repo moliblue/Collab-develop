@@ -4,6 +4,7 @@ import '../Models/app_models.dart';
 
 abstract class DiscoveryRepository {
   Future<List<HeritagePlace>> getDestinations();
+  Future<List<DestinationImage>> getDestinationImages(String destinationId);
   Future<Set<String>> getBookmarkIds();
   Future<void> addBookmark(HeritagePlace place);
   Future<void> removeBookmark(String destinationId);
@@ -30,6 +31,33 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         .eq('is_active', true)
         .eq('is_verified', true)
         .order('name');
+    List<dynamic> coverRows = const <dynamic>[];
+    try {
+      coverRows = await client
+          .from('destination_image_covers')
+          .select(
+            'id,destination_id,image_url,source,source_image_id,'
+            'photographer_name,photographer_url,is_cover,display_order,'
+            'match_status,license_name,license_url,source_page_url,'
+            'refresh_after',
+          );
+    } on PostgrestException catch (error) {
+      if (_isMissingImageMetadata(error)) {
+        coverRows = await client
+            .from('destination_image_covers')
+            .select(
+              'id,destination_id,image_url,source,source_image_id,'
+              'photographer_name,photographer_url,is_cover,display_order',
+            );
+      } else {
+        rethrow;
+      }
+    }
+    final covers = <String, DestinationImage>{};
+    for (final raw in coverRows) {
+      final row = Map<String, dynamic>.from(raw as Map);
+      covers['${row['destination_id']}'] = _destinationImage(row);
+    }
     final unique = <String, HeritagePlace>{};
     for (final raw in rows) {
       final row = Map<String, dynamic>.from(raw);
@@ -38,24 +66,15 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
       final lat = (row['latitude'] as num?)?.toDouble();
       final lng = (row['longitude'] as num?)?.toDouble();
       if (id.isEmpty || name.isEmpty || lat == null || lng == null) continue;
-      final sourceCategory = '${row['category']}';
+      final sourceCategory = '${row['category']}'.trim();
       final tags = Map<String, String>.from(
         row['osm_tags'] as Map? ?? const {},
       );
-      final isWorkshop = <String>[sourceCategory, ...tags.keys, ...tags.values]
-          .any((value) {
-            final v = value.toLowerCase();
-            return v.contains('workshop') ||
-                v.contains('craft') ||
-                v.contains('artisan');
-          });
       unique[id] = HeritagePlace(
         id: id,
         osmId: id,
         name: name,
-        category: isWorkshop
-            ? 'Heritage Workshops'
-            : 'Traditional Heritage Site',
+        category: sourceCategory,
         state: '${row['state'] ?? ''}'.trim(),
         shortDescription: '${row['address'] ?? ''}'.trim(),
         description: '${row['description'] ?? ''}'.trim(),
@@ -68,10 +87,91 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         address: '${row['address'] ?? ''}'.trim(),
         hours: '${row['opening_hours'] ?? ''}'.trim(),
         osmTags: tags,
+        googlePlaceId: row['google_place_id']?.toString(),
+        googlePlaceName: row['google_place_name']?.toString(),
+        googleMatchStatus: row['google_match_status']?.toString(),
+        formattedAddress: row['formatted_address']?.toString(),
+        openingHoursWeekdayText:
+            (row['opening_hours_weekday_text'] as List? ?? const <dynamic>[])
+                .map((value) => '$value'.trim())
+                .where((value) => value.isNotEmpty)
+                .toList(growable: false),
+        openingHoursPeriods: row['opening_hours_periods'] is Map
+            ? Map<String, dynamic>.from(row['opening_hours_periods'] as Map)
+            : null,
+        openingHoursUpdatedAt: DateTime.tryParse(
+          '${row['opening_hours_updated_at'] ?? ''}',
+        ),
+        googleMapsUri: row['google_maps_uri']?.toString(),
+        images: covers[id] == null
+            ? const <DestinationImage>[]
+            : <DestinationImage>[covers[id]!],
       );
     }
     return unique.values.toList()..sort((a, b) => a.name.compareTo(b.name));
   }
+
+  @override
+  Future<List<DestinationImage>> getDestinationImages(
+    String destinationId,
+  ) async {
+    try {
+      final rows = await client
+          .from('destination_images')
+          .select(
+            'id,image_url,source,source_image_id,photographer_name,'
+            'photographer_url,is_cover,display_order,match_status,'
+            'license_name,license_url,source_page_url,refresh_after',
+          )
+          .eq('destination_id', destinationId)
+          .order('display_order')
+          .limit(3);
+      return rows
+          .map((raw) => _destinationImage(Map<String, dynamic>.from(raw)))
+          .toList(growable: false);
+    } on PostgrestException catch (error) {
+      if (error.code == '42703') {
+        final rows = await client
+            .from('destination_images')
+            .select(
+              'id,image_url,source,source_image_id,photographer_name,'
+              'photographer_url,is_cover,display_order,match_status',
+            )
+            .eq('destination_id', destinationId)
+            .order('display_order')
+            .limit(3);
+        return rows
+            .map((raw) => _destinationImage(Map<String, dynamic>.from(raw)))
+            .toList(growable: false);
+      }
+      if (error.code == '42P01' || error.code == 'PGRST205') {
+        return const <DestinationImage>[];
+      }
+      rethrow;
+    }
+  }
+
+  DestinationImage _destinationImage(Map<String, dynamic> row) =>
+      DestinationImage(
+        id: '${row['id']}',
+        imageUrl: '${row['image_url'] ?? ''}'.trim(),
+        source: '${row['source'] ?? 'pexels'}',
+        sourceImageId: row['source_image_id']?.toString(),
+        photographerName: row['photographer_name']?.toString(),
+        photographerUrl: row['photographer_url']?.toString(),
+        matchStatus: '${row['match_status'] ?? 'fallback'}',
+        licenseName: row['license_name']?.toString(),
+        licenseUrl: row['license_url']?.toString(),
+        sourcePageUrl: row['source_page_url']?.toString(),
+        refreshAfter: DateTime.tryParse('${row['refresh_after'] ?? ''}'),
+        isCover: row['is_cover'] == true,
+        displayOrder: (row['display_order'] as num?)?.toInt() ?? 1,
+      );
+
+  bool _isMissingImageMetadata(PostgrestException error) =>
+      error.code == '42703' ||
+      error.code == '42P01' ||
+      error.code == 'PGRST205';
 
   @override
   Future<Set<String>> getBookmarkIds() async {
@@ -91,7 +191,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
       'destination_category': place.category,
       'destination_latitude': place.latitude,
       'destination_longitude': place.longitude,
-      'destination_photo_url': place.image,
+      'destination_photo_url': place.coverImageUrl,
     }, onConflict: 'user_id,destination_id');
   }
 

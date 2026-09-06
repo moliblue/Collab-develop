@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart' hide Text;
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/localization/localized_text.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -24,12 +26,39 @@ class DiscoverModuleView extends StatefulWidget {
 }
 
 class _DiscoverModuleViewState extends State<DiscoverModuleView> {
+  final ScrollController _discoverScrollController = ScrollController();
+  bool _showScrollToTop = false;
+
   @override
   void initState() {
     super.initState();
+    _discoverScrollController.addListener(_handleDiscoverScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) widget.viewModel.load();
     });
+  }
+
+  void _handleDiscoverScroll() {
+    final shouldShow =
+        _discoverScrollController.hasClients &&
+        _discoverScrollController.offset >= 600;
+    if (shouldShow != _showScrollToTop && mounted) {
+      setState(() => _showScrollToTop = shouldShow);
+    }
+  }
+
+  Future<void> _scrollDiscoverToTop() => _discoverScrollController.animateTo(
+    0,
+    duration: const Duration(milliseconds: 420),
+    curve: Curves.easeOutCubic,
+  );
+
+  @override
+  void dispose() {
+    _discoverScrollController
+      ..removeListener(_handleDiscoverScroll)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -71,241 +100,264 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
         ),
       );
     }
-    return ListView(
-      key: const PageStorageKey<String>('discover-list'),
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+    return Stack(
       children: <Widget>[
-        Container(
-          height: 190,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTokens.cardRadius),
-          ),
-          child: Stack(
-            fit: StackFit.expand,
-            children: <Widget>[
-              Image.asset('assets/petaling_street.png', fit: BoxFit.cover),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: <Color>[Color(0x220C2130), Color(0xD90C2130)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                ),
+        ListView(
+          key: const PageStorageKey<String>('discover-list'),
+          controller: _discoverScrollController,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          children: <Widget>[
+            Container(
+              height: 190,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTokens.cardRadius),
               ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Badge(
-                  label: Text('${vm.bookmarks.length}'),
-                  child: IconButton(
-                    key: const Key('open_bookmarks'),
-                    tooltip: 'View saved places',
-                    onPressed: () => vm.setSection(DiscoverSection.bookmarks),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: .94),
-                      foregroundColor: AppColors.primary,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Image.asset('assets/petaling_street.png', fit: BoxFit.cover),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: <Color>[Color(0x220C2130), Color(0xD90C2130)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
-                    icon: const Icon(Icons.bookmark_rounded),
+                  ),
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Badge(
+                      label: Text('${vm.bookmarks.length}'),
+                      child: IconButton(
+                        key: const Key('open_bookmarks'),
+                        tooltip: 'View saved places',
+                        onPressed: () =>
+                            vm.setSection(DiscoverSection.bookmarks),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: .94),
+                          foregroundColor: AppColors.primary,
+                        ),
+                        icon: const Icon(Icons.bookmark_rounded),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 18,
+                    right: 18,
+                    bottom: 18,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Eyebrow('Discover Malaysia', color: Colors.white),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Find your next local story',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(color: Colors.white),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Heritage, food and places worth slowing down for.',
+                          style: TextStyle(
+                            color: Color(0xE6FFFFFF),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextField(
+                    onChanged: vm.setQuery,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search_rounded),
+                      hintText: 'Search heritage locations…',
+                    ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                Badge(
+                  isLabelVisible:
+                      vm.states.isNotEmpty || vm.categories.isNotEmpty,
+                  label: Text('${vm.states.length + vm.categories.length}'),
+                  child: IconButton(
+                    tooltip: 'Filter',
+                    onPressed: vm.toggleFilters,
+                    style: IconButton.styleFrom(
+                      backgroundColor: vm.filtersOpen
+                          ? AppColors.primary
+                          : Colors.white,
+                      foregroundColor: vm.filtersOpen
+                          ? Colors.white
+                          : AppColors.textSecondary,
+                      side: const BorderSide(color: AppColors.border),
+                      minimumSize: const Size.square(48),
+                    ),
+                    icon: const Icon(Icons.tune_rounded),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: vm.availableCategories.map((String category) {
+                  final selected = vm.categories.contains(category);
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: AppChip(
+                      label: category,
+                      selected: selected,
+                      onTap: () => vm.toggleCategory(category),
+                    ),
+                  );
+                }).toList(),
               ),
-              Positioned(
-                left: 18,
-                right: 18,
-                bottom: 18,
+            ),
+            if (vm.filtersOpen) ...<Widget>[
+              const SizedBox(height: 10),
+              AppCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Eyebrow('Discover Malaysia', color: Colors.white),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Find your next local story',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineMedium?.copyWith(color: Colors.white),
+                    Row(
+                      children: <Widget>[
+                        const Expanded(
+                          child: Text(
+                            'Pick your travel mood',
+                            style: TextStyle(fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: vm.clearFilters,
+                          child: const Text('Clear all'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Heritage, food and places worth slowing down for.',
-                      style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 13),
+                    const Eyebrow('Destination', color: AppColors.muted),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 6,
+                      children: vm.availableStates
+                          .map(
+                            (String s) => AppChip(
+                              label: s,
+                              selected: vm.states.contains(s),
+                              onTap: () => vm.toggleState(s),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    const Eyebrow('Experience', color: AppColors.muted),
+                    const SizedBox(height: 5),
+                    Wrap(
+                      spacing: 6,
+                      children: vm.availableCategories
+                          .map(
+                            (String c) => AppChip(
+                              label: c,
+                              selected: vm.categories.contains(c),
+                              selectedColor: AppColors.teal,
+                              onTap: () => vm.toggleCategory(c),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: vm.closeFilters,
+                      child: Text('Show ${results.length} places'),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: TextField(
-                onChanged: vm.setQuery,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search_rounded),
-                  hintText: 'Search heritage locations…',
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Badge(
-              isLabelVisible: vm.states.isNotEmpty || vm.categories.isNotEmpty,
-              label: Text('${vm.states.length + vm.categories.length}'),
-              child: IconButton(
-                tooltip: 'Filter',
-                onPressed: vm.toggleFilters,
-                style: IconButton.styleFrom(
-                  backgroundColor: vm.filtersOpen
-                      ? AppColors.primary
-                      : Colors.white,
-                  foregroundColor: vm.filtersOpen
-                      ? Colors.white
-                      : AppColors.textSecondary,
-                  side: const BorderSide(color: AppColors.border),
-                  minimumSize: const Size.square(48),
-                ),
-                icon: const Icon(Icons.tune_rounded),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 40,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: vm.availableCategories.map((String category) {
-              final selected = vm.categories.contains(category);
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: AppChip(
-                  label: category,
-                  selected: selected,
-                  onTap: () => vm.toggleCategory(category),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        if (vm.filtersOpen) ...<Widget>[
-          const SizedBox(height: 10),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 13),
+            Row(
               children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    const Expanded(
-                      child: Text(
-                        'Pick your travel mood',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: vm.clearFilters,
-                      child: const Text('Clear all'),
-                    ),
-                  ],
+                Text(
+                  '${results.length}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                const Eyebrow('Destination', color: AppColors.muted),
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 6,
-                  children: vm.availableStates
-                      .map(
-                        (String s) => AppChip(
-                          label: s,
-                          selected: vm.states.contains(s),
-                          onTap: () => vm.toggleState(s),
-                        ),
-                      )
-                      .toList(),
+                const Text(
+                  ' places to explore',
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
-                const SizedBox(height: 12),
-                const Eyebrow('Experience', color: AppColors.muted),
-                const SizedBox(height: 5),
-                Wrap(
-                  spacing: 6,
-                  children: vm.availableCategories
-                      .map(
-                        (String c) => AppChip(
-                          label: c,
-                          selected: vm.categories.contains(c),
-                          selectedColor: AppColors.teal,
-                          onTap: () => vm.toggleCategory(c),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: vm.closeFilters,
-                  child: Text('Show ${results.length} places'),
+                const Spacer(),
+                const Text(
+                  'Sorted A–Z',
+                  style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ],
             ),
-          ),
-        ],
-        const SizedBox(height: 13),
-        Row(
-          children: <Widget>[
-            Text(
-              '${results.length}',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w900,
+            const SizedBox(height: 9),
+            if (results.isEmpty)
+              EmptyState(
+                icon: Icons.travel_explore_rounded,
+                title: vm.categories.isNotEmpty
+                    ? 'No locations match the selected category.'
+                    : 'No locations found.',
+                message: 'Try another category or search term.',
+                action: TextButton(
+                  onPressed: vm.clearFilters,
+                  child: const Text('Reset filters'),
+                ),
+              )
+            else
+              ...results.map(
+                (HeritagePlace p) => Padding(
+                  padding: const EdgeInsets.only(bottom: 13),
+                  child: _DestinationCard(
+                    place: p,
+                    onTap: () => vm.select(p),
+                    onBookmark: () async {
+                      final saved = await vm.toggleBookmark(p);
+                      if (saved == null) {
+                        widget.notify(
+                          vm.takeActionError() ?? 'Unable to update bookmark.',
+                          AppColors.danger,
+                        );
+                        return;
+                      }
+                      widget.notify(
+                        saved
+                            ? 'Destination added to your bookmarks.'
+                            : 'Removed from bookmarks.',
+                        AppColors.primary,
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
-            const Text(
-              ' places to explore',
-              style: TextStyle(fontSize: 12, color: AppColors.muted),
-            ),
-            const Spacer(),
-            const Text(
-              'Sorted A–Z',
-              style: TextStyle(fontSize: 12, color: AppColors.muted),
-            ),
           ],
         ),
-        const SizedBox(height: 9),
-        if (results.isEmpty)
-          EmptyState(
-            icon: Icons.travel_explore_rounded,
-            title: vm.categories.isNotEmpty
-                ? 'No locations match the selected category.'
-                : 'No locations found.',
-            message: 'Try another category or search term.',
-            action: TextButton(
-              onPressed: vm.clearFilters,
-              child: const Text('Reset filters'),
-            ),
-          )
-        else
-          ...results.map(
-            (HeritagePlace p) => Padding(
-              padding: const EdgeInsets.only(bottom: 13),
-              child: _DestinationCard(
-                place: p,
-                onTap: () => vm.select(p),
-                onBookmark: () async {
-                  final saved = await vm.toggleBookmark(p);
-                  if (saved == null) {
-                    widget.notify(
-                      vm.takeActionError() ?? 'Unable to update bookmark.',
-                      AppColors.danger,
-                    );
-                    return;
-                  }
-                  widget.notify(
-                    saved
-                        ? 'Destination added to your bookmarks.'
-                        : 'Removed from bookmarks.',
-                    AppColors.primary,
-                  );
-                },
+        if (_showScrollToTop)
+          Positioned(
+            right: 14,
+            bottom: 14,
+            child: SafeArea(
+              top: false,
+              child: FloatingActionButton.small(
+                key: const Key('discover_scroll_to_top'),
+                tooltip: 'Scroll to top',
+                onPressed: _scrollDiscoverToTop,
+                child: const Icon(Icons.keyboard_arrow_up_rounded),
               ),
             ),
           ),
@@ -406,7 +458,18 @@ class _DestinationCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(19),
                 ),
-                child: Hero(tag: place.id, child: _PlaceImage(place.image)),
+                child: Hero(
+                  tag: place.id,
+                  child: _PlaceImage(
+                    place.coverImageUrl,
+                    legacySource: place.image,
+                    categoryContext: <String>[
+                      place.category,
+                      ...place.osmTags.keys,
+                      ...place.osmTags.values,
+                    ].join(' '),
+                  ),
+                ),
               ),
               const DecoratedBox(
                 decoration: BoxDecoration(
@@ -564,32 +627,152 @@ class _ImagePill extends StatelessWidget {
 }
 
 class _PlaceImage extends StatelessWidget {
-  const _PlaceImage(this.source);
+  const _PlaceImage(
+    this.source, {
+    this.legacySource = '',
+    this.categoryContext = '',
+  });
   final String source;
+  final String legacySource;
+  final String categoryContext;
 
   @override
   Widget build(BuildContext context) {
     final trimmed = source.trim();
+    if (trimmed == 'assets/discovery_placeholder.png') {
+      return _categoryPlaceholder();
+    }
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return Image.network(trimmed, fit: BoxFit.cover, errorBuilder: _fallback);
+      return Image.network(
+        trimmed,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _legacyOrPlaceholder(),
+      );
     }
     if (trimmed.isNotEmpty) {
-      return Image.asset(trimmed, fit: BoxFit.cover, errorBuilder: _fallback);
+      return Image.asset(
+        trimmed,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _legacyOrPlaceholder(),
+      );
     }
-    return _fallback(context, Object(), null);
+    return _legacyOrPlaceholder();
   }
 
-  Widget _fallback(BuildContext context, Object _, StackTrace? stackTrace) =>
-      const ColoredBox(
-        color: Color(0xFFEAF0F4),
-        child: Center(
-          child: Icon(
-            Icons.account_balance_rounded,
-            size: 58,
-            color: AppColors.muted,
-          ),
-        ),
+  Widget _legacyOrPlaceholder() {
+    final legacy = legacySource.trim();
+    if (legacy.isNotEmpty && legacy != source.trim()) {
+      if (legacy.startsWith('http://') || legacy.startsWith('https://')) {
+        return Image.network(
+          legacy,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _categoryPlaceholder(),
+        );
+      }
+      return Image.asset(
+        legacy,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _categoryPlaceholder(),
       );
+    }
+    return _categoryPlaceholder();
+  }
+
+  ({String key, IconData icon, Color color}) get _placeholderStyle {
+    final value = categoryContext.toLowerCase();
+    if (value.contains('museum')) {
+      return (
+        key: 'museum',
+        icon: Icons.account_balance_rounded,
+        color: const Color(0xFF315B7D),
+      );
+    }
+    if (value.contains('mural') ||
+        value.contains('street_art') ||
+        value.contains('artwork') ||
+        value.contains('gallery')) {
+      return (
+        key: 'mural',
+        icon: Icons.palette_rounded,
+        color: const Color(0xFFC65E49),
+      );
+    }
+    if (value.contains('temple') ||
+        value.contains('mosque') ||
+        value.contains('church') ||
+        value.contains('place_of_worship') ||
+        value.contains('sacred')) {
+      return (
+        key: 'religious',
+        icon: Icons.auto_awesome_rounded,
+        color: const Color(0xFF8A643D),
+      );
+    }
+    if (value.contains('park') ||
+        value.contains('garden') ||
+        value.contains('forest') ||
+        value.contains('nature') ||
+        value.contains('beach')) {
+      return (
+        key: 'nature',
+        icon: Icons.park_rounded,
+        color: const Color(0xFF287A69),
+      );
+    }
+    if (value.contains('building') ||
+        value.contains('architecture') ||
+        value.contains('palace') ||
+        value.contains('house')) {
+      return (
+        key: 'building',
+        icon: Icons.domain_rounded,
+        color: const Color(0xFF4C648B),
+      );
+    }
+    if (value.contains('monument') ||
+        value.contains('memorial') ||
+        value.contains('historic') ||
+        value.contains('heritage')) {
+      return (
+        key: 'heritage',
+        icon: Icons.fort_rounded,
+        color: const Color(0xFF8B5D46),
+      );
+    }
+    return (
+      key: 'general',
+      icon: Icons.explore_rounded,
+      color: AppColors.primary,
+    );
+  }
+
+  Widget _categoryPlaceholder() {
+    final style = _placeholderStyle;
+    return Semantics(
+      image: true,
+      label: '${style.key} Discovery placeholder',
+      child: Stack(
+        key: Key('discovery_category_placeholder_${style.key}'),
+        fit: StackFit.expand,
+        children: <Widget>[
+          Image.asset('assets/discovery_placeholder.png', fit: BoxFit.cover),
+          ColoredBox(color: style.color.withValues(alpha: .12)),
+          Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: .9),
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Icon(style.icon, size: 38, color: style.color),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LocationDetail extends StatefulWidget {
@@ -611,17 +794,133 @@ class _LocationDetail extends StatefulWidget {
 
 class _LocationDetailState extends State<_LocationDetail> {
   bool expanded = false;
+  bool hoursExpanded = false;
   int rating = 0;
+  int imagePage = 0;
+  int imageCount = -1;
+  final PageController imageController = PageController();
   final review = TextEditingController();
   @override
   void dispose() {
+    imageController.dispose();
     review.dispose();
     super.dispose();
+  }
+
+  Future<void> _sharePlace(BuildContext shareContext) async {
+    try {
+      final box = shareContext.findRenderObject() as RenderBox?;
+      final origin = box != null && box.hasSize
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          text: widget.place.discoveryShareText,
+          subject: 'Discover ${widget.place.name}',
+          title: 'Share ${widget.place.name}',
+          sharePositionOrigin: origin,
+        ),
+      );
+      if (result.status == ShareResultStatus.unavailable) {
+        widget.notify(
+          'Sharing is unavailable on this device.',
+          AppColors.danger,
+        );
+      }
+    } catch (_) {
+      widget.notify('Unable to open sharing options.', AppColors.danger);
+    }
+  }
+
+  Future<void> _openDirections() async {
+    final googleMapsUri = Uri.tryParse(
+      widget.place.googleMapsUri?.trim() ?? '',
+    );
+    if (googleMapsUri != null) {
+      try {
+        if (await launchUrl(
+          googleMapsUri,
+          mode: LaunchMode.externalApplication,
+        )) {
+          return;
+        }
+      } catch (_) {
+        // Fall through to the existing in-app Map handoff.
+      }
+    }
+    widget.onDirections(widget.place);
+  }
+
+  Widget _openingHours(HeritagePlace place) {
+    final todayHours = place.openingHoursForDay(DateTime.now().weekday);
+    final closedToday = todayHours?.toLowerCase().contains('closed') == true;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.schedule_rounded, color: AppColors.teal),
+      title: const Text(
+        'Opening hours',
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (todayHours == null)
+              const Text('Hours unavailable')
+            else ...<Widget>[
+              Text(
+                closedToday ? 'Closed today' : 'Open today',
+                style: TextStyle(
+                  color: closedToday ? AppColors.danger : AppColors.teal,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (!closedToday) Text(todayHours),
+              TextButton(
+                onPressed: () => setState(() => hoursExpanded = !hoursExpanded),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  minimumSize: const Size(0, 32),
+                ),
+                child: Text(
+                  hoursExpanded ? 'Hide full hours' : 'View full hours',
+                ),
+              ),
+              if (hoursExpanded)
+                ...place.openingHoursWeekdayText.map(
+                  (line) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(line),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final p = widget.place;
+    final imageUrls = p.detailImageUrls;
+    final detailImages = p.detailImages;
+    if (imageCount != imageUrls.length) {
+      imageCount = imageUrls.length;
+      final maxImageIndex = imageUrls.isEmpty ? 0 : imageUrls.length - 1;
+      imagePage = p.coverImageIndex > maxImageIndex
+          ? maxImageIndex
+          : p.coverImageIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && imageController.hasClients && imageUrls.isNotEmpty) {
+          imageController.jumpToPage(imagePage);
+        }
+      });
+    }
+    final currentImage = imagePage >= 0 && imagePage < detailImages.length
+        ? detailImages[imagePage]
+        : null;
     return ListView(
       padding: EdgeInsets.zero,
       children: <Widget>[
@@ -630,13 +929,44 @@ class _LocationDetailState extends State<_LocationDetail> {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Hero(tag: p.id, child: _PlaceImage(p.image)),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: <Color>[Color(0x10152231), Color(0xC0152231)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+              Hero(
+                tag: p.id,
+                child: imageUrls.isEmpty
+                    ? _PlaceImage(
+                        '',
+                        legacySource: p.image,
+                        categoryContext: <String>[
+                          p.category,
+                          ...p.osmTags.keys,
+                          ...p.osmTags.values,
+                        ].join(' '),
+                      )
+                    : PageView.builder(
+                        key: const Key('destination_image_carousel'),
+                        controller: imageController,
+                        itemCount: imageUrls.length,
+                        onPageChanged: (value) => setState(() {
+                          imagePage = value;
+                        }),
+                        itemBuilder: (_, index) => _PlaceImage(
+                          imageUrls[index],
+                          legacySource: p.image,
+                          categoryContext: <String>[
+                            p.category,
+                            ...p.osmTags.keys,
+                            ...p.osmTags.values,
+                          ].join(' '),
+                        ),
+                      ),
+              ),
+              const IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: <Color>[Color(0x10152231), Color(0xC0152231)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
                 ),
               ),
@@ -658,17 +988,16 @@ class _LocationDetailState extends State<_LocationDetail> {
                 right: 12,
                 child: Row(
                   children: <Widget>[
-                    IconButton(
-                      tooltip: 'Share',
-                      onPressed: () => widget.notify(
-                        'Place link copied for sharing.',
-                        AppColors.primary,
+                    Builder(
+                      builder: (shareContext) => IconButton(
+                        tooltip: 'Share',
+                        onPressed: () => _sharePlace(shareContext),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.textPrimary,
+                        ),
+                        icon: const Icon(Icons.share_rounded),
                       ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.textPrimary,
-                      ),
-                      icon: const Icon(Icons.share_rounded),
                     ),
                     const SizedBox(width: 6),
                     IconButton(
@@ -703,7 +1032,7 @@ class _LocationDetailState extends State<_LocationDetail> {
               Positioned(
                 left: 16,
                 right: 16,
-                bottom: 16,
+                bottom: imageUrls.length > 1 ? 31 : 16,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -768,9 +1097,84 @@ class _LocationDetailState extends State<_LocationDetail> {
                   ],
                 ),
               ),
+              if (imageUrls.length > 1)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 10,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List<Widget>.generate(
+                      imageUrls.length,
+                      (index) => AnimatedContainer(
+                        key: Key('destination_image_indicator_$index'),
+                        duration: const Duration(milliseconds: 180),
+                        width: imagePage == index ? 18 : 7,
+                        height: 7,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: imagePage == index
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: .55),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
+        if (currentImage != null &&
+            (currentImage.photographerName?.isNotEmpty == true ||
+                currentImage.licenseName?.isNotEmpty == true ||
+                currentImage.sourcePageUrl?.isNotEmpty == true))
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 7, 10, 7),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    [
+                      if (currentImage.source == 'google_places') 'Google Maps',
+                      if (currentImage.photographerName?.isNotEmpty == true)
+                        'Photo by ${currentImage.photographerName}',
+                      if (currentImage.licenseName?.isNotEmpty == true)
+                        currentImage.licenseName!,
+                    ].join(' · '),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+                if (currentImage.sourcePageUrl?.isNotEmpty == true)
+                  TextButton(
+                    onPressed: () async {
+                      final uri = Uri.tryParse(currentImage.sourcePageUrl!);
+                      if (uri == null ||
+                          !await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          )) {
+                        widget.notify(
+                          'Unable to open the photo source.',
+                          AppColors.danger,
+                        );
+                      }
+                    },
+                    child: Text(
+                      currentImage.source == 'google_places'
+                          ? 'View on Google Maps'
+                          : 'View source',
+                    ),
+                  ),
+              ],
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
           child: Column(
@@ -796,21 +1200,7 @@ class _LocationDetailState extends State<_LocationDetail> {
                       child: Text(expanded ? 'Show less' : 'Read full story'),
                     ),
                     const Divider(),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.schedule_rounded,
-                        color: AppColors.teal,
-                      ),
-                      title: const Text(
-                        'Opening hours',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      subtitle: Text(p.hours),
-                    ),
+                    _openingHours(p),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(
@@ -824,7 +1214,7 @@ class _LocationDetailState extends State<_LocationDetail> {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      subtitle: Text(p.address),
+                      subtitle: Text(p.displayAddress),
                     ),
                   ],
                 ),
@@ -834,7 +1224,7 @@ class _LocationDetailState extends State<_LocationDetail> {
                 children: <Widget>[
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () => widget.onDirections(p),
+                      onPressed: _openDirections,
                       icon: const Icon(Icons.navigation_rounded),
                       label: const Text('Get Directions'),
                     ),

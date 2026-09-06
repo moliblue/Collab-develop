@@ -376,6 +376,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       <GroupVoteType, GroupVoteOutcome>{};
   Timer? _groupSyncTimer;
   Timer? _arrivalCountdownTimer;
+  String? _lastRejectedRevisitId;
 
   app.MysteryStage get stage => _stage;
   app.JourneyMode get mode => _mode;
@@ -393,6 +394,10 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _journey != null &&
       _journey!.status != JourneyStatus.completed &&
       _journey!.status != JourneyStatus.cancelled;
+  bool get awaitingSoloRevisitDecision =>
+      _journey?.mode == JourneyMode.solo &&
+      _journey?.isRevisit == true &&
+      _journey?.id.startsWith('provisional:') == true;
   bool get scanning => _scanning;
   ArrivalVerificationUpdate get arrivalVerification => _arrivalVerification;
   bool get chatSending => _chatSending;
@@ -1078,6 +1083,7 @@ class MysteryJourneyViewModel extends ChangeNotifier {
     var shouldResumeShakeDetection = false;
     try {
       await _repository.stopShakeDetection();
+      final rejectedId = _lastRejectedRevisitId;
       _journey = await _repository.startJourney(
         _mode == app.JourneyMode.group ? JourneyMode.group : JourneyMode.solo,
         TravelPreferences(
@@ -1091,7 +1097,12 @@ class MysteryJourneyViewModel extends ChangeNotifier {
       _stage = app.MysteryStage.active;
       _ready = false;
       _startGroupSync();
-      _message = null;
+      _message = rejectedId != null && _journey?.destination?.id == rejectedId
+          ? 'No other new mystery locations are available nearby right now.'
+          : rejectedId != null
+          ? 'New Mystery Found'
+          : null;
+      _lastRejectedRevisitId = null;
     } catch (error, stackTrace) {
       debugPrint('Journey start failed: $error\n$stackTrace');
       _message = _friendlyError(error);
@@ -1104,6 +1115,64 @@ class MysteryJourneyViewModel extends ChangeNotifier {
           !_disposed) {
         unawaited(_listenForShake());
       }
+    }
+  }
+
+  Future<void> playThisRevisit() async {
+    final current = _journey;
+    if (_loading || current == null || !awaitingSoloRevisitDecision) return;
+    _loading = true;
+    _message = null;
+    _notify();
+    try {
+      _journey = await _repository.acceptSoloRevisit(current);
+    } catch (error) {
+      _message = _friendlyError(error);
+    } finally {
+      _loading = false;
+      _notify();
+    }
+  }
+
+  Future<void> shakeAgainForNewDestination() async {
+    final current = _journey;
+    if (_loading || current == null || !awaitingSoloRevisitDecision) return;
+    _loading = true;
+    _message = 'Looking for another mystery...';
+    _notify();
+    try {
+      await _repository.rejectSoloRevisit(current);
+      _lastRejectedRevisitId = current.destination?.id;
+      _journey = null;
+      _stage = app.MysteryStage.shake;
+      _sensorUnavailable = false;
+    } catch (error) {
+      _message = _friendlyError(error);
+      _stage = app.MysteryStage.active;
+    } finally {
+      _loading = false;
+      _notify();
+    }
+    if (_stage == app.MysteryStage.shake) unawaited(_listenForShake());
+  }
+
+  Future<void> adjustRevisitPreferences() async {
+    final current = _journey;
+    if (_loading || current == null || !awaitingSoloRevisitDecision) return;
+    _loading = true;
+    _message = null;
+    _notify();
+    try {
+      await _repository.rejectSoloRevisit(current);
+      _lastRejectedRevisitId = current.destination?.id;
+      _journey = null;
+      _stage = app.MysteryStage.home;
+    } catch (error) {
+      _message = _friendlyError(error);
+      _stage = app.MysteryStage.active;
+    } finally {
+      _loading = false;
+      _notify();
     }
   }
 

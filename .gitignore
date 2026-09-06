@@ -50,3 +50,6 @@ app.*.map.json
 supabase.env.json
 supabase.local.env.json
 .pub-cache/
+
+#pixel api
+.env

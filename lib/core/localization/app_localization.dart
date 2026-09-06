@@ -75,6 +75,52 @@ class AppLocalization {
       'Local Food': 'Makanan Tempatan',
       'Local Craft': 'Kraf Tempatan',
       'Historical Monument': 'Monumen Bersejarah',
+      'Heritage Workshops': 'Bengkel Warisan',
+      'Revisit Challenge': 'Cabaran Lawatan Semula',
+      "You've explored this place before.": 'Anda pernah menerokai tempat ini.',
+      'Play This Revisit': 'Main Lawatan Semula Ini',
+      'Shake Again for a New Place': 'Goncang Lagi untuk Tempat Baharu',
+      'Looking for another mystery...': 'Mencari misteri lain...',
+      'No other new mystery locations are available nearby right now.':
+          'Tiada lokasi misteri baharu lain yang tersedia berdekatan sekarang.',
+      'Try Again': 'Cuba Lagi',
+      'Adjust Preferences': 'Laraskan Pilihan',
+      'New Mystery Found': 'Misteri Baharu Ditemui',
+      'Live mystery': 'Misteri langsung',
+      'Your hidden destination': 'Destinasi tersembunyi anda',
+      'Journey progress': 'Kemajuan perjalanan',
+      'Started': 'Bermula',
+      'Clues': 'Petunjuk',
+      'Route': 'Laluan',
+      'Arrived': 'Tiba',
+      'Check Arrival': 'Semak Ketibaan',
+      'Leave and continue later': 'Keluar dan sambung kemudian',
+      'No locations found.': 'Tiada lokasi ditemui.',
+      'No locations match the selected category.':
+          'Tiada lokasi sepadan dengan kategori dipilih.',
+      'Destination added to your bookmarks.':
+          'Destinasi ditambah pada penanda buku anda.',
+      'Review submitted successfully.': 'Ulasan berjaya dihantar.',
+      'Email': 'E-mel',
+      'Password': 'Kata laluan',
+      'Back to Login': 'Kembali ke log masuk',
+      'Create New Account': 'Cipta Akaun Baharu',
+      'Reset Password': 'Tetapkan Semula Kata Laluan',
+      'Passwords do not match.': 'Kata laluan tidak sepadan.',
+      'About this place': 'Tentang tempat ini',
+      'Opening hours': 'Waktu operasi',
+      'Plan your visit': 'Rancang lawatan anda',
+      'Traveller reviews': 'Ulasan pengembara',
+      'Saved places': 'Tempat disimpan',
+      'Search the map': 'Cari dalam peta',
+      'Centre on me': 'Pusatkan pada saya',
+      'Start Route': 'Mulakan Laluan',
+      'Shake your phone!': 'Goncang telefon anda!',
+      'Motion sensor active': 'Penderia gerakan aktif',
+      'Group Chat': 'Sembang Kumpulan',
+      'Ready': 'Sedia',
+      'Not ready': 'Belum sedia',
+      'All clues discovered': 'Semua petunjuk telah ditemui',
     },
     'zh': {
       'Discover': '探索',
@@ -142,6 +188,50 @@ class AppLocalization {
       'Local Food': '当地美食',
       'Local Craft': '当地工艺',
       'Historical Monument': '历史古迹',
+      'Heritage Workshops': '传统工艺工作坊',
+      'Revisit Challenge': '重游挑战',
+      "You've explored this place before.": '你以前探索过这个地方。',
+      'Play This Revisit': '接受重游挑战',
+      'Shake Again for a New Place': '再次摇动寻找新地点',
+      'Looking for another mystery...': '正在寻找另一个神秘地点……',
+      'No other new mystery locations are available nearby right now.':
+          '附近目前没有其他新的神秘地点。',
+      'Try Again': '再试一次',
+      'Adjust Preferences': '调整偏好',
+      'New Mystery Found': '发现新的神秘地点',
+      'Live mystery': '进行中的神秘之旅',
+      'Your hidden destination': '你的隐藏目的地',
+      'Journey progress': '旅程进度',
+      'Started': '已开始',
+      'Clues': '线索',
+      'Route': '路线',
+      'Arrived': '已到达',
+      'Check Arrival': '检查到达状态',
+      'Leave and continue later': '暂时离开，稍后继续',
+      'No locations found.': '未找到地点。',
+      'No locations match the selected category.': '没有符合所选分类的地点。',
+      'Destination added to your bookmarks.': '目的地已添加到书签。',
+      'Review submitted successfully.': '评价提交成功。',
+      'Email': '电子邮箱',
+      'Password': '密码',
+      'Back to Login': '返回登录',
+      'Create New Account': '创建新账号',
+      'Reset Password': '重置密码',
+      'Passwords do not match.': '两次输入的密码不一致。',
+      'About this place': '关于这个地点',
+      'Opening hours': '开放时间',
+      'Plan your visit': '规划你的参观',
+      'Traveller reviews': '旅行者评价',
+      'Saved places': '已收藏地点',
+      'Search the map': '搜索地图',
+      'Centre on me': '定位到我的位置',
+      'Start Route': '开始路线',
+      'Shake your phone!': '摇动你的手机！',
+      'Motion sensor active': '动作传感器已启用',
+      'Group Chat': '群组聊天',
+      'Ready': '已准备',
+      'Not ready': '未准备',
+      'All clues discovered': '所有线索均已发现',
     },
     'ta': {
       'Discover': 'கண்டறியுங்கள்',
@@ -211,11 +301,146 @@ class AppLocalization {
       'Local Food': 'உள்ளூர் உணவு',
       'Local Craft': 'உள்ளூர் கைவினை',
       'Historical Monument': 'வரலாற்றுச் சின்னம்',
+      'Heritage Workshops': 'பாரம்பரியப் பட்டறைகள்',
+      'Revisit Challenge': 'மீள்வருகை சவால்',
+      "You've explored this place before.":
+          'இந்த இடத்தை நீங்கள் முன்பே ஆராய்ந்துள்ளீர்கள்.',
+      'Play This Revisit': 'இந்த மீள்வருகையைத் தொடங்கு',
+      'Shake Again for a New Place': 'புதிய இடத்திற்காக மீண்டும் குலுக்கவும்',
+      'Looking for another mystery...': 'மற்றொரு மர்மத்தைத் தேடுகிறது...',
+      'No other new mystery locations are available nearby right now.':
+          'அருகில் வேறு புதிய மர்ம இடங்கள் இப்போது இல்லை.',
+      'Try Again': 'மீண்டும் முயற்சி',
+      'Adjust Preferences': 'விருப்பங்களை மாற்று',
+      'New Mystery Found': 'புதிய மர்மம் கண்டறியப்பட்டது',
+      'Live mystery': 'நடப்பு மர்மம்',
+      'Your hidden destination': 'உங்கள் மறைக்கப்பட்ட இலக்கு',
+      'Journey progress': 'பயண முன்னேற்றம்',
+      'Started': 'தொடங்கியது',
+      'Clues': 'குறிப்புகள்',
+      'Route': 'வழி',
+      'Arrived': 'வந்தடைந்தது',
+      'Check Arrival': 'வருகையைச் சரிபார்',
+      'Leave and continue later': 'வெளியேறி பின்னர் தொடரவும்',
+      'No locations found.': 'இடங்கள் எதுவும் கிடைக்கவில்லை.',
+      'No locations match the selected category.':
+          'தேர்ந்தெடுத்த வகைக்கு இடங்கள் எதுவும் பொருந்தவில்லை.',
+      'Destination added to your bookmarks.':
+          'இலக்கு உங்கள் புத்தகக்குறிகளில் சேர்க்கப்பட்டது.',
+      'Review submitted successfully.':
+          'மதிப்புரை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது.',
+      'Email': 'மின்னஞ்சல்',
+      'Password': 'கடவுச்சொல்',
+      'Back to Login': 'உள்நுழைவுக்குத் திரும்பு',
+      'Create New Account': 'புதிய கணக்கை உருவாக்கு',
+      'Reset Password': 'கடவுச்சொல்லை மீட்டமை',
+      'Passwords do not match.': 'கடவுச்சொற்கள் பொருந்தவில்லை.',
+      'About this place': 'இந்த இடத்தைப் பற்றி',
+      'Opening hours': 'திறந்திருக்கும் நேரம்',
+      'Plan your visit': 'உங்கள் வருகையைத் திட்டமிடுங்கள்',
+      'Traveller reviews': 'பயணியர் மதிப்புரைகள்',
+      'Saved places': 'சேமித்த இடங்கள்',
+      'Search the map': 'வரைபடத்தில் தேடு',
+      'Centre on me': 'என்னை மையப்படுத்து',
+      'Start Route': 'வழியைத் தொடங்கு',
+      'Shake your phone!': 'உங்கள் தொலைபேசியைக் குலுக்குங்கள்!',
+      'Motion sensor active': 'இயக்க உணரி செயலில் உள்ளது',
+      'Group Chat': 'குழு அரட்டை',
+      'Ready': 'தயார்',
+      'Not ready': 'தயாரில்லை',
+      'All clues discovered': 'அனைத்து குறிப்புகளும் கண்டறியப்பட்டன',
     },
   };
 
-  String text(String english) =>
-      _values[locale.languageCode]?[english] ?? english;
+  String text(String english) {
+    final values = _values[locale.languageCode];
+    if (values == null) return english;
+    final exact = values[english];
+    if (exact != null) return exact;
+    return _dynamicText(english, locale.languageCode);
+  }
+
+  static String _dynamicText(String english, String language) {
+    String? match(String pattern) =>
+        RegExp(pattern).firstMatch(english)?.group(1);
+    final seconds = match(r'^Resend available in (\d+)s$');
+    if (seconds != null) {
+      return switch (language) {
+        'ms' => 'Hantar semula tersedia dalam ${seconds}s',
+        'zh' => '$seconds秒后可重新发送',
+        'ta' => '$seconds வினாடிகளில் மீண்டும் அனுப்பலாம்',
+        _ => english,
+      };
+    }
+    final metres = match(r'^(\d+) m away$');
+    if (metres != null) {
+      return switch (language) {
+        'ms' => '$metres m lagi',
+        'zh' => '距离 $metres 米',
+        'ta' => '$metres மீ தொலைவில்',
+        _ => english,
+      };
+    }
+    final explored = match(r'^Explored (\d+) times$');
+    if (explored != null) {
+      return switch (language) {
+        'ms' => 'Diterokai $explored kali',
+        'zh' => '已探索 $explored 次',
+        'ta' => '$explored முறை ஆராயப்பட்டது',
+        _ => english,
+      };
+    }
+    final reviews = match(r'^(\d+) reviews$');
+    if (reviews != null) {
+      return switch (language) {
+        'ms' => '$reviews ulasan',
+        'zh' => '$reviews 条评价',
+        'ta' => '$reviews மதிப்புரைகள்',
+        _ => english,
+      };
+    }
+    final completedOn = match(r'^Completed on (.+)$');
+    if (completedOn != null) {
+      return switch (language) {
+        'ms' => 'Selesai pada $completedOn',
+        'zh' => '完成于 $completedOn',
+        'ta' => '$completedOn அன்று முடிக்கப்பட்டது',
+        _ => english,
+      };
+    }
+    final membersReady = match(r'^(\d+) members ready$');
+    if (membersReady != null) {
+      return switch (language) {
+        'ms' => '$membersReady ahli bersedia',
+        'zh' => '$membersReady 位成员已准备',
+        'ta' => '$membersReady உறுப்பினர்கள் தயார்',
+        _ => english,
+      };
+    }
+    final withinRadius = match(r'^Within (\d+) km$');
+    if (withinRadius != null) {
+      return switch (language) {
+        'ms' => 'Dalam lingkungan $withinRadius km',
+        'zh' => '$withinRadius 公里以内',
+        'ta' => '$withinRadius கிமீக்குள்',
+        _ => english,
+      };
+    }
+    final groupShake = RegExp(
+      r'^Group Shake — (\d+)/(\d+) shaken$',
+    ).firstMatch(english);
+    if (groupShake != null) {
+      final shaken = groupShake.group(1)!;
+      final total = groupShake.group(2)!;
+      return switch (language) {
+        'ms' => 'Goncangan Kumpulan — $shaken/$total telah goncang',
+        'zh' => '群组摇动 — $shaken/$total 已完成',
+        'ta' => 'குழு குலுக்கல் — $shaken/$total முடித்தனர்',
+        _ => english,
+      };
+    }
+    return english;
+  }
 }
 
 extension LocalizedBuildContext on BuildContext {

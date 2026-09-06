@@ -1188,71 +1188,113 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
     ],
   ], key: const PageStorageKey<String>('mystery-shake'));
 
-  Widget _active() => _scroll(<Widget>[
-    _activeHero(),
-    const SizedBox(height: AppTokens.space16),
-    _journeyProgressCard(),
-    if (widget.viewModel.loading) ...<Widget>[
+  Widget _active() {
+    if (widget.viewModel.awaitingSoloRevisitDecision) {
+      return _scroll(<Widget>[
+        _activeHero(),
+        const SizedBox(height: AppTokens.space16),
+        if (widget.viewModel.loading) const LinearProgressIndicator(),
+        if (widget.viewModel.message != null) ...<Widget>[
+          const SizedBox(height: AppTokens.space12),
+          AppCard(
+            color: const Color(0xFFFFF5DF),
+            borderColor: const Color(0xFFFFD78A),
+            child: Text(widget.viewModel.message!),
+          ),
+        ],
+        const SizedBox(height: AppTokens.space16),
+        FilledButton.icon(
+          onPressed: widget.viewModel.loading
+              ? null
+              : widget.viewModel.playThisRevisit,
+          icon: const Icon(Icons.replay_rounded),
+          label: const Text('Play This Revisit'),
+        ),
+        const SizedBox(height: AppTokens.space8),
+        OutlinedButton.icon(
+          onPressed: widget.viewModel.loading
+              ? null
+              : widget.viewModel.shakeAgainForNewDestination,
+          icon: const Icon(Icons.vibration_rounded),
+          label: const Text('Shake Again for a New Place'),
+        ),
+        const SizedBox(height: AppTokens.space8),
+        TextButton(
+          onPressed: widget.viewModel.loading
+              ? null
+              : widget.viewModel.adjustRevisitPreferences,
+          child: const Text('Adjust Preferences'),
+        ),
+      ], key: const PageStorageKey<String>('mystery-revisit-decision'));
+    }
+    return _scroll(<Widget>[
+      _activeHero(),
+      const SizedBox(height: AppTokens.space16),
+      _journeyProgressCard(),
+      if (widget.viewModel.loading) ...<Widget>[
+        const SizedBox(height: AppTokens.space12),
+        const LinearProgressIndicator(),
+      ],
+      if (widget.viewModel.message != null) ...<Widget>[
+        const SizedBox(height: AppTokens.space12),
+        AppCard(
+          color: const Color(0xFFFFF5DF),
+          borderColor: const Color(0xFFFFD78A),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              const Icon(Icons.info_outline_rounded, color: AppColors.warning),
+              const SizedBox(width: AppTokens.space8),
+              Expanded(child: Text(widget.viewModel.message!)),
+            ],
+          ),
+        ),
+      ],
+      const SizedBox(height: AppTokens.space16),
+      _clueCard(),
       const SizedBox(height: AppTokens.space12),
-      const LinearProgressIndicator(),
-    ],
-    if (widget.viewModel.message != null) ...<Widget>[
+      _secondaryJourneyActions(),
+      if (widget.viewModel.mode == JourneyMode.group)
+        ..._groupVoteStatusCards(),
+      if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
+        const SizedBox(height: AppTokens.space16),
+        _groupProgressCard(),
+        if (widget.viewModel.groupChatUnlocked) ...<Widget>[
+          const SizedBox(height: AppTokens.space16),
+          _groupChatCard(),
+        ],
+      ],
+      const SizedBox(height: AppTokens.space24),
+      const SectionTitle(
+        "Think you've found it?",
+        subtitle: 'Check in with real GPS when you reach the place.',
+      ),
+      const SizedBox(height: AppTokens.space8),
+      _arrivalStatusCard(),
       const SizedBox(height: AppTokens.space12),
-      AppCard(
-        color: const Color(0xFFFFF5DF),
-        borderColor: const Color(0xFFFFD78A),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Icon(Icons.info_outline_rounded, color: AppColors.warning),
-            const SizedBox(width: AppTokens.space8),
-            Expanded(child: Text(widget.viewModel.message!)),
-          ],
+      FilledButton.icon(
+        key: const Key('test_real_arrival'),
+        onPressed:
+            widget.viewModel.loading || widget.viewModel.currentUserArrived
+            ? null
+            : widget.viewModel.testArrivalNow,
+        icon: const Icon(Icons.gps_fixed_rounded),
+        label: Text(
+          widget.viewModel.currentUserArrived
+              ? 'Your arrival is verified'
+              : 'Check Arrival',
         ),
       ),
-    ],
-    const SizedBox(height: AppTokens.space16),
-    _clueCard(),
-    const SizedBox(height: AppTokens.space12),
-    _secondaryJourneyActions(),
-    if (widget.viewModel.mode == JourneyMode.group) ..._groupVoteStatusCards(),
-    if (widget.viewModel.mode == JourneyMode.group) ...<Widget>[
-      const SizedBox(height: AppTokens.space16),
-      _groupProgressCard(),
-      if (widget.viewModel.groupChatUnlocked) ...<Widget>[
-        const SizedBox(height: AppTokens.space16),
-        _groupChatCard(),
-      ],
-    ],
-    const SizedBox(height: AppTokens.space24),
-    const SectionTitle(
-      "Think you've found it?",
-      subtitle: 'Check in with real GPS when you reach the place.',
-    ),
-    const SizedBox(height: AppTokens.space8),
-    _arrivalStatusCard(),
-    const SizedBox(height: AppTokens.space12),
-    FilledButton.icon(
-      key: const Key('test_real_arrival'),
-      onPressed: widget.viewModel.loading || widget.viewModel.currentUserArrived
-          ? null
-          : widget.viewModel.testArrivalNow,
-      icon: const Icon(Icons.gps_fixed_rounded),
-      label: Text(
-        widget.viewModel.currentUserArrived
-            ? 'Your arrival is verified'
-            : 'Check Arrival',
+      const SizedBox(height: AppTokens.space8),
+      Center(
+        child: TextButton.icon(
+          onPressed: () => widget.viewModel.setStage(MysteryStage.interrupted),
+          icon: const Icon(Icons.pause_circle_outline_rounded),
+          label: const Text('Leave and continue later'),
+        ),
       ),
-    ),
-    const SizedBox(height: AppTokens.space8),
-    Center(
-      child: TextButton.icon(
-        onPressed: () => widget.viewModel.setStage(MysteryStage.interrupted),
-        icon: const Icon(Icons.pause_circle_outline_rounded),
-        label: const Text('Leave and continue later'),
-      ),
-    ),
-  ], key: const PageStorageKey<String>('mystery-active'));
+    ], key: const PageStorageKey<String>('mystery-active'));
+  }
 
   Widget _activeHero() => Container(
     padding: const EdgeInsets.all(AppTokens.space16),
@@ -1332,7 +1374,7 @@ class _MysteryJourneyViewState extends State<MysteryJourneyView>
                             ),
                             SizedBox(height: 2),
                             Text(
-                              "You've explored this place before. Try a fresh clue path this time.",
+                              "You've explored this place before.",
                               style: TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 11,

@@ -11,6 +11,8 @@ abstract interface class ShakeFindRepository {
   });
   Future<void> stopShakeDetection();
   Future<Journey> startJourney(JourneyMode mode, TravelPreferences preferences);
+  Future<Journey> acceptSoloRevisit(Journey provisionalJourney);
+  Future<void> rejectSoloRevisit(Journey provisionalJourney);
   Future<Journey> requestHint(Journey journey);
   Future<Journey> revealRoute(Journey journey);
   Future<Journey> verifyArrival(

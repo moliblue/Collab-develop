@@ -1,0 +1,3946 @@
+{
+  "applied_at": "2026-09-06T12:50:24.663Z",
+  "backup_path": "reports/backups/discovery-backup-2026-09-06T12-50-05-385Z.json",
+  "stats": {
+    "processed": 1447,
+    "patched": 104,
+    "states": 0,
+    "categories": 0,
+    "googleMatched": 104,
+    "googleRejected": 0,
+    "formattedAddresses": 0,
+    "openingHours": 0,
+    "googleMapsUris": 0,
+    "descriptions": 0,
+    "failures": 0
+  },
+  "validation": {
+    "total_locations": 1447,
+    "valid_states": 1447,
+    "blank_states": 0,
+    "canonical_categories": 1447,
+    "noncanonical_categories": 0,
+    "google_matched": 476,
+    "formatted_addresses": 1447,
+    "opening_hours_available": 347,
+    "descriptions_available": 1447,
+    "malformed_formatted_addresses": 0,
+    "orphan_destination_images": 0,
+    "heritage_row_count_unchanged": true,
+    "opening_hours_unavailable": 1100,
+    "descriptions_unavailable": 0
+  },
+  "changes": [
+    {
+      "osm_id": "node/10035485588",
+      "name": "Petrosains",
+      "before": {
+        "osm_id": "node/10035485588",
+        "name": "Petrosains",
+        "category": "Museum",
+        "state": "Kuala Lumpur",
+        "address": "Jalan Ampang, Kuala Lumpur, 50088",
+        "description": "Petrosains - Petroscience - is a scientific children museum with lots of interactive activities for the young ones. Some attractions req. minimum height 1.40 meters and weight max 80kg",
+        "latitude": 3.1575283,
+        "longitude": 101.7118699,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJiXsntdY3zDER0-B-9En1XOQ",
+        "google_place_name": "Petrosains, The Discovery Centre",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/10719628808",
+      "name": "Masjid Al-Makmur Taman Kobena",
+      "before": {
+        "osm_id": "node/10719628808",
+        "name": "Masjid Al-Makmur Taman Kobena",
+        "category": "Historical Monument",
+        "state": "Johor",
+        "address": "Masjid Al-Makmur Taman Kobena, Malaysia",
+        "description": "Historical monument located in Johor, Malaysia.",
+        "latitude": 1.5033807,
+        "longitude": 103.6965681,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJTyeWru9y2jERo1VdJH6_6RI",
+        "google_place_name": "Masjid Al Makmor Taman Kobena",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/10867481346",
+      "name": "Medan Perwira",
+      "before": {
+        "osm_id": "node/10867481346",
+        "name": "Medan Perwira",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Medan Perwira, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 3.3431794,
+        "longitude": 101.249131,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJA6syuFnzzDERqPd0APoaX9g",
+        "google_place_name": "Jalan Medan Perwira",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11011358507",
+      "name": "Murals",
+      "before": {
+        "osm_id": "node/11011358507",
+        "name": "Murals",
+        "category": "Cultural Heritage",
+        "state": "Melaka",
+        "address": "Murals, Malaysia",
+        "description": "Cultural heritage located in Melaka, Malaysia.",
+        "latitude": 2.1964581,
+        "longitude": 102.2481876,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJa9YDLwPx0TERE7n5Iz1NVNI",
+        "google_place_name": "View murals across the river",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11011476706",
+      "name": "Mural",
+      "before": {
+        "osm_id": "node/11011476706",
+        "name": "Mural",
+        "category": "Cultural Heritage",
+        "state": "Melaka",
+        "address": "Mural, Malaysia",
+        "description": "Cultural heritage located in Melaka, Malaysia.",
+        "latitude": 2.1958776,
+        "longitude": 102.2491094,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJmZATEgDx0TERo5LqqRIqE0k",
+        "google_place_name": "Fan Bing Bing Mural 范冰冰壁画",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11051037971",
+      "name": "Christian Columbarium",
+      "before": {
+        "osm_id": "node/11051037971",
+        "name": "Christian Columbarium",
+        "category": "Traditional Heritage Site",
+        "state": "Selangor",
+        "address": "Christian Columbarium, Malaysia",
+        "description": "Traditional heritage site located in Selangor, Malaysia.",
+        "latitude": 3.0514942,
+        "longitude": 101.8652106,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "tomb",
+          "religion": "christian"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJuWUbudszzDEROLDRWtYjcTA",
+        "google_place_name": "Nirvana memorial Park Christian Columbarium",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11051037975",
+      "name": "Chinese Calligraphy Stone Gallery",
+      "before": {
+        "osm_id": "node/11051037975",
+        "name": "Chinese Calligraphy Stone Gallery",
+        "category": "Cultural Heritage",
+        "state": "Selangor",
+        "address": "Chinese Calligraphy Stone Gallery, Malaysia",
+        "description": "Cultural heritage located in Selangor, Malaysia.",
+        "latitude": 3.04831,
+        "longitude": 101.8668299,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork",
+          "start_date": "2012"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ2WJXY78yzDERcTj1oP2__pM",
+        "google_place_name": "中华人文碑林 Chinese Calligraphy Stone Gallery",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11295875302",
+      "name": "Mumu Memorial",
+      "before": {
+        "osm_id": "node/11295875302",
+        "name": "Mumu Memorial",
+        "category": "Historical Monument",
+        "state": "Pahang",
+        "address": "Mumu Memorial, Malaysia",
+        "description": "Historical monument located in Pahang, Malaysia.",
+        "latitude": 3.5219317,
+        "longitude": 101.8748065,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJb_TOOgAPzDERgKPDXiHDZ9A",
+        "google_place_name": "Mumu",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11295875304",
+      "name": "Dorje Shugden",
+      "before": {
+        "osm_id": "node/11295875304",
+        "name": "Dorje Shugden",
+        "category": "Historical Monument",
+        "state": "Pahang",
+        "address": "Dorje Shugden, Malaysia",
+        "description": "Historical monument located in Pahang, Malaysia.",
+        "latitude": 3.5214217,
+        "longitude": 101.8748796,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJX1rUaQAPzDERFw3d7ZAt2aY",
+        "google_place_name": "Outdoor Dorje Shugden statue",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11482092459",
+      "name": "Tugu Sawit",
+      "before": {
+        "osm_id": "node/11482092459",
+        "name": "Tugu Sawit",
+        "category": "Cultural Heritage",
+        "state": "Sarawak",
+        "address": "Tugu Sawit, Malaysia",
+        "description": "Cultural heritage located in Sarawak, Malaysia.",
+        "latitude": 4.057217,
+        "longitude": 113.8463065,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ-QuFoPQhHzIRZAZkYwRzU-w",
+        "google_place_name": "Tugu Sawit Taman Tengah Pekan Bekenu",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11515771739",
+      "name": "Oriental Art & Cultural Center",
+      "before": {
+        "osm_id": "node/11515771739",
+        "name": "Oriental Art & Cultural Center",
+        "category": "Cultural Heritage",
+        "state": "Kuala Lumpur",
+        "address": "Oriental Art & Cultural Center, Malaysia",
+        "description": "Cultural heritage located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.084761,
+        "longitude": 101.6707926,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "gallery",
+          "website": "https://www.oacc.my/"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ30RFu09KzDERgOSx27xbvyo",
+        "google_place_name": "Oriental Art & Cultural Center 东方人文艺术馆",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11637223069",
+      "name": "Mural",
+      "before": {
+        "osm_id": "node/11637223069",
+        "name": "Mural",
+        "category": "Cultural Heritage",
+        "state": "Melaka",
+        "address": "Mural, Malaysia",
+        "description": "Cultural heritage located in Melaka, Malaysia.",
+        "latitude": 2.1964076,
+        "longitude": 102.2470464,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T12:16:21.549012+00:00",
+        "google_place_id": "ChIJmZATEgDx0TERo5LqqRIqE0k",
+        "google_place_name": "Fan Bing Bing Mural 范冰冰壁画",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/11965395159",
+      "name": "Pineapple",
+      "before": {
+        "osm_id": "node/11965395159",
+        "name": "Pineapple",
+        "category": "Cultural Heritage",
+        "state": "Sarawak",
+        "address": "Pineapple, Malaysia",
+        "description": "Cultural heritage located in Sarawak, Malaysia.",
+        "latitude": 2.1303688,
+        "longitude": 111.5178635,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJddeHJl7D-TERloy6IhI5qzo",
+        "google_place_name": "The Pineapple Statue",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12099283901",
+      "name": "Guan Yin",
+      "before": {
+        "osm_id": "node/12099283901",
+        "name": "Guan Yin",
+        "category": "Cultural Heritage",
+        "state": "Pahang",
+        "address": "Guan Yin, Malaysia",
+        "description": "Cultural heritage located in Pahang, Malaysia.",
+        "latitude": 3.8142304,
+        "longitude": 101.9373597,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJCXwItCn7yzERpXkS1lQ3NDA",
+        "google_place_name": "Sungai Ruan Guan Yin Temple",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12109839558",
+      "name": "Beryl's",
+      "before": {
+        "osm_id": "node/12109839558",
+        "name": "Beryl's",
+        "category": "Museum",
+        "state": "Selangor",
+        "address": "Beryl's, Malaysia",
+        "description": "Museum located in Selangor, Malaysia.",
+        "latitude": 3.0206079,
+        "longitude": 101.7115821,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ31-0PqLKzTERCG4rNnu-V9g",
+        "google_place_name": "Beryl's Cookies Factory",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12110550202",
+      "name": "Alter /  Space Gallery & Studio",
+      "before": {
+        "osm_id": "node/12110550202",
+        "name": "Alter /  Space Gallery & Studio",
+        "category": "Cultural Heritage",
+        "state": "Sarawak",
+        "address": "277A, Jalan Holiday, Miri, 98000",
+        "description": "Cultural heritage located in Sarawak, Malaysia.",
+        "latitude": 4.3787047,
+        "longitude": 113.9763577,
+        "image_url": "",
+        "opening_hours": "Tu-Fr 09:00-17:00; Sa 13:00-16:00",
+        "osm_tags": {
+          "tourism": "gallery",
+          "opening_hours": "Tu-Fr 09:00-17:00; Sa 13:00-16:00"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJEYn5I-ZJHzIR5xa_CLjurVM",
+        "google_place_name": "alter/space Gallery & Studio (Miri)",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12284577501",
+      "name": "Akash Classics Malaysia",
+      "before": {
+        "osm_id": "node/12284577501",
+        "name": "Akash Classics Malaysia",
+        "category": "Museum",
+        "state": "Perak",
+        "address": "Akash Classics Malaysia, Malaysia",
+        "description": "Museum located in Perak, Malaysia.",
+        "latitude": 4.6031852,
+        "longitude": 101.11216,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ0Qgj52TtyjERdFf5j5bvtB0",
+        "google_place_name": "Akash Classics Malaysia Showroom",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12372895062",
+      "name": "Museum Tanahsahi (Entomology Meseum . Art and Culture)",
+      "before": {
+        "osm_id": "node/12372895062",
+        "name": "Museum Tanahsahi (Entomology Meseum . Art and Culture)",
+        "category": "Museum",
+        "state": "Perak",
+        "address": "23, Jalan Besar Sungai Raia, Kampung Kepayang, 31300",
+        "description": "Museum located in Perak, Malaysia.",
+        "latitude": 4.5185542,
+        "longitude": 101.1350575,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ_1FALLDvyjERMkvmp6dVXjQ",
+        "google_place_name": "Museum TANAHSAHI",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12641826710",
+      "name": "Perahu",
+      "before": {
+        "osm_id": "node/12641826710",
+        "name": "Perahu",
+        "category": "Cultural Heritage",
+        "state": "Sabah",
+        "address": "Perahu, Malaysia",
+        "description": "Cultural heritage located in Sabah, Malaysia.",
+        "latitude": 4.4231752,
+        "longitude": 118.4760487,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ1R7dXSVYFTIRHs1J9K-qZBQ",
+        "google_place_name": "Perahu Statue",
+        "google_match_status": "exact",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/12652714923",
+      "name": "Padang Bas Kota Bharu",
+      "before": {
+        "osm_id": "node/12652714923",
+        "name": "Padang Bas Kota Bharu",
+        "category": "Traditional Heritage Site",
+        "state": "Kelantan",
+        "address": "Padang Bas Kota Bharu, Malaysia",
+        "description": "Traditional heritage site located in Kelantan, Malaysia.",
+        "latitude": 6.1288275,
+        "longitude": 102.2397151,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ08gPeEOvtjERfDI5TfSRDg4",
+        "google_place_name": "Padang Bas Kota Bharu (Medan Selera Lama KB)",
+        "google_match_status": "exact",
+        "formatted_address": "Kelantan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/13411744801",
+      "name": "Petrosains Playsmart Kuantan",
+      "before": {
+        "osm_id": "node/13411744801",
+        "name": "Petrosains Playsmart Kuantan",
+        "category": "Museum",
+        "state": "Pahang",
+        "address": "Petrosains Playsmart Kuantan, Malaysia",
+        "description": "Museum located in Pahang, Malaysia.",
+        "latitude": 3.7964686,
+        "longitude": 103.3210723,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ8fs0b3mwyDERFcF9TVBORpg",
+        "google_place_name": "Petrosains PlaySmart Kuantan (in Perpustakaan Awam Pahang)",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/13527820228",
+      "name": "Galeri Seri Negara",
+      "before": {
+        "osm_id": "node/13527820228",
+        "name": "Galeri Seri Negara",
+        "category": "Museum",
+        "state": "Kuala Lumpur",
+        "address": "Galeri Seri Negara, Malaysia",
+        "description": "Step into galleries that reveal the milestones, struggles, and triumphs behind Malaysia’s road to Merdeka. Registration on website compulsory.",
+        "latitude": 3.1417959,
+        "longitude": 101.6819632,
+        "image_url": "",
+        "opening_hours": "Tu-Su 10:00-18:00 \"Reserve a slot via website\"",
+        "osm_tags": {
+          "tourism": "museum",
+          "website": "https://serinegara.com.my/",
+          "opening_hours": "Tu-Su 10:00-18:00 \"Reserve a slot via website\""
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJry-o_LZJzDERnArdpj4mtGU",
+        "google_place_name": "Seri Negara",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/13565867815",
+      "name": "k7 Melaka Art Gallery",
+      "before": {
+        "osm_id": "node/13565867815",
+        "name": "k7 Melaka Art Gallery",
+        "category": "Cultural Heritage",
+        "state": "Melaka",
+        "address": "k7 Melaka Art Gallery, Malaysia",
+        "description": "Other Facebook Page -https://www.facebook.com/p/%E4%B8%83%E9%87%8C%E6%9D%91%E8%97%9D%E8%A1%93%E9%A4%A8-100065230791140/",
+        "latitude": 2.2087401,
+        "longitude": 102.2424913,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "gallery"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJEcHYLnTx0TERdnZMpO6yU04",
+        "google_place_name": "k7 Melaka art gallery 七里村艺术馆",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/1376587787",
+      "name": "Moongate",
+      "before": {
+        "osm_id": "node/1376587787",
+        "name": "Moongate",
+        "category": "Historical Monument",
+        "state": "Penang",
+        "address": "Moongate, Malaysia",
+        "description": "Historical monument located in Penang, Malaysia.",
+        "latitude": 5.4356506,
+        "longitude": 100.2927075,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJLzN2RvfCSjARhtyfSQSJ8Yc",
+        "google_place_name": "Moongate 5 Penang",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/14084420416",
+      "name": "Perigi Raja",
+      "before": {
+        "osm_id": "node/14084420416",
+        "name": "Perigi Raja",
+        "category": "Traditional Heritage Site",
+        "state": "Johor",
+        "address": "Perigi Raja, Malaysia",
+        "description": "Traditional heritage site located in Johor, Malaysia.",
+        "latitude": 1.8826558,
+        "longitude": 103.4019613,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJB4QEBgl70DERPkm3Du3vry8",
+        "google_place_name": "Jalan Perigi Raja",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/2122554935",
+      "name": "Faizy Crystal Glass Blowing",
+      "before": {
+        "osm_id": "node/2122554935",
+        "name": "Faizy Crystal Glass Blowing",
+        "category": "Museum",
+        "state": "Kedah",
+        "address": "Faizy Crystal Glass Blowing, Malaysia",
+        "description": "Museum located in Kedah, Malaysia.",
+        "latitude": 6.4203345,
+        "longitude": 99.7803027,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJMZIfz8d7TDARJ7_kVuke1BA",
+        "google_place_name": "Faizy Crystal Glass Blowing Sdn Bhd",
+        "google_match_status": "exact",
+        "formatted_address": "Kedah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/2449610197",
+      "name": "La Salle Wall of Fame",
+      "before": {
+        "osm_id": "node/2449610197",
+        "name": "La Salle Wall of Fame",
+        "category": "Historical Monument",
+        "state": "Sabah",
+        "address": "La Salle Wall of Fame, Malaysia",
+        "description": "Historical monument located in Sabah, Malaysia.",
+        "latitude": 5.9536211,
+        "longitude": 116.0520357,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJPdxaTi1oOzIR1ZFzonjPTI4",
+        "google_place_name": "SM La Salle",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/2749205371",
+      "name": "Heroes' Monument",
+      "before": {
+        "osm_id": "node/2749205371",
+        "name": "Heroes' Monument",
+        "category": "Historical Monument",
+        "state": "Sarawak",
+        "address": "Heroes' Monument, Malaysia",
+        "description": "Historical monument located in Sarawak, Malaysia.",
+        "latitude": 1.553396,
+        "longitude": 110.3442707,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJYdXPVu2n-zERcAYP_3exvo8",
+        "google_place_name": "Heroes' Monument Park",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/2749216785",
+      "name": "Square Tower",
+      "before": {
+        "osm_id": "node/2749216785",
+        "name": "Square Tower",
+        "category": "Historical Monument",
+        "state": "Sarawak",
+        "address": "Square Tower, Malaysia",
+        "description": "Historical monument located in Sarawak, Malaysia.",
+        "latitude": 1.5602651,
+        "longitude": 110.3455639,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "ruins"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ072yyO-n-zERWC1JNO3qP7I",
+        "google_place_name": "Square Tower & Magenta Restaurant",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4300677694",
+      "name": "Istana Mahkota",
+      "before": {
+        "osm_id": "node/4300677694",
+        "name": "Istana Mahkota",
+        "category": "Historical Monument",
+        "state": "Kelantan",
+        "address": "Istana Mahkota, Malaysia",
+        "description": "Historical monument located in Kelantan, Malaysia.",
+        "latitude": 6.0906716,
+        "longitude": 102.2710105,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJS_hH_U67tjERtRXCUCPRbkc",
+        "google_place_name": "Istana Mahkota Kelantan",
+        "google_match_status": "exact",
+        "formatted_address": "Kelantan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4519924691",
+      "name": "Ushamax Sdn Bhd",
+      "before": {
+        "osm_id": "node/4519924691",
+        "name": "Ushamax Sdn Bhd",
+        "category": "Cultural Heritage",
+        "state": "Selangor",
+        "address": "18, Jalan Presiden F U1/F",
+        "description": "Cultural heritage located in Selangor, Malaysia.",
+        "latitude": 3.094949,
+        "longitude": 101.5872445,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJLe-etThMzDERZmf7bEQpEks",
+        "google_place_name": "Ushamax (M) Sdn Bhd",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4525948489",
+      "name": "Herbarium",
+      "before": {
+        "osm_id": "node/4525948489",
+        "name": "Herbarium",
+        "category": "Museum",
+        "state": "Kuala Lumpur",
+        "address": "Herbarium, Malaysia",
+        "description": "Very small collection (84) of herbs and plants",
+        "latitude": 3.1468405,
+        "longitude": 101.6869418,
+        "image_url": "",
+        "opening_hours": "Mo-Fr 08:30-17:00",
+        "osm_tags": {
+          "tourism": "museum",
+          "opening_hours": "Mo-Fr 08:30-17:00"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ2TLl0stJzDERhBbKKVXNs64",
+        "google_place_name": "Perdana Botanical Gardens Herbarium",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4549309107",
+      "name": "Antique Shop",
+      "before": {
+        "osm_id": "node/4549309107",
+        "name": "Antique Shop",
+        "category": "Museum",
+        "state": "Penang",
+        "address": "Antique Shop, Malaysia",
+        "description": "Museum located in Penang, Malaysia.",
+        "latitude": 5.41698,
+        "longitude": 100.3358842,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJGR0uG7wpSzARNV1M3Ksa8-0",
+        "google_place_name": "KS Coins & Collectibles- Antique Shop",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4576751996",
+      "name": "Time Tunnel Museum",
+      "before": {
+        "osm_id": "node/4576751996",
+        "name": "Time Tunnel Museum",
+        "category": "Museum",
+        "state": "Pahang",
+        "address": "Brinchang, Cameron Highlands",
+        "description": "Museum located in Pahang, Malaysia.",
+        "latitude": 4.4972912,
+        "longitude": 101.3952605,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "wikidata": "Q7805179"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJE8OoIgBZyjER3EHN5C0F2NQ",
+        "google_place_name": "Time Tunnel 时光隧道",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4605231089",
+      "name": "Siong Long",
+      "before": {
+        "osm_id": "node/4605231089",
+        "name": "Siong Long",
+        "category": "Cultural Heritage",
+        "state": "Selangor",
+        "address": "Siong Long, Malaysia",
+        "description": "Cultural heritage located in Selangor, Malaysia.",
+        "latitude": 2.9836054,
+        "longitude": 101.6264835,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJr144O3C0zTERztquMG2DRPk",
+        "google_place_name": "SIONG LONG RESOURCES",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4631558289",
+      "name": "Street art",
+      "before": {
+        "osm_id": "node/4631558289",
+        "name": "Street art",
+        "category": "Cultural Heritage",
+        "state": "Perak",
+        "address": "Street art, Malaysia",
+        "description": "Cultural heritage located in Perak, Malaysia.",
+        "latitude": 4.5965346,
+        "longitude": 101.0771498,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJA4vNYQDtyjERelAuoUO5KU8",
+        "google_place_name": "Street Art - Tiger & Tree",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4683146489",
+      "name": "Gallery",
+      "before": {
+        "osm_id": "node/4683146489",
+        "name": "Gallery",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Gallery, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.4171752,
+        "longitude": 100.3375571,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ_yFZaZDDSjARkY3kXexvWCU",
+        "google_place_name": "Unique Penang Art Gallery",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4728861484",
+      "name": "Bukit Kutu Hill Station",
+      "before": {
+        "osm_id": "node/4728861484",
+        "name": "Bukit Kutu Hill Station",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Bukit Kutu Hill Station, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 3.5429991,
+        "longitude": 101.7201801,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "ruins"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJzcFXlygNzDERVmOCv7OHLm0",
+        "google_place_name": "Bukit Kutu",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4751861023",
+      "name": "Lakeside Pavilion",
+      "before": {
+        "osm_id": "node/4751861023",
+        "name": "Lakeside Pavilion",
+        "category": "Museum",
+        "state": "Sabah",
+        "address": "Lakeside Pavilion, Malaysia",
+        "description": "Museum located in Sabah, Malaysia.",
+        "latitude": 5.8760283,
+        "longitude": 117.9443771,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJkS7RSbvZODIRH9Ugv4rKph8",
+        "google_place_name": "Lakeside Pavilion (RDC)",
+        "google_match_status": "exact",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4776350022",
+      "name": "Street Art",
+      "before": {
+        "osm_id": "node/4776350022",
+        "name": "Street Art",
+        "category": "Cultural Heritage",
+        "state": "Perak",
+        "address": "Street Art, Malaysia",
+        "description": "Cultural heritage located in Perak, Malaysia.",
+        "latitude": 4.5959948,
+        "longitude": 101.0780238,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T12:16:21.549012+00:00",
+        "google_place_id": "ChIJA4vNYQDtyjERelAuoUO5KU8",
+        "google_place_name": "Street Art - Tiger & Tree",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4916993626",
+      "name": "\"Beca\"",
+      "before": {
+        "osm_id": "node/4916993626",
+        "name": "\"Beca\"",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "\"Beca\", Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.4191706,
+        "longitude": 100.3377147,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJl321F5DDSjARt_jbBofrm9Q",
+        "google_place_name": "BECA-Sculpture",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4917104521",
+      "name": "Marking George Town - \"Spy\"",
+      "before": {
+        "osm_id": "node/4917104521",
+        "name": "Marking George Town - \"Spy\"",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Marking George Town - \"Spy\", Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.418528,
+        "longitude": 100.3338619,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJy6AexZDDSjARaWFT88J9MRY",
+        "google_place_name": "Spy",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/4973495753",
+      "name": "Bungalow at Bukit Kutu",
+      "before": {
+        "osm_id": "node/4973495753",
+        "name": "Bungalow at Bukit Kutu",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Bungalow at Bukit Kutu, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 3.5428829,
+        "longitude": 101.7177734,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "ruins"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJzcFXlygNzDERVmOCv7OHLm0",
+        "google_place_name": "Bukit Kutu",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5010826123",
+      "name": "Run Amok",
+      "before": {
+        "osm_id": "node/5010826123",
+        "name": "Run Amok",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Run Amok, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.4117112,
+        "longitude": 100.3273571,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJaxXei5fDSjARU2o-dN6Q2xE",
+        "google_place_name": "Run Amok Gallery",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5144391225",
+      "name": "Clock Tower",
+      "before": {
+        "osm_id": "node/5144391225",
+        "name": "Clock Tower",
+        "category": "Historical Monument",
+        "state": "Sarawak",
+        "address": "Clock Tower, Malaysia",
+        "description": "Historical monument located in Sarawak, Malaysia.",
+        "latitude": 2.0161259,
+        "longitude": 112.937641,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T12:16:21.549012+00:00",
+        "google_place_id": "ChIJY62pKQC_AjIRfoLzhlXtXvc",
+        "google_place_name": "Kapit Clock Tower",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5151028122",
+      "name": "Street Art",
+      "before": {
+        "osm_id": "node/5151028122",
+        "name": "Street Art",
+        "category": "Cultural Heritage",
+        "state": "Kelantan",
+        "address": "Street Art, Malaysia",
+        "description": "Cultural heritage located in Kelantan, Malaysia.",
+        "latitude": 6.1263342,
+        "longitude": 102.2382717,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T12:16:21.549012+00:00",
+        "google_place_id": "ChIJ60S16MWvtjERPLOi9ZLe_FY",
+        "google_place_name": "Street Art Kota Bharu",
+        "google_match_status": "exact",
+        "formatted_address": "Kelantan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5306235123",
+      "name": "Miniature wonders",
+      "before": {
+        "osm_id": "node/5306235123",
+        "name": "Miniature wonders",
+        "category": "Museum",
+        "state": "Perak",
+        "address": "Miniature wonders, Malaysia",
+        "description": "Museum located in Perak, Malaysia.",
+        "latitude": 4.5958326,
+        "longitude": 101.0783482,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJB6W5QHzsyjERqWUniJcNSSk",
+        "google_place_name": "Miniature Wonders Art Gallery",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5344299020",
+      "name": "Replica Royal Palace Melawar",
+      "before": {
+        "osm_id": "node/5344299020",
+        "name": "Replica Royal Palace Melawar",
+        "category": "Museum",
+        "state": "Negeri Sembilan",
+        "address": "Replica Royal Palace Melawar, Malaysia",
+        "description": "Museum located in Negeri Sembilan, Malaysia.",
+        "latitude": 2.5058607,
+        "longitude": 102.115296,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJrVmLSx4HzjERswVtuzkjwu8",
+        "google_place_name": "Replica Royal Palace Melawar (Rembau Museum)",
+        "google_match_status": "exact",
+        "formatted_address": "Negeri Sembilan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5382681823",
+      "name": "Kapsul Masa UTC Kedah",
+      "before": {
+        "osm_id": "node/5382681823",
+        "name": "Kapsul Masa UTC Kedah",
+        "category": "Traditional Heritage Site",
+        "state": "Kedah",
+        "address": "Kapsul Masa UTC Kedah, Malaysia",
+        "description": "Traditional heritage site located in Kedah, Malaysia.",
+        "latitude": 6.1184944,
+        "longitude": 100.3702971,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "time_capsule"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJVVWVBb9ESzAR_kbZbMdY_UI",
+        "google_place_name": "UTC Kedah",
+        "google_match_status": "exact",
+        "formatted_address": "Kedah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5617602560",
+      "name": "\"The Chicken Alley\" Mural",
+      "before": {
+        "osm_id": "node/5617602560",
+        "name": "\"The Chicken Alley\" Mural",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "\"The Chicken Alley\" Mural, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.4165732,
+        "longitude": 100.3407526,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJY9ngXI7DSjARQo0IhV47d2A",
+        "google_place_name": "The Chicken Alley",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5774747656",
+      "name": "Waterfront Seahorse Statue",
+      "before": {
+        "osm_id": "node/5774747656",
+        "name": "Waterfront Seahorse Statue",
+        "category": "Cultural Heritage",
+        "state": "Sarawak",
+        "address": "Waterfront Seahorse Statue, Malaysia",
+        "description": "Cultural heritage located in Sarawak, Malaysia.",
+        "latitude": 4.399285,
+        "longitude": 113.985897,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJQ6TiChxPHzIRKDGjSDMKw2M",
+        "google_place_name": "Seahorse",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/5859992760",
+      "name": "Jugra Sign",
+      "before": {
+        "osm_id": "node/5859992760",
+        "name": "Jugra Sign",
+        "category": "Cultural Heritage",
+        "state": "Selangor",
+        "address": "Jugra Sign, Malaysia",
+        "description": "Cultural heritage located in Selangor, Malaysia.",
+        "latitude": 2.8355785,
+        "longitude": 101.4174694,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJk5h9IIymzTERhVvlHta3R9s",
+        "google_place_name": "Jugra",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/6432204513",
+      "name": "Monumen Badminton Dato' Hj Sidek Abdullah Kamar",
+      "before": {
+        "osm_id": "node/6432204513",
+        "name": "Monumen Badminton Dato' Hj Sidek Abdullah Kamar",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Monumen Badminton Dato' Hj Sidek Abdullah Kamar, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 2.7984864,
+        "longitude": 101.4917298,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJJ96Ebc2jzTER1Uv2Dp7JdAk",
+        "google_place_name": "Monumen Badminton Keluarga Dato’ Hj Sidek",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/6591463586",
+      "name": "Street Art - “cat looking through blue window”",
+      "before": {
+        "osm_id": "node/6591463586",
+        "name": "Street Art - “cat looking through blue window”",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Street Art - “cat looking through blue window”, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.4147649,
+        "longitude": 100.3366628,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJg39BGADDSjARRUZ9UURkuaY",
+        "google_place_name": "Street Art - Kittens in Window",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/6624785569",
+      "name": "TSTC Jetty Training Centre",
+      "before": {
+        "osm_id": "node/6624785569",
+        "name": "TSTC Jetty Training Centre",
+        "category": "Traditional Heritage Site",
+        "state": "Terengganu",
+        "address": "TSTC Jetty Training Centre, Malaysia",
+        "description": "Traditional heritage site located in Terengganu, Malaysia.",
+        "latitude": 4.2559474,
+        "longitude": 103.4255569,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "wreck"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJF7P7HBWHyDERoeV5OZXH9u4",
+        "google_place_name": "Terengganu Safety Training Centre Jetty",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Terengganu, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/6898908498",
+      "name": "Mr. Bean",
+      "before": {
+        "osm_id": "node/6898908498",
+        "name": "Mr. Bean",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Mr. Bean, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.418985,
+        "longitude": 100.3345276,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJNRQUL5jDSjAR0IFZs7Bebhc",
+        "google_place_name": "Mural - Mr. Bean",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/7001779267",
+      "name": "MCKIP",
+      "before": {
+        "osm_id": "node/7001779267",
+        "name": "MCKIP",
+        "category": "Cultural Heritage",
+        "state": "Pahang",
+        "address": "MCKIP, Malaysia",
+        "description": "Cultural heritage located in Pahang, Malaysia.",
+        "latitude": 3.997244,
+        "longitude": 103.3484393,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJEY2bVDKXyDERAoG295OadwQ",
+        "google_place_name": "MCKIP Monument ( Next to the gallery )",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/7241659593",
+      "name": "Chinese opera",
+      "before": {
+        "osm_id": "node/7241659593",
+        "name": "Chinese opera",
+        "category": "Cultural Heritage",
+        "state": "Johor",
+        "address": "Chinese opera, Malaysia",
+        "description": "Cultural heritage located in Johor, Malaysia.",
+        "latitude": 2.0454864,
+        "longitude": 102.5679012,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJu6QtVTK50TERLZzL3c8teoY",
+        "google_place_name": "The Chinese Opera Mural @ Persatuan Kwong Siu Wui Koon",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/7241872111",
+      "name": "the loving sisters",
+      "before": {
+        "osm_id": "node/7241872111",
+        "name": "the loving sisters",
+        "category": "Cultural Heritage",
+        "state": "Johor",
+        "address": "the loving sisters, Malaysia",
+        "description": "Cultural heritage located in Johor, Malaysia.",
+        "latitude": 2.0483709,
+        "longitude": 102.5716181,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJf_Xw8wa50TERqoAzgOU64YU",
+        "google_place_name": "The Loving Sisters - Julia Volchkova",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/7642194458",
+      "name": "House of Yeap Chor Ee",
+      "before": {
+        "osm_id": "node/7642194458",
+        "name": "House of Yeap Chor Ee",
+        "category": "Museum",
+        "state": "Penang",
+        "address": "4, Lebuh Penang, George Town, 10200",
+        "description": "Museum located in Penang, Malaysia.",
+        "latitude": 5.4199297,
+        "longitude": 100.3418015,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJuWXFe4_DSjARPz1KgbJTrb4",
+        "google_place_name": "The House of Yeap Chor Ee",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/8175332117",
+      "name": "Nirvana Memorial Park Tiram Johor",
+      "before": {
+        "osm_id": "node/8175332117",
+        "name": "Nirvana Memorial Park Tiram Johor",
+        "category": "Historical Monument",
+        "state": "Johor",
+        "address": "Nirvana Memorial Park Tiram Johor, Malaysia",
+        "description": "Historical monument located in Johor, Malaysia.",
+        "latitude": 1.5852339,
+        "longitude": 103.9119093,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJs2Oeuf1p2jERP1GqpvC0RpA",
+        "google_place_name": "Nirvana Memorial Park- Tiram",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/8870087897",
+      "name": "Pineapple",
+      "before": {
+        "osm_id": "node/8870087897",
+        "name": "Pineapple",
+        "category": "Cultural Heritage",
+        "state": "Johor",
+        "address": "Pineapple, Malaysia",
+        "description": "Cultural heritage located in Johor, Malaysia.",
+        "latitude": 1.5076211,
+        "longitude": 103.5109822,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T12:16:21.549012+00:00",
+        "google_place_id": "ChIJoQkPbrCf0DERn_ibcLTqGH4",
+        "google_place_name": "Pekan Nanas Pineapple Statue",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/9121631164",
+      "name": "Penang Free School Main Gate",
+      "before": {
+        "osm_id": "node/9121631164",
+        "name": "Penang Free School Main Gate",
+        "category": "Historical Monument",
+        "state": "Penang",
+        "address": "Penang Free School Main Gate, Malaysia",
+        "description": "Historical monument located in Penang, Malaysia.",
+        "latitude": 5.403574,
+        "longitude": 100.3040288,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJGSld1MzDSjARk6Ox9klj60I",
+        "google_place_name": "Penang Free School",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/9455370921",
+      "name": "Langkawi Geopark Discovery Centre",
+      "before": {
+        "osm_id": "node/9455370921",
+        "name": "Langkawi Geopark Discovery Centre",
+        "category": "Museum",
+        "state": "Kedah",
+        "address": "Langkawi Geopark Discovery Centre, Malaysia",
+        "description": "Museum located in Kedah, Malaysia.",
+        "latitude": 6.4048356,
+        "longitude": 99.8576696,
+        "image_url": "",
+        "opening_hours": "Mo-Su 09:00-17:00",
+        "osm_tags": {
+          "tourism": "museum",
+          "website": "https://langkawigeopark.com.my/discovery-centre/",
+          "start_date": "2019-08",
+          "opening_hours": "Mo-Su 09:00-17:00"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJc4TdtJ19TDARX6EbsYgcahM",
+        "google_place_name": "Discovery Centre, Langkawi UNESCO Global Geopark",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Kedah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/9810788568",
+      "name": "KTN",
+      "before": {
+        "osm_id": "node/9810788568",
+        "name": "KTN",
+        "category": "Cultural Heritage",
+        "state": "Pahang",
+        "address": "KTN, Malaysia",
+        "description": "Cultural heritage located in Pahang, Malaysia.",
+        "latitude": 3.8052827,
+        "longitude": 103.327366,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJH-wZLp26yDERftC6wE9fhv8",
+        "google_place_name": "SUKAN MAJU (KTN) SDN BHD",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/9919056987",
+      "name": "Datuk Chong Tain Vun",
+      "before": {
+        "osm_id": "node/9919056987",
+        "name": "Datuk Chong Tain Vun",
+        "category": "Cultural Heritage",
+        "state": "Sabah",
+        "address": "Datuk Chong Tain Vun, Malaysia",
+        "description": "Cultural heritage located in Sabah, Malaysia.",
+        "latitude": 5.8416416,
+        "longitude": 118.0992327,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJFfkzv9XaODIRrC7WG0Av_Vs",
+        "google_place_name": "Chong Tain Vun Park",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "node/9963878901",
+      "name": "Tugu Peringatan Cho Huan Lai",
+      "before": {
+        "osm_id": "node/9963878901",
+        "name": "Tugu Peringatan Cho Huan Lai",
+        "category": "Historical Monument",
+        "state": "Sabah",
+        "address": "Tugu Peringatan Cho Huan Lai, Malaysia",
+        "description": "Historical monument located in Sabah, Malaysia.",
+        "latitude": 5.3507632,
+        "longitude": 116.1678278,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJYz8nMOzuPDIRQaraOTl39TU",
+        "google_place_name": "Cho Huan Lai Memorial",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "relation/16441382",
+      "name": "Gohtong Memorial Park (Upgrading)",
+      "before": {
+        "osm_id": "relation/16441382",
+        "name": "Gohtong Memorial Park (Upgrading)",
+        "category": "Historical Monument",
+        "state": "Pahang",
+        "address": "Gohtong Memorial Park (Upgrading), Malaysia",
+        "description": "Historical monument located in Pahang, Malaysia.",
+        "latitude": 3.40228,
+        "longitude": 101.7756217,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJPX0FrDgUzDERr5aQacgjGcA",
+        "google_place_name": "Gohtong Memorial Park",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "relation/17418186",
+      "name": "Istana Melawati",
+      "before": {
+        "osm_id": "relation/17418186",
+        "name": "Istana Melawati",
+        "category": "Historical Monument",
+        "state": "Putrajaya",
+        "address": "Putrajaya",
+        "description": "Historical monument located in Putrajaya, Malaysia.",
+        "latitude": 2.9452776,
+        "longitude": 101.7008801,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle",
+          "wikidata": "Q1674825",
+          "wikipedia": "en:Istana Melawati"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJT-dweAC3zTERTFObgSPbTBY",
+        "google_place_name": "Istana Melawati Putrajaya",
+        "google_match_status": "exact",
+        "formatted_address": "Putrajaya, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "relation/17470491",
+      "name": "Galeri Azman Hashim UMS",
+      "before": {
+        "osm_id": "relation/17470491",
+        "name": "Galeri Azman Hashim UMS",
+        "category": "Cultural Heritage",
+        "state": "Sabah",
+        "address": "Galeri Azman Hashim UMS, Malaysia",
+        "description": "Cultural heritage located in Sabah, Malaysia.",
+        "latitude": 6.0416379,
+        "longitude": 116.1136346,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "gallery",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJDQOkcxVrOzIRovkELfDwBFI",
+        "google_place_name": "Azman Hashim UMS Gallery",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Sabah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "seed/niah-caves",
+      "name": "Niah National Park and Caves",
+      "before": {
+        "osm_id": "seed/niah-caves",
+        "name": "Niah National Park and Caves",
+        "category": "Historical Monument",
+        "state": "Sarawak",
+        "address": "Niah, Miri Division, Sarawak",
+        "description": "Cave complex with major prehistoric archaeological evidence.",
+        "latitude": 3.814,
+        "longitude": 113.781,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "natural": "cave_entrance",
+          "historic": "archaeological_site"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:24:28.89916+00:00",
+        "updated_at": "2026-09-05T12:46:43.653436+00:00",
+        "google_place_id": "ChIJEabDttjpHjIRWGlhHAJkjfA",
+        "google_place_name": "Niah National Park",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1052443849",
+      "name": "TAMAN TASIK TITIWANGSA",
+      "before": {
+        "osm_id": "way/1052443849",
+        "name": "TAMAN TASIK TITIWANGSA",
+        "category": "Cultural Heritage",
+        "state": "Kuala Lumpur",
+        "address": "TAMAN TASIK TITIWANGSA, Malaysia",
+        "description": "Cultural heritage located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.1790197,
+        "longitude": 101.7044955,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJfYY3h-I3zDERQUK3EweOCP8",
+        "google_place_name": "Tasik Titiwangsa",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1058167192",
+      "name": "PANTAI SENTRAL PARK",
+      "before": {
+        "osm_id": "way/1058167192",
+        "name": "PANTAI SENTRAL PARK",
+        "category": "Cultural Heritage",
+        "state": "Kuala Lumpur",
+        "address": "PANTAI SENTRAL PARK, Malaysia",
+        "description": "Cultural heritage located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.1023791,
+        "longitude": 101.6662769,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJn3QlGTJKzDERe3f9OhlJQks",
+        "google_place_name": "IJM Land Centre of Excellence I.C.E. Gallery @ Pantai Sentral Park",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1185603314",
+      "name": "Istana Pantai Bahagia",
+      "before": {
+        "osm_id": "way/1185603314",
+        "name": "Istana Pantai Bahagia",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Istana Pantai Bahagia, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 2.7262434,
+        "longitude": 101.4553592,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJrXSexgejzTERwiNiEl7I8RM",
+        "google_place_name": "Pejabat DYMM Sultan Selangor Istana Pantai Bahagia",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1251874678",
+      "name": "Jabatan Muzium Malaysia, Wilayah Selatan",
+      "before": {
+        "osm_id": "way/1251874678",
+        "name": "Jabatan Muzium Malaysia, Wilayah Selatan",
+        "category": "Historical Monument",
+        "state": "Melaka",
+        "address": "3, Jalan Kota, Melaka, 75000",
+        "description": "Historical monument located in Melaka, Malaysia.",
+        "latitude": 2.1921779,
+        "longitude": 102.2486662,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "public",
+          "historic": "building"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ35SnVefx0TERfaFUpAol1zI",
+        "google_place_name": "Jabatan Muzium Malaysia",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1251888430",
+      "name": "Balai Seni Lukis",
+      "before": {
+        "osm_id": "way/1251888430",
+        "name": "Balai Seni Lukis",
+        "category": "Historical Monument",
+        "state": "Melaka",
+        "address": "Balai Seni Lukis, Malaysia",
+        "description": "Historical monument located in Melaka, Malaysia.",
+        "latitude": 2.19461,
+        "longitude": 102.2495452,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "building"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJsYo9JADx0TERC9pWoMiQb28",
+        "google_place_name": "Malacca Art Gallery | Balai Seni Lukis",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/129018570",
+      "name": "Muzium Sarawak",
+      "before": {
+        "osm_id": "way/129018570",
+        "name": "Muzium Sarawak",
+        "category": "Museum",
+        "state": "Sarawak",
+        "address": "Muzium Sarawak, Malaysia",
+        "description": "Museum located in Sarawak, Malaysia.",
+        "latitude": 1.5548004,
+        "longitude": 110.3434605,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "building": "yes",
+          "wikidata": "Q3329752",
+          "wikipedia": "en:Sarawak State Museum",
+          "start_date": "1891"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ-61D7Ban-zERp4yLOmuqKLI",
+        "google_place_name": "Pejabat Jabatan Muzium Sarawak",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1293060214",
+      "name": "Bastion Victoria",
+      "before": {
+        "osm_id": "way/1293060214",
+        "name": "Bastion Victoria",
+        "category": "Historical Monument",
+        "state": "Melaka",
+        "address": "Bastion Victoria, Malaysia",
+        "description": "Historical monument located in Melaka, Malaysia.",
+        "latitude": 2.1956448,
+        "longitude": 102.2504398,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "attraction",
+          "historic": "ruins"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ6-ytlN7x0TERB28wUZiLI6U",
+        "google_place_name": "Bastion Victoria (UNESCO World Heritage Site)",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1310795913",
+      "name": "Istana Puteri Bongsu",
+      "before": {
+        "osm_id": "way/1310795913",
+        "name": "Istana Puteri Bongsu",
+        "category": "Museum",
+        "state": "Selangor",
+        "address": "Istana Puteri Bongsu, Malaysia",
+        "description": "Museum located in Selangor, Malaysia.",
+        "latitude": 2.9239652,
+        "longitude": 101.7662922,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJFyNPiRrJzTERPhMSqB3__8k",
+        "google_place_name": "Istana Puteri Bongsu UKM ايستان ڤوتري بوقسو",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/1419914017",
+      "name": "Melaka Anti Japanese Memorial",
+      "before": {
+        "osm_id": "way/1419914017",
+        "name": "Melaka Anti Japanese Memorial",
+        "category": "Historical Monument",
+        "state": "Melaka",
+        "address": "Melaka Anti Japanese Memorial, Malaysia",
+        "description": "Historical monument located in Melaka, Malaysia.",
+        "latitude": 2.1956409,
+        "longitude": 102.2554269,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument",
+          "wikipedia": "en:Melaka Warrior Monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ1RH9mSDu0TERcdxi_VPGR9k",
+        "google_place_name": "Melaka Warrior Monument For The Chinese Victims of Anti Japanese Occupation",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/157569300",
+      "name": "Istana Balai Besar",
+      "before": {
+        "osm_id": "way/157569300",
+        "name": "Istana Balai Besar",
+        "category": "Historical Monument",
+        "state": "Kelantan",
+        "address": "Istana Balai Besar, Malaysia",
+        "description": "Historical monument located in Kelantan, Malaysia.",
+        "latitude": 6.1310855,
+        "longitude": 102.2379825,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "castle",
+          "wikidata": "Q7353868",
+          "wikipedia": "ms:Istana Balai Besar"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ5QZsVQCvtjER0RnxZxqqA30",
+        "google_place_name": "Istana Balai Besar ايستان بالاي بسر",
+        "google_match_status": "exact",
+        "formatted_address": "Kelantan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/160440791",
+      "name": "Dewan Bandaraya",
+      "before": {
+        "osm_id": "way/160440791",
+        "name": "Dewan Bandaraya",
+        "category": "Historical Monument",
+        "state": "Penang",
+        "address": "Jalan Padang Kota Lama, George Town, 10200",
+        "description": "Historical monument located in Penang, Malaysia.",
+        "latitude": 5.4219684,
+        "longitude": 100.3414048,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "public",
+          "heritage": "1",
+          "wikidata": "Q3281103",
+          "wikipedia": "en:City Hall, Penang"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJRTtqDZvDSjARinKMxHy9VXM",
+        "google_place_name": "Dewan Bandaraya MBPP",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/171114876",
+      "name": "Istana Hinggap Perak",
+      "before": {
+        "osm_id": "way/171114876",
+        "name": "Istana Hinggap Perak",
+        "category": "Historical Monument",
+        "state": "Kuala Lumpur",
+        "address": "Istana Hinggap Perak, Malaysia",
+        "description": "\"Istana Hinggap Perak\" refers to a palace used temporarily by the royal family of Perak when they are in Kuala Lumpur.",
+        "latitude": 3.136233,
+        "longitude": 101.6814902,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJOYY4dgBJzDERgA34j6ftu7c",
+        "google_place_name": "ISTANA PERAK",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/189574938",
+      "name": "Penang State Museum & Art Gallery (Branch)",
+      "before": {
+        "osm_id": "way/189574938",
+        "name": "Penang State Museum & Art Gallery (Branch)",
+        "category": "Museum",
+        "state": "Penang",
+        "address": "57, Macalister Road",
+        "description": "Museum located in Penang, Malaysia.",
+        "latitude": 5.4150094,
+        "longitude": 100.3254966,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ6xszcb7DSjARQvFfMHklNZo",
+        "google_place_name": "Penang State Museum",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/247175848",
+      "name": "Cheong Fatt Tze Mansion",
+      "before": {
+        "osm_id": "way/247175848",
+        "name": "Cheong Fatt Tze Mansion",
+        "category": "Museum",
+        "state": "Penang",
+        "address": "14, Lebuh Leith, George Town, 10200",
+        "description": "Museum located in Penang, Malaysia.",
+        "latitude": 5.4215056,
+        "longitude": 100.3347742,
+        "image_url": "",
+        "opening_hours": "\"Daily tours 11:00, 14:00, 15:30\"",
+        "osm_tags": {
+          "tourism": "museum",
+          "website": "https://www.cheongfatttzemansion.com/",
+          "building": "yes",
+          "wikidata": "Q5091627",
+          "wikipedia": "en:Cheong Fatt Tze Mansion",
+          "opening_hours": "\"Daily tours 11:00, 14:00, 15:30\""
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJJZ1Pb5rDSjAR0FgEYqphTw0",
+        "google_place_name": "Cheong Fatt Tze - The Blue Mansion",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/285911176",
+      "name": "Liu Men Melaka",
+      "before": {
+        "osm_id": "way/285911176",
+        "name": "Liu Men Melaka",
+        "category": "Traditional Heritage Site",
+        "state": "Melaka",
+        "address": "48-56, Jalan Tokong, 75200",
+        "description": "Traditional heritage site located in Melaka, Malaysia.",
+        "latitude": 2.1979598,
+        "longitude": 102.2464882,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "hotel",
+          "website": "https://www.liumenhotel.com",
+          "building": "yes",
+          "historic": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJn6zzYp7x0TERtPE5MnLlCQw",
+        "google_place_name": "Liu Men Hotel Melaka",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/323762224",
+      "name": "Istana Hinggap Selangor",
+      "before": {
+        "osm_id": "way/323762224",
+        "name": "Istana Hinggap Selangor",
+        "category": "Historical Monument",
+        "state": "Kuala Lumpur",
+        "address": "Istana Hinggap Selangor, Malaysia",
+        "description": "Historical monument located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.1573687,
+        "longitude": 101.6835646,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJNYeveABJzDERRNxj6yK1xdg",
+        "google_place_name": "Istana Selangor (Istana Hinggap Kuala Lumpur)",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/353344429",
+      "name": "Astana",
+      "before": {
+        "osm_id": "way/353344429",
+        "name": "Astana",
+        "category": "Historical Monument",
+        "state": "Sarawak",
+        "address": "Astana, Malaysia",
+        "description": "Historical monument located in Sarawak, Malaysia.",
+        "latitude": 1.5637683,
+        "longitude": 110.3460467,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle",
+          "wikidata": "Q4204300",
+          "wikipedia": "en:The Astana, Sarawak",
+          "start_date": "1888"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJqf4uC-Wn-zERGbZJRaPt4RE",
+        "google_place_name": "The Astana",
+        "google_match_status": "exact",
+        "formatted_address": "Sarawak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/375635986",
+      "name": "Rumah Penghulu Abu Seman",
+      "before": {
+        "osm_id": "way/375635986",
+        "name": "Rumah Penghulu Abu Seman",
+        "category": "Museum",
+        "state": "Kuala Lumpur",
+        "address": "Rumah Penghulu Abu Seman, Malaysia",
+        "description": "Only accessible with guided tours that last for 30mins: Tuesdays - Saturdays: 11 AM & 3PM. Groups need to book in advance.",
+        "latitude": 3.1502734,
+        "longitude": 101.7164633,
+        "image_url": "",
+        "opening_hours": "Tu-Sa 11:00-17:00",
+        "osm_tags": {
+          "tourism": "museum",
+          "building": "historic",
+          "opening_hours": "Tu-Sa 11:00-17:00"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJQd6sOS02zDER_HJnQBZXwXM",
+        "google_place_name": "Rumah Penghulu Abu Seman (The Penghulu Abu Seman House)",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/428954061",
+      "name": "Balai Seni Visual Negara",
+      "before": {
+        "osm_id": "way/428954061",
+        "name": "Balai Seni Visual Negara",
+        "category": "Cultural Heritage",
+        "state": "Kuala Lumpur",
+        "address": "2, Jalan Temerloh, 53200",
+        "description": "Cultural heritage located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.1737611,
+        "longitude": 101.7050833,
+        "image_url": "",
+        "opening_hours": "Mo-Fr 09:00-19:00",
+        "osm_tags": {
+          "tourism": "gallery",
+          "website": "https://www.artgallery.gov.my/",
+          "building": "public",
+          "wikidata": "Q3294835",
+          "wikipedia": "en:National Visual Arts Gallery (Malaysia)",
+          "opening_hours": "Mo-Fr 09:00-19:00"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJx0daMB5IzDERXJQ4pkAPj0w",
+        "google_place_name": "Lembaga Pembangunan Seni Visual Negara",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/466670179",
+      "name": "Istana Darul Aman Kedah",
+      "before": {
+        "osm_id": "way/466670179",
+        "name": "Istana Darul Aman Kedah",
+        "category": "Historical Monument",
+        "state": "Kuala Lumpur",
+        "address": "2, Jalan Kedah",
+        "description": "Historical monument located in Kuala Lumpur, Malaysia.",
+        "latitude": 3.1405198,
+        "longitude": 101.6776397,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJK2jeFLpJzDERLrzLAjkfbFE",
+        "google_place_name": "Istana Darul Aman",
+        "google_match_status": "exact",
+        "formatted_address": "Kuala Lumpur, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/478273609",
+      "name": "Muzium Nelayan",
+      "before": {
+        "osm_id": "way/478273609",
+        "name": "Muzium Nelayan",
+        "category": "Museum",
+        "state": "Johor",
+        "address": "Muzium Nelayan, Malaysia",
+        "description": "Museum located in Johor, Malaysia.",
+        "latitude": 1.6147754,
+        "longitude": 104.2579109,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "wikidata": "Q7393420",
+          "wikipedia": "en:Tanjung Balau Fishermen Museum"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJSWp7rWhN2jEReFQYMTje944",
+        "google_place_name": "Muzium Nelayan Tanjung Balau (Fishermen Museum)",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/544970002",
+      "name": "Istana Hinggap Negeri Sembilan",
+      "before": {
+        "osm_id": "way/544970002",
+        "name": "Istana Hinggap Negeri Sembilan",
+        "category": "Historical Monument",
+        "state": "Negeri Sembilan",
+        "address": "Istana Hinggap Negeri Sembilan, Malaysia",
+        "description": "Historical monument located in Negeri Sembilan, Malaysia.",
+        "latitude": 2.727691,
+        "longitude": 101.9430748,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ61PMqbrdzTERYCsWUyQDLmY",
+        "google_place_name": "Istana Hinggap",
+        "google_match_status": "exact",
+        "formatted_address": "Negeri Sembilan, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/556030844",
+      "name": "Galeri Tenun Bandar",
+      "before": {
+        "osm_id": "way/556030844",
+        "name": "Galeri Tenun Bandar",
+        "category": "Museum",
+        "state": "Pahang",
+        "address": "Galeri Tenun Bandar, Malaysia",
+        "description": "Museum located in Pahang, Malaysia.",
+        "latitude": 3.8037419,
+        "longitude": 103.322304,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "museum",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJj85R4YK6yDER3N3aq3JrrFc",
+        "google_place_name": "Galeri Tenun Bandar My Pride Jabatan Penjara Malaysia",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/563380802",
+      "name": "Sutera Mall Dolphin statue",
+      "before": {
+        "osm_id": "way/563380802",
+        "name": "Sutera Mall Dolphin statue",
+        "category": "Cultural Heritage",
+        "state": "Johor",
+        "address": "Sutera Mall Dolphin statue, Malaysia",
+        "description": "Cultural heritage located in Johor, Malaysia.",
+        "latitude": 1.5165518,
+        "longitude": 103.6689594,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:56.455044+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ5-YuwMFz2jERCJbqqo0ig0U",
+        "google_place_name": "Sutera Mall",
+        "google_match_status": "exact",
+        "formatted_address": "Johor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/599120620",
+      "name": "Chapel of the Holy Infant Jesus",
+      "before": {
+        "osm_id": "way/599120620",
+        "name": "Chapel of the Holy Infant Jesus",
+        "category": "Historical Monument",
+        "state": "Melaka",
+        "address": "Chapel of the Holy Infant Jesus, Malaysia",
+        "description": "Historical monument located in Melaka, Malaysia.",
+        "latitude": 2.1890594,
+        "longitude": 102.2563586,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "church",
+          "historic": "building",
+          "religion": "christian"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJPykgEwDv0TERbB4F8UfwPvg",
+        "google_place_name": "Chapel of the Holy Infant Jesus (1859)",
+        "google_match_status": "exact",
+        "formatted_address": "Melaka, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/620367628",
+      "name": "Makam Almarhum Sultan Abdul Samad",
+      "before": {
+        "osm_id": "way/620367628",
+        "name": "Makam Almarhum Sultan Abdul Samad",
+        "category": "Historical Monument",
+        "state": "Selangor",
+        "address": "Makam Almarhum Sultan Abdul Samad, Malaysia",
+        "description": "Historical monument located in Selangor, Malaysia.",
+        "latitude": 2.8295908,
+        "longitude": 101.4218442,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJh8kfDpCmzTER5PxuuxTgXgg",
+        "google_place_name": "Sultan Abdul Samad Mausoleum",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/663215428",
+      "name": "3D Art",
+      "before": {
+        "osm_id": "way/663215428",
+        "name": "3D Art",
+        "category": "Cultural Heritage",
+        "state": "Kedah",
+        "address": "3D Art, Malaysia",
+        "description": "Cultural heritage located in Kedah, Malaysia.",
+        "latitude": 6.3721578,
+        "longitude": 99.672048,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "gallery",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ0eh8jeR2TDARHMbm07pxat0",
+        "google_place_name": "3D Art in Paradise Langkawi",
+        "google_match_status": "exact",
+        "formatted_address": "Kedah, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/766728340",
+      "name": "Memorial tragedi Kroh-Betong (17 Jun 1968)",
+      "before": {
+        "osm_id": "way/766728340",
+        "name": "Memorial tragedi Kroh-Betong (17 Jun 1968)",
+        "category": "Historical Monument",
+        "state": "Perak",
+        "address": "Memorial tragedi Kroh-Betong (17 Jun 1968), Malaysia",
+        "description": "Historical monument located in Perak, Malaysia.",
+        "latitude": 5.745657,
+        "longitude": 101.0274359,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "historic": "monument"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJmzJEZMXntDER4zF6xmCIV3g",
+        "google_place_name": "Betong - Kroh Tragedy Memorial",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/884003729",
+      "name": "METROPARK",
+      "before": {
+        "osm_id": "way/884003729",
+        "name": "METROPARK",
+        "category": "Cultural Heritage",
+        "state": "Selangor",
+        "address": "METROPARK, Malaysia",
+        "description": "Cultural heritage located in Selangor, Malaysia.",
+        "latitude": 3.0725355,
+        "longitude": 101.567442,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "artwork"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJN4i9PvlNzDERQtT3ULEV-ik",
+        "google_place_name": "Paloma Serviced Residences & Courtyard Villas, Tropicana Metropark",
+        "google_match_status": "exact",
+        "formatted_address": "Selangor, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/884973003",
+      "name": "Istana Sri Udara",
+      "before": {
+        "osm_id": "way/884973003",
+        "name": "Istana Sri Udara",
+        "category": "Historical Monument",
+        "state": "Pahang",
+        "address": "Istana Sri Udara, Malaysia",
+        "description": "Historical monument located in Pahang, Malaysia.",
+        "latitude": 3.4484038,
+        "longitude": 102.4216292,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJkX4-Co64zjERrkHzF1EbuQE",
+        "google_place_name": "Istana Sri Udara Temerloh",
+        "google_match_status": "exact",
+        "formatted_address": "Pahang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/943229470",
+      "name": "Lin Xiang Xiong Art Gallery",
+      "before": {
+        "osm_id": "way/943229470",
+        "name": "Lin Xiang Xiong Art Gallery",
+        "category": "Cultural Heritage",
+        "state": "Penang",
+        "address": "Lin Xiang Xiong Art Gallery, Malaysia",
+        "description": "Cultural heritage located in Penang, Malaysia.",
+        "latitude": 5.3765583,
+        "longitude": 100.319275,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "tourism": "gallery",
+          "building": "yes"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJ0zdyWlfBSjARqYa-uraw-fw",
+        "google_place_name": "Kids' Corner @ Lin Xiang Xiong Art Gallery",
+        "google_match_status": "exact",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/958139421",
+      "name": "Istana Al-Ridhuan Perak",
+      "before": {
+        "osm_id": "way/958139421",
+        "name": "Istana Al-Ridhuan Perak",
+        "category": "Historical Monument",
+        "state": "Perak",
+        "address": "Istana Al-Ridhuan Perak, Malaysia",
+        "description": "Historical monument located in Perak, Malaysia.",
+        "latitude": 4.5965381,
+        "longitude": 101.1003519,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "castle"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:52.96522+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJKx5QqC3tyjEREgPCdYCIiH0",
+        "google_place_name": "Istana Al-Ridhuan",
+        "google_match_status": "exact",
+        "formatted_address": "Perak, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    },
+    {
+      "osm_id": "way/979737123",
+      "name": "Makam Syed Hussain Idid",
+      "before": {
+        "osm_id": "way/979737123",
+        "name": "Makam Syed Hussain Idid",
+        "category": "Historical Monument",
+        "state": "Penang",
+        "address": "Makam Syed Hussain Idid, Malaysia",
+        "description": "Historical monument located in Penang, Malaysia.",
+        "latitude": 5.414619,
+        "longitude": 100.3360449,
+        "image_url": "",
+        "opening_hours": "",
+        "osm_tags": {
+          "building": "yes",
+          "historic": "memorial"
+        },
+        "is_verified": true,
+        "is_active": true,
+        "source_updated_at": null,
+        "created_at": "2026-09-05T10:45:54.255186+00:00",
+        "updated_at": "2026-09-06T11:36:38.810733+00:00",
+        "google_place_id": "ChIJd03lLZLDSjARhXjbB7XvF60",
+        "google_place_name": "Makam Tengku Syed Hussain Idid",
+        "google_match_status": "high_confidence",
+        "formatted_address": "Penang, Malaysia",
+        "opening_hours_weekday_text": null,
+        "opening_hours_periods": null,
+        "opening_hours_updated_at": null,
+        "google_maps_uri": null
+      },
+      "patch": {
+        "google_place_id": null,
+        "google_place_name": null,
+        "google_match_status": null
+      }
+    }
+  ]
+}
