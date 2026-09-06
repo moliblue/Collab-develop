@@ -34,6 +34,21 @@ class DiscoveryViewModel extends ChangeNotifier {
   bool get detailsLoading => _detailsLoading;
   bool get reviewSubmitting => _reviewSubmitting;
   String? get loadError => _loadError;
+  // Compatibility surface used by the latest shared AppViewModel/Discover UI.
+  // It delegates to the single repository-backed loading state below.
+  bool get catalogueLoading => _loading;
+  String? get catalogueIssue => _loadError;
+  List<String> get availableStates =>
+      (_places
+          .map((place) => place.state)
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort());
+  List<String> get availableCategories => const <String>[
+    'Traditional Heritage Site',
+    'Heritage Workshops',
+  ];
   String? takeActionError() {
     final value = _actionError;
     _actionError = null;
@@ -86,6 +101,8 @@ class DiscoveryViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> loadHeritageCatalogue() => load();
 
   Future<void> select(HeritagePlace? value) async {
     _selected = value;

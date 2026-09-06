@@ -40,10 +40,11 @@ class MapModuleView extends StatefulWidget {
 class _MapModuleViewState extends State<MapModuleView> {
   final MapController controller = MapController();
   final MapNavigationService navigation = MapNavigationService();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
   final ValueNotifier<double> _headingNotifier = ValueNotifier<double>(0);
   StreamSubscription<Position>? _positionSubscription;
   StreamSubscription<double?>? _headingSubscription;
-  Timer? _demoMovementTimer;
   Timer? _locationTimeoutTimer;
   bool filtersOpen = false;
   bool _navigationActive = false;
@@ -52,11 +53,6 @@ class _MapModuleViewState extends State<MapModuleView> {
   _RouteMode _routeMode = _RouteMode.driving;
   bool _guidanceMode = false;
   LatLng? _userPosition;
-  LatLng? _demoPosition;
-  double? _demoDistanceMeters;
-  List<LatLng> _demoRoutePoints = <LatLng>[];
-  int _demoRouteIndex = 0;
-  bool _demoMovementActive = false;
   LatLng? _routedFrom;
   double _heading = 0;
   double _routeDistanceMeters = 0;
@@ -72,9 +68,9 @@ class _MapModuleViewState extends State<MapModuleView> {
   DateTime? _lastHeadingUpdate;
 
   static const Duration _headingUpdateInterval = Duration(milliseconds: 200);
-  static const Duration _demoMovementInterval = Duration(milliseconds: 400);
-  static const double _demoMovementStepMeters = 40;
   static const double _heritageLabelZoomThreshold = 15;
+  static const double _questRadiusMeters = 1000;
+  static const double _maximumRecommendedWalkingMeters = 10000;
 
   @override
   void initState() {
@@ -97,10 +93,11 @@ class _MapModuleViewState extends State<MapModuleView> {
   @override
   void dispose() {
     _locationTimeoutTimer?.cancel();
-    _demoMovementTimer?.cancel();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
     _headingNotifier.dispose();
+    _searchController.dispose();
+    _searchFocus.dispose();
     controller.dispose();
     super.dispose();
   }
@@ -191,7 +188,6 @@ class _MapModuleViewState extends State<MapModuleView> {
   void _stopNavigation() {
     _navigationActive = false;
     _locationTimeoutTimer?.cancel();
-    _clearDemoMovementState();
     _positionSubscription?.cancel();
     _headingSubscription?.cancel();
     _positionSubscription = null;
@@ -208,7 +204,16 @@ class _MapModuleViewState extends State<MapModuleView> {
     if (!mounted) return;
     _locationTimeoutTimer?.cancel();
     final next = LatLng(position.latitude, position.longitude);
-    final effectiveNext = _demoPosition ?? next;
+    final previous = _userPosition;
+    if (previous != null) {
+      final movement = const Distance().as(LengthUnit.Meter, previous, next);
+      final noiseFloor = math.max(10.0, position.accuracy * 1.5);
+      if (movement < noiseFloor) {
+        if (_locating) setState(() => _locating = false);
+        return;
+      }
+    }
+    final effectiveNext = next;
     final moved = _routedFrom == null
         ? double.infinity
         : const Distance().as(LengthUnit.Meter, _routedFrom!, effectiveNext);
@@ -236,7 +241,7 @@ class _MapModuleViewState extends State<MapModuleView> {
         ),
       );
     }
-    if (_demoPosition == null && moved > 40 && _hasRouteTarget) {
+    if (moved > 40 && _hasRouteTarget) {
       if (_routeLoading) {
         _routeReloadPending = true;
       } else {
@@ -249,7 +254,8 @@ class _MapModuleViewState extends State<MapModuleView> {
       widget.viewModel.directionTarget != null ||
       widget.viewModel.routeStops.isNotEmpty;
 
-  LatLng? get _effectiveUserPosition => _demoPosition ?? _userPosition;
+  // Navigation and quest eligibility must always use the physical device GPS.
+  LatLng? get _effectiveUserPosition => _userPosition;
 
   List<LatLng> _routeWaypoints() {
     final origin = _userPosition;
@@ -277,7 +283,6 @@ class _MapModuleViewState extends State<MapModuleView> {
         : 'none';
     if (signature == _lastRouteSignature) return;
     _lastRouteSignature = signature;
-    _clearDemoMovementState();
     _roadRoute = <LatLng>[];
     _routeDistanceMeters = 0;
     _routeDurationSeconds = 0;
@@ -441,9 +446,29 @@ class _MapModuleViewState extends State<MapModuleView> {
     return '$mode · $distance · about $minutes min';
   }
 
+  bool get _walkingRouteAllowed {
+    final points = _routeWaypoints();
+    if (points.length < 2) return false;
+    var directDistance = 0.0;
+    for (var index = 0; index < points.length - 1; index++) {
+      directDistance += const Distance().as(
+        LengthUnit.Meter,
+        points[index],
+        points[index + 1],
+      );
+    }
+    return directDistance <= _maximumRecommendedWalkingMeters;
+  }
+
   void _setRouteMode(_RouteMode mode) {
     if (_routeLoading || mode == _routeMode || !_hasRouteTarget) return;
-    _clearDemoMovementState();
+    if (mode == _RouteMode.walking && !_walkingRouteAllowed) {
+      widget.notify(
+        'Walking is not recommended for routes over 10 km. Choose Driving instead.',
+        AppColors.warning,
+      );
+      return;
+    }
     setState(() {
       _routeMode = mode;
       _guidanceMode = false;
@@ -458,118 +483,9 @@ class _MapModuleViewState extends State<MapModuleView> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadRoadRoute());
   }
 
-  void _startRouteDemo() {
-    final target = widget.viewModel.directionTarget;
-    if (target == null ||
-        _routeLoading ||
-        _routeIssue != null ||
-        _roadRoute.length < 2) {
-      return;
-    }
-    final destination = LatLng(target.latitude, target.longitude);
-    final originDistance = const Distance().as(
-      LengthUnit.Meter,
-      _roadRoute.first,
-      destination,
-    );
-    if (originDistance <= 500) {
-      widget.notify(
-        'Current route already starts within 500 metres.',
-        AppColors.tealDark,
-      );
-      return;
-    }
-    final samples = _interpolateRoute(_roadRoute);
-    if (samples.length < 2) return;
-    _demoMovementTimer?.cancel();
-    setState(() {
-      _demoRoutePoints = samples;
-      _demoRouteIndex = 0;
-      _demoPosition = samples.first;
-      _demoDistanceMeters = originDistance;
-      _demoMovementActive = true;
-    });
-    _demoMovementTimer = Timer.periodic(
-      _demoMovementInterval,
-      (_) => _advanceRouteDemo(destination),
-    );
-  }
-
-  List<LatLng> _interpolateRoute(List<LatLng> route) {
-    final samples = <LatLng>[route.first];
-    for (var index = 0; index < route.length - 1; index++) {
-      final start = route[index];
-      final end = route[index + 1];
-      final segmentMeters = const Distance().as(LengthUnit.Meter, start, end);
-      if (!segmentMeters.isFinite || segmentMeters <= 0) continue;
-      final steps = math.max(
-        1,
-        (segmentMeters / _demoMovementStepMeters).ceil(),
-      );
-      var longitudeDelta = end.longitude - start.longitude;
-      if (longitudeDelta > 180) longitudeDelta -= 360;
-      if (longitudeDelta < -180) longitudeDelta += 360;
-      for (var step = 1; step <= steps; step++) {
-        final progress = step / steps;
-        var longitude = start.longitude + longitudeDelta * progress;
-        if (longitude > 180) longitude -= 360;
-        if (longitude < -180) longitude += 360;
-        samples.add(
-          LatLng(
-            start.latitude + (end.latitude - start.latitude) * progress,
-            longitude,
-          ),
-        );
-      }
-    }
-    return samples;
-  }
-
-  void _advanceRouteDemo(LatLng destination) {
-    if (!mounted || !_demoMovementActive) return;
-    final nextIndex = _demoRouteIndex + 1;
-    if (nextIndex >= _demoRoutePoints.length) {
-      _demoMovementTimer?.cancel();
-      _demoMovementTimer = null;
-      setState(() => _demoMovementActive = false);
-      return;
-    }
-    final next = _demoRoutePoints[nextIndex];
-    final distanceMeters = const Distance().as(
-      LengthUnit.Meter,
-      next,
-      destination,
-    );
-    setState(() {
-      _demoRouteIndex = nextIndex;
-      _demoPosition = next;
-      _demoDistanceMeters = distanceMeters;
-    });
-  }
-
-  void _stopRouteDemo() {
-    if (_demoPosition == null && !_demoMovementActive) return;
-    setState(_clearDemoMovementState);
-  }
-
-  void _clearDemoMovementState() {
-    _demoMovementTimer?.cancel();
-    _demoMovementTimer = null;
-    _demoMovementActive = false;
-    _demoPosition = null;
-    _demoDistanceMeters = null;
-    _demoRoutePoints = <LatLng>[];
-    _demoRouteIndex = 0;
-  }
-
   Future<void> _joinRouteQuest(BuildContext context) async {
     final target = widget.viewModel.directionTarget;
     if (target == null) return;
-    _demoMovementTimer?.cancel();
-    _demoMovementTimer = null;
-    if (_demoMovementActive && mounted) {
-      setState(() => _demoMovementActive = false);
-    }
     await _joinHeritageQuest(
       context: context,
       place: target,
@@ -581,39 +497,25 @@ class _MapModuleViewState extends State<MapModuleView> {
   }
 
   double? _routeOriginDistance(HeritagePlace target) {
-    if (_roadRoute.isEmpty) return null;
+    final current = _userPosition;
+    if (current == null) return null;
     return const Distance().as(
       LengthUnit.Meter,
-      _roadRoute.first,
+      current,
       LatLng(target.latitude, target.longitude),
     );
   }
 
-  bool _canStartRouteDemo(HeritagePlace target) {
-    final originDistance = _routeOriginDistance(target);
-    return !_routeLoading &&
-        _routeIssue == null &&
-        _roadRoute.length >= 2 &&
-        _demoPosition == null &&
-        originDistance != null &&
-        originDistance > 500;
-  }
-
-  String? _routeDemoStatus(HeritagePlace target) {
-    final demoDistance = _demoDistanceMeters;
-    if (_demoPosition != null && demoDistance != null) {
-      return demoDistance <= 500
-          ? 'Within 500m — Quest available'
-          : '${demoDistance.round()} m away from quest';
+  String _liveRouteStatus(HeritagePlace target) {
+    final distance = _routeOriginDistance(target);
+    if (distance == null) return 'Waiting for live GPS position…';
+    if (distance <= _questRadiusMeters) {
+      return 'Live GPS · within 1 km · Quest available';
     }
-    final originDistance = _routeOriginDistance(target);
-    if (_routeIssue == null &&
-        _roadRoute.length >= 2 &&
-        originDistance != null &&
-        originDistance <= 500) {
-      return 'Current route already starts within 500 metres.';
-    }
-    return null;
+    final label = distance >= 1000
+        ? '${(distance / 1000).toStringAsFixed(1)} km'
+        : '${distance.round()} m';
+    return 'Live GPS · $label from destination';
   }
 
   List<HeritagePlace> get filtered {
@@ -842,7 +744,13 @@ class _MapModuleViewState extends State<MapModuleView> {
                       const SizedBox(width: 7),
                       Expanded(
                         child: TextField(
-                          onChanged: vm.setQuery,
+                          controller: _searchController,
+                          focusNode: _searchFocus,
+                          onTap: () => setState(() {}),
+                          onChanged: (value) {
+                            vm.setQuery(value);
+                            setState(() {});
+                          },
                           decoration: const InputDecoration(
                             fillColor: Colors.white,
                             prefixIcon: Icon(Icons.search_rounded),
@@ -870,6 +778,52 @@ class _MapModuleViewState extends State<MapModuleView> {
                       ),
                     ],
                   ),
+                  if (_searchFocus.hasFocus && filtered.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: AppCard(
+                        radius: 14,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: filtered
+                              .take(5)
+                              .map((place) {
+                                return ListTile(
+                                  dense: true,
+                                  leading: Icon(
+                                    place.bookmarked
+                                        ? Icons.bookmark_rounded
+                                        : Icons.account_balance_rounded,
+                                    color: place.bookmarked
+                                        ? AppColors.warning
+                                        : AppColors.primary,
+                                  ),
+                                  title: Text(
+                                    place.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Text(
+                                    place.address,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  onTap: () {
+                                    _searchController.text = place.name;
+                                    vm.setQuery(place.name);
+                                    vm.select(place);
+                                    _searchFocus.unfocus();
+                                    controller.move(
+                                      LatLng(place.latitude, place.longitude),
+                                      16,
+                                    );
+                                  },
+                                );
+                              })
+                              .toList(growable: false),
+                        ),
+                      ),
+                    ),
                   if (vm.heritageLoading)
                     const Padding(
                       padding: EdgeInsets.only(top: 7),
@@ -952,14 +906,11 @@ class _MapModuleViewState extends State<MapModuleView> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children:
-                                    <String>[
+                                    <String>{
                                           'All',
-                                          'Architecture',
-                                          'Historical Monument',
-                                          'Cultural Heritage',
-                                          'Temple & Sacred',
-                                          'Museum',
-                                        ]
+                                          ...vm.nearbyPlaces.map(_mapCategory),
+                                        }
+                                        .toList()
                                         .map(
                                           (String c) => Padding(
                                             padding: const EdgeInsets.only(
@@ -985,7 +936,9 @@ class _MapModuleViewState extends State<MapModuleView> {
           ),
           Positioned(
             right: 12,
-            bottom: vm.directionTarget != null || vm.routeStops.isNotEmpty
+            bottom: vm.routeStops.isNotEmpty
+                ? 292
+                : vm.directionTarget != null
                 ? 178
                 : 22,
             child: Column(
@@ -1022,7 +975,19 @@ class _MapModuleViewState extends State<MapModuleView> {
                 ],
                 const SizedBox(height: 8),
                 FloatingActionButton.small(
-                  heroTag: 'zoom',
+                  heroTag: 'zoom-out',
+                  tooltip: 'Zoom out',
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.textPrimary,
+                  onPressed: () {
+                    final camera = controller.camera;
+                    controller.move(camera.center, camera.zoom - 1);
+                  },
+                  child: const Icon(Icons.remove_rounded),
+                ),
+                const SizedBox(height: 8),
+                FloatingActionButton.small(
+                  heroTag: 'zoom-in',
                   tooltip: 'Zoom in',
                   backgroundColor: Colors.white,
                   foregroundColor: AppColors.textPrimary,
@@ -1047,21 +1012,17 @@ class _MapModuleViewState extends State<MapModuleView> {
                 loading: _routeLoading,
                 guidanceActive: _guidanceMode,
                 mode: _routeMode,
+                walkingEnabled: _walkingRouteAllowed,
                 onModeChanged: _setRouteMode,
-                demoActive: _demoPosition != null,
-                demoRunning: _demoMovementActive,
-                demoStatus: _routeDemoStatus(vm.directionTarget!),
-                canStartDemo: _canStartRouteDemo(vm.directionTarget!),
+                liveStatus: _liveRouteStatus(vm.directionTarget!),
                 canJoinQuest:
-                    _demoPosition == null ||
-                    (_demoDistanceMeters ?? double.infinity) <= 500,
+                    (_routeOriginDistance(vm.directionTarget!) ??
+                        double.infinity) <=
+                    _questRadiusMeters,
                 questLoading: vm.questLoading,
-                onStartDemo: _startRouteDemo,
-                onStopDemo: _stopRouteDemo,
                 onJoinQuest: () => _joinRouteQuest(context),
                 onGuide: _toggleGuidance,
                 onClose: () {
-                  _clearDemoMovementState();
                   setState(() {
                     _guidanceMode = false;
                     _roadRoute = <LatLng>[];
@@ -1084,6 +1045,13 @@ class _MapModuleViewState extends State<MapModuleView> {
               bottom: 14,
               child: _DayRoutePanel(
                 stops: vm.routeStops,
+                detail: _routeDetail,
+                loading: _routeLoading,
+                guidanceActive: _guidanceMode,
+                mode: _routeMode,
+                walkingEnabled: _walkingRouteAllowed,
+                onModeChanged: _setRouteMode,
+                onGuide: _toggleGuidance,
                 onClose: vm.clearDayRoute,
                 onFocus: (ActivityItem a) =>
                     controller.move(LatLng(a.latitude, a.longitude), 14.5),
@@ -1440,15 +1408,11 @@ class _RoutePanel extends StatelessWidget {
     required this.loading,
     required this.guidanceActive,
     required this.mode,
+    required this.walkingEnabled,
     required this.onModeChanged,
-    required this.demoActive,
-    required this.demoRunning,
-    required this.demoStatus,
-    required this.canStartDemo,
+    required this.liveStatus,
     required this.canJoinQuest,
     required this.questLoading,
-    required this.onStartDemo,
-    required this.onStopDemo,
     required this.onJoinQuest,
     required this.onGuide,
     required this.onClose,
@@ -1459,15 +1423,11 @@ class _RoutePanel extends StatelessWidget {
   final bool loading;
   final bool guidanceActive;
   final _RouteMode mode;
+  final bool walkingEnabled;
   final ValueChanged<_RouteMode> onModeChanged;
-  final bool demoActive;
-  final bool demoRunning;
-  final String? demoStatus;
-  final bool canStartDemo;
+  final String? liveStatus;
   final bool canJoinQuest;
   final bool questLoading;
-  final VoidCallback onStartDemo;
-  final VoidCallback onStopDemo;
   final VoidCallback onJoinQuest;
   final VoidCallback onGuide;
   final VoidCallback onClose;
@@ -1523,6 +1483,7 @@ class _RoutePanel extends StatelessWidget {
                   _RouteModeSelector(
                     mode: mode,
                     enabled: !loading,
+                    walkingEnabled: walkingEnabled,
                     onChanged: onModeChanged,
                   ),
                 ],
@@ -1546,15 +1507,13 @@ class _RoutePanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        if (demoStatus != null)
+        if (liveStatus != null)
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              demoStatus!,
-              style: TextStyle(
-                color: demoActive && canJoinQuest
-                    ? AppColors.tealDark
-                    : AppColors.textSecondary,
+              liveStatus!,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
               ),
@@ -1564,24 +1523,14 @@ class _RoutePanel extends StatelessWidget {
           children: <Widget>[
             Expanded(
               child: TextButton.icon(
-                onPressed: demoActive
-                    ? onStopDemo
-                    : canStartDemo
-                    ? onStartDemo
-                    : null,
+                onPressed: loading ? null : onGuide,
                 icon: Icon(
-                  demoActive
+                  guidanceActive
                       ? Icons.stop_circle_outlined
                       : Icons.play_circle_outline_rounded,
                   size: 18,
                 ),
-                label: Text(
-                  demoActive
-                      ? demoRunning
-                            ? 'Stop Route Demo'
-                            : 'Reset Route Demo'
-                      : 'Start Route Demo',
-                ),
+                label: Text(guidanceActive ? 'Stop Route' : 'Start Route'),
               ),
             ),
             const SizedBox(width: 6),
@@ -1606,11 +1555,13 @@ class _RouteModeSelector extends StatelessWidget {
   const _RouteModeSelector({
     required this.mode,
     required this.enabled,
+    required this.walkingEnabled,
     required this.onChanged,
   });
 
   final _RouteMode mode;
   final bool enabled;
+  final bool walkingEnabled;
   final ValueChanged<_RouteMode> onChanged;
 
   @override
@@ -1635,7 +1586,10 @@ class _RouteModeSelector extends StatelessWidget {
                     ),
                   ),
                   child: InkWell(
-                    onTap: enabled && mode != value
+                    onTap:
+                        enabled &&
+                            (value != _RouteMode.walking || walkingEnabled) &&
+                            mode != value
                         ? () => onChanged(value)
                         : null,
                     borderRadius: BorderRadius.circular(9),
@@ -1647,7 +1601,12 @@ class _RouteModeSelector extends StatelessWidget {
                               ? Icons.directions_car_rounded
                               : Icons.directions_walk_rounded,
                           size: 13,
-                          color: enabled ? AppColors.primary : AppColors.muted,
+                            color:
+                                enabled &&
+                                    (value != _RouteMode.walking ||
+                                        walkingEnabled)
+                                ? AppColors.primary
+                                : AppColors.muted,
                         ),
                         const SizedBox(width: 3),
                         Flexible(
@@ -1675,10 +1634,24 @@ class _RouteModeSelector extends StatelessWidget {
 class _DayRoutePanel extends StatelessWidget {
   const _DayRoutePanel({
     required this.stops,
+    required this.detail,
+    required this.loading,
+    required this.guidanceActive,
+    required this.mode,
+    required this.walkingEnabled,
+    required this.onModeChanged,
+    required this.onGuide,
     required this.onClose,
     required this.onFocus,
   });
   final List<ActivityItem> stops;
+  final String detail;
+  final bool loading;
+  final bool guidanceActive;
+  final _RouteMode mode;
+  final bool walkingEnabled;
+  final ValueChanged<_RouteMode> onModeChanged;
+  final VoidCallback onGuide;
   final VoidCallback onClose;
   final ValueChanged<ActivityItem> onFocus;
   @override
@@ -1743,6 +1716,50 @@ class _DayRoutePanel extends StatelessWidget {
                 ),
               );
             }).toList(),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            detail,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 7),
+        _RouteModeSelector(
+          mode: mode,
+          enabled: !loading,
+          walkingEnabled: walkingEnabled,
+          onChanged: onModeChanged,
+        ),
+        if (!walkingEnabled) ...<Widget>[
+          const SizedBox(height: 5),
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Walking is not recommended for routes over 10 km.',
+              style: TextStyle(fontSize: 9, color: AppColors.warning),
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: loading ? null : onGuide,
+            icon: Icon(
+              guidanceActive
+                  ? Icons.pause_circle_filled_rounded
+                  : Icons.navigation_rounded,
+            ),
+            label: Text(
+              guidanceActive ? 'Stop Route Guidance' : 'Start Route Guidance',
+            ),
           ),
         ),
       ],
@@ -2094,10 +2111,10 @@ Future<void> _joinHeritageQuest({
     currentPosition,
     LatLng(place.latitude, place.longitude),
   );
-  if (distanceMeters > 500) {
+  if (distanceMeters > _MapModuleViewState._questRadiusMeters) {
     await _showQuestMessage(
       context,
-      'You must be within 500 metres of this heritage location to join the quest.',
+      'You must be within 1 kilometre of this heritage location to join the quest.',
     );
     return;
   }

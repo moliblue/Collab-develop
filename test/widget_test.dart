@@ -248,7 +248,7 @@ void main() {
       );
       expect(
         AuthRedirectResolver.resolve(web: false),
-        'com.finditmy.findit_my://login-callback/',
+        'finditmy://login-callback/',
       );
       expect(
         AuthRedirectResolver.resolve(
@@ -281,10 +281,7 @@ void main() {
       expect(await auth.recover('traveller@example.com'), isNull);
       expect(service.recoveryRequests, 1);
       expect(service.lastRecoveryEmail, 'traveller@example.com');
-      expect(
-        service.lastRedirectTo,
-        AuthRedirectResolver.androidCallback,
-      );
+      expect(service.lastRedirectTo, AuthRedirectResolver.androidCallback);
       expect(auth.recoverySent, isTrue);
     });
 
@@ -576,6 +573,48 @@ void main() {
             birthday: DateTime(2001),
           ),
           AuthViewModel.genericRegistrationErrorMessage,
+        );
+      },
+    );
+
+    test(
+      'signup email failures use actionable messages instead of raw JSON',
+      () async {
+        final service = FakeRecoverySupabaseService()
+          ..registrationError = const AuthException(
+            '{"code":"unexpected_failure","message":"Error sending confirmation email"}',
+          );
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
+
+        expect(
+          await auth.register(
+            name: 'Traveller One',
+            email: 'new@example.com',
+            password: 'ValidPass!',
+            confirmation: 'ValidPass!',
+            phone: '0123456789',
+            identityNumber: '010101010101',
+            birthday: DateTime(2001),
+          ),
+          AuthViewModel.confirmationEmailFailureMessage,
+        );
+
+        service.registrationError = const AuthException(
+          'email rate limit exceeded',
+        );
+        expect(
+          await auth.register(
+            name: 'Traveller One',
+            email: 'new@example.com',
+            password: 'ValidPass!',
+            confirmation: 'ValidPass!',
+            phone: '0123456789',
+            identityNumber: '010101010101',
+            birthday: DateTime(2001),
+          ),
+          AuthViewModel.emailRateLimitMessage,
         );
       },
     );

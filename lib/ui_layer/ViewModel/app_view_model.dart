@@ -47,6 +47,7 @@ class AppViewModel extends ChangeNotifier {
     if (auth.shouldShowResetPassword || auth.hasAuthNotice) {
       _handleAuthChanged();
     }
+    unawaited(discovery.loadHeritageCatalogue());
   }
 
   final MysteryJourneyViewModel mystery;
