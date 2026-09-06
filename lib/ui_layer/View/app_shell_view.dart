@@ -66,7 +66,7 @@ class _AppShellViewState extends State<AppShellView> {
                 if (!didPop && vm.hasNestedScreen) vm.back();
               },
               child: Scaffold(
-                backgroundColor: const Color(0xFFEAF2F7),
+                backgroundColor: const Color(0xFFDAEFEA),
                 body: SafeArea(
                   child: Center(
                     child: ConstrainedBox(
@@ -151,7 +151,11 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
     decoration: const BoxDecoration(
-      color: AppColors.surface,
+      gradient: LinearGradient(
+        colors: <Color>[Color(0xFFFFFEFB), Color(0xFFEAF8F4)],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ),
       border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
     ),
     child: Row(
@@ -172,8 +176,12 @@ class _Header extends StatelessWidget {
         else ...<Widget>[
           const CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.primary,
-            child: Icon(Icons.explore_rounded, color: Colors.white, size: 20),
+            backgroundColor: AppColors.secondary,
+            child: Icon(
+              Icons.flight_takeoff_rounded,
+              color: Colors.white,
+              size: 19,
+            ),
           ),
           const SizedBox(width: 10),
         ],
@@ -265,45 +273,70 @@ class _BottomNavigation extends StatelessWidget {
   const _BottomNavigation({required this.viewModel});
   final AppViewModel viewModel;
   @override
-  Widget build(BuildContext context) => NavigationBar(
-    height: 68,
-    selectedIndex: viewModel.tab.index,
-    backgroundColor: AppColors.surface,
-    indicatorColor: AppColors.softBlue,
-    labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-    onDestinationSelected: (int index) =>
-        viewModel.selectTab(MainTab.values[index]),
-    destinations: <NavigationDestination>[
-      NavigationDestination(
-        icon: const Icon(Icons.search_rounded, key: Key('tab_discover')),
-        selectedIcon: const Icon(Icons.travel_explore_rounded),
-        label: context.tr('Discover'),
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.map_outlined, key: Key('tab_map')),
-        selectedIcon: const Icon(Icons.map_rounded),
-        label: context.tr('Map'),
-      ),
-      NavigationDestination(
-        icon: Badge(
-          isLabelVisible: viewModel.mystery.journeyActive,
-          smallSize: 7,
-          child: const Icon(Icons.explore_outlined, key: Key('tab_mystery')),
+  Widget build(BuildContext context) => Container(
+    decoration: const BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      boxShadow: <BoxShadow>[
+        BoxShadow(
+          color: Color(0x24135E64),
+          blurRadius: 20,
+          offset: Offset(0, -5),
         ),
-        selectedIcon: const Icon(Icons.explore_rounded),
-        label: context.tr('Mystery'),
+      ],
+    ),
+    child: ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: NavigationBar(
+        height: 70,
+        selectedIndex: viewModel.tab.index,
+        backgroundColor: AppColors.surface,
+        indicatorColor: AppColors.softBlue,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        onDestinationSelected: (int index) =>
+            viewModel.selectTab(MainTab.values[index]),
+        destinations: <NavigationDestination>[
+          NavigationDestination(
+            icon: const Icon(Icons.search_rounded, key: Key('tab_discover')),
+            selectedIcon: const Icon(Icons.travel_explore_rounded),
+            label: context.tr('Discover'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.map_outlined, key: Key('tab_map')),
+            selectedIcon: const Icon(Icons.map_rounded),
+            label: context.tr('Map'),
+          ),
+          NavigationDestination(
+            icon: Badge(
+              isLabelVisible: viewModel.mystery.journeyActive,
+              smallSize: 7,
+              child: const Icon(
+                Icons.explore_outlined,
+                key: Key('tab_mystery'),
+              ),
+            ),
+            selectedIcon: const Icon(Icons.explore_rounded),
+            label: context.tr('Mystery'),
+          ),
+          NavigationDestination(
+            icon: const Icon(
+              Icons.calendar_month_outlined,
+              key: Key('tab_plan'),
+            ),
+            selectedIcon: const Icon(Icons.calendar_month_rounded),
+            label: context.tr('Plan'),
+          ),
+          NavigationDestination(
+            icon: const Icon(
+              Icons.person_outline_rounded,
+              key: Key('tab_profile'),
+            ),
+            selectedIcon: const Icon(Icons.person_rounded),
+            label: context.tr('Profile'),
+          ),
+        ],
       ),
-      NavigationDestination(
-        icon: const Icon(Icons.calendar_month_outlined, key: Key('tab_plan')),
-        selectedIcon: const Icon(Icons.calendar_month_rounded),
-        label: context.tr('Plan'),
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.person_outline_rounded, key: Key('tab_profile')),
-        selectedIcon: const Icon(Icons.person_rounded),
-        label: context.tr('Profile'),
-      ),
-    ],
+    ),
   );
 }
 

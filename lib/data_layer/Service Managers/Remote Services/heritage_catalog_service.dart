@@ -3,16 +3,13 @@ import 'dart:math' as math;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../Models/app_models.dart';
-import 'osm_heritage_service.dart';
 import 'heritage_location_normalizer.dart';
 
-/// Reads the curated catalogue first and falls back to live OSM/Overpass data.
+/// Reads the curated, Google-matched catalogue used by Map and Plan.
 class HeritageCatalogService {
-  HeritageCatalogService({this.client, OsmHeritageService? osm})
-    : _osm = osm ?? OsmHeritageService();
+  HeritageCatalogService({this.client});
 
   final SupabaseClient? client;
-  final OsmHeritageService _osm;
 
   SupabaseClient? get _availableClient {
     if (client != null) return client;
@@ -28,32 +25,11 @@ class HeritageCatalogService {
     required double longitude,
     required int radiusMeters,
   }) async {
-    List<HeritagePlace> catalogue = <HeritagePlace>[];
-    List<HeritagePlace> osmPlaces = <HeritagePlace>[];
-    Object? catalogueError;
-    Object? osmError;
-    try {
-      catalogue = await _fetchCatalogue(
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeters: radiusMeters,
-      );
-    } catch (error) {
-      catalogueError = error;
-    }
-    try {
-      osmPlaces = await _osm.fetchNearbyHeritage(
-        latitude: latitude,
-        longitude: longitude,
-        radiusMeters: radiusMeters,
-      );
-    } catch (error) {
-      osmError = error;
-    }
-    final merged = _mergePlaces(<HeritagePlace>[...catalogue, ...osmPlaces]);
-    if (merged.isNotEmpty) return merged;
-    if (catalogueError != null && osmError != null) throw osmError;
-    return merged;
+    return _fetchCatalogue(
+      latitude: latitude,
+      longitude: longitude,
+      radiusMeters: radiusMeters,
+    );
   }
 
   /// Returns every active verified Supabase catalogue record. Discover and
@@ -63,9 +39,8 @@ class HeritageCatalogService {
     final client = _availableClient;
     if (client == null) return <HeritagePlace>[];
     final rows = await client
-        .from('heritage_locations')
+        .from('displayable_heritage_locations')
         .select()
-        .eq('is_active', true)
         .order('name')
         .limit(1000);
     return _mergePlaces(
@@ -90,9 +65,8 @@ class HeritageCatalogService {
         radiusKm /
         (111.0 * math.max(0.1, math.cos(latitude * math.pi / 180)).abs());
     final rows = await client
-        .from('heritage_locations')
+        .from('displayable_heritage_locations')
         .select()
-        .eq('is_active', true)
         .gte('latitude', latitude - latitudeDelta)
         .lte('latitude', latitude + latitudeDelta)
         .gte('longitude', longitude - longitudeDelta)
@@ -150,7 +124,7 @@ class HeritageCatalogService {
       state: state,
       shortDescription: '${row['category']}',
       description: '${row['description'] ?? ''}',
-      image: '${row['image_url'] ?? ''}',
+      image: '${row['cover_image_url'] ?? row['image_url'] ?? ''}',
       distanceKm: distance,
       rating: 0,
       reviewsCount: 0,

@@ -27,7 +27,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
   @override
   Future<List<HeritagePlace>> getDestinations() async {
     final rows = await client
-        .from('heritage_locations')
+        .from('displayable_heritage_locations')
         .select()
         .eq('is_active', true)
         .eq('is_verified', true)
@@ -91,7 +91,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         state: state,
         shortDescription: address,
         description: '${row['description'] ?? ''}'.trim(),
-        image: '${row['image_url'] ?? ''}'.trim(),
+        image: '${row['cover_image_url'] ?? row['image_url'] ?? ''}'.trim(),
         distanceKm: 0,
         rating: 0,
         reviewsCount: 0,

@@ -34,27 +34,32 @@ class CollaborativePlannerRepository {
       try {
         final encodedPattern = Uri.encodeQueryComponent('*$term*');
         final rows = await supabase.select(
-          'heritage_locations',
-          query: 'select=osm_id,name,address,category,latitude,longitude'
-              '&is_active=eq.true'
+          'displayable_heritage_locations',
+          query:
+              'select=osm_id,name,address,category,latitude,longitude'
               '&or=(name.ilike.$encodedPattern,address.ilike.$encodedPattern,state.ilike.$encodedPattern)'
               '&order=name.asc&limit=8',
           accessToken: (await authenticate())?.accessToken,
         );
-        final catalogueCandidates = rows.map((row) => OsmPlace(
-          name: '${row['name']}',
-          displayName: '${row['address']}'.trim().isEmpty
-              ? '${row['name']}'
-              : '${row['name']}, ${row['address']}',
-          point: GeoPoint(
-            (row['latitude'] as num).toDouble(),
-            (row['longitude'] as num).toDouble(),
-          ),
-          type: '${row['category']}',
-        )).toList();
+        final catalogueCandidates = rows
+            .map(
+              (row) => OsmPlace(
+                name: '${row['name']}',
+                displayName: '${row['address']}'.trim().isEmpty
+                    ? '${row['name']}'
+                    : '${row['name']}, ${row['address']}',
+                point: GeoPoint(
+                  (row['latitude'] as num).toDouble(),
+                  (row['longitude'] as num).toDouble(),
+                ),
+                type: '${row['category']}',
+              ),
+            )
+            .toList();
         final catalogueByKey = <String, OsmPlace>{};
         for (final place in catalogueCandidates) {
-          final key = '${place.name.trim().toLowerCase()}|'
+          final key =
+              '${place.name.trim().toLowerCase()}|'
               '${place.point.latitude.toStringAsFixed(4)}|'
               '${place.point.longitude.toStringAsFixed(4)}';
           catalogueByKey.putIfAbsent(key, () => place);
