@@ -50,7 +50,7 @@ void main() {
     expect(plan.activityCount, 0);
     expect(plan.primaryRegion, 'Johor');
     expect(plan.coverAsset, 'assets/discovery_placeholder.png');
-    expect(plan.toJson()['trip_regions'], <String>['Johor', 'Melaka']);
+    expect(plan.toJson()['regions'], <String>['Johor', 'Melaka']);
   });
 
   test('general OSM search is restricted to Malaysia', () async {
@@ -145,8 +145,7 @@ void main() {
             'start_date': '2026-09-10',
             'end_date': '2026-09-10',
             'invite_code': 'TEST-PLAN',
-            'trip_regions': <String>['Penang', 'Kuala Lumpur'],
-            'primary_region': 'Penang',
+            'regions': <String>['Penang', 'Kuala Lumpur'],
             'revision': 4,
           },
         ],
@@ -291,7 +290,7 @@ void main() {
     );
     expect(jsonDecode(planPatch.body)['name'], 'Updated CRUD plan');
     expect(jsonDecode(planPatch.body)['revision'], 1);
-    expect(jsonDecode(planPatch.body)['primary_region'], 'Selangor');
+    expect(jsonDecode(planPatch.body)['regions'], <String>['Selangor']);
     repository.dispose();
   });
 

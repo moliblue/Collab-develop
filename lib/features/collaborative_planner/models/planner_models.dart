@@ -190,8 +190,7 @@ class TravelPlan {
     'start_date': startDate.toIso8601String().substring(0, 10),
     'end_date': endDate.toIso8601String().substring(0, 10),
     'invite_code': inviteCode,
-    'trip_regions': regions,
-    'primary_region': primaryRegion.isEmpty ? null : primaryRegion,
+    'regions': regions,
     'revision': revision,
   };
   String encodeSharePayload() => base64Url.encode(
@@ -205,11 +204,10 @@ class TravelPlan {
     startDate: DateTime.parse('${json['start_date']}'),
     endDate: DateTime.parse('${json['end_date']}'),
     inviteCode: '${json['invite_code']}',
-    regions: (json['trip_regions'] as List<dynamic>? ?? const <dynamic>[])
+    regions: (json['regions'] as List<dynamic>? ?? const <dynamic>[])
         .map((value) => '$value'.trim())
         .where((value) => value.isNotEmpty)
         .toList(growable: false),
-    primaryRegion: '${json['primary_region'] ?? ''}',
     revision: (json['revision'] as num?)?.toInt() ?? 0,
   );
 
