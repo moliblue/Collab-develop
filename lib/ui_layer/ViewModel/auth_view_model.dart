@@ -10,7 +10,7 @@ enum IdentityType { ic, passport }
 class AuthRedirectResolver {
   const AuthRedirectResolver._();
 
-  static const androidCallback = 'com.finditmy.findit_my://login-callback/';
+  static const androidCallback = 'finditmy://login-callback/';
   static const localhostWebCallback = 'http://localhost:8080/';
 
   static String resolve({
@@ -119,6 +119,10 @@ class AuthViewModel extends ChangeNotifier {
       'Error: The email or identification number is already registered.';
   static const genericRegistrationErrorMessage =
       'Registration could not be completed. Please try again.';
+  static const emailRateLimitMessage =
+      'Too many authentication emails were requested. Please wait about one hour and try again.';
+  static const confirmationEmailFailureMessage =
+      'We could not send the confirmation email. Please try again later or contact the project administrator.';
   static const emailNotConfirmedMessage =
       'Error: Please confirm your email address before signing in.';
   static const passwordsDoNotMatchMessage =
@@ -288,10 +292,7 @@ class AuthViewModel extends ChangeNotifier {
     return error;
   }
 
-
   String get authRedirectUrl => AuthRedirectResolver.resolve();
-
-
 
   Future<void> _finishEmailConfirmation() async {
     await _supabase.signOutLocal();
@@ -392,6 +393,15 @@ class AuthViewModel extends ChangeNotifier {
   String _friendlyAuthError(AuthException error) {
     final message = error.message;
     final normalized = message.toLowerCase();
+    if (normalized.contains('rate limit') ||
+        normalized.contains('over_email_send_rate_limit')) {
+      return emailRateLimitMessage;
+    }
+    if (normalized.contains('error sending confirmation email') ||
+        normalized.contains('email address not authorized') ||
+        normalized.contains('smtp')) {
+      return confirmationEmailFailureMessage;
+    }
     if (message == duplicateRegistrationMessage ||
         normalized.contains('already registered') ||
         normalized.contains('duplicate key') ||
