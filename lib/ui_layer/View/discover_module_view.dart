@@ -152,27 +152,21 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
           height: 40,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            children:
-                <String>[
-                  'Traditional Heritage Site',
-                  'Local Food',
-                  'Local Craft',
-                  'Local Micro Business',
-                ].map((String category) {
-                  final selected = vm.categories.contains(category);
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: AppChip(
-                      label: switch (category) {
-                        'Traditional Heritage Site' => 'Heritage',
-                        'Local Micro Business' => 'Local makers',
-                        _ => category.replaceFirst('Local ', ''),
-                      },
-                      selected: selected,
-                      onTap: () => vm.toggleCategory(category),
-                    ),
-                  );
-                }).toList(),
+            children: vm.availableCategories.map((String category) {
+              final selected = vm.categories.contains(category);
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: AppChip(
+                  label: switch (category) {
+                    'Traditional Heritage Site' => 'Heritage',
+                    'Local Micro Business' => 'Local makers',
+                    _ => category.replaceFirst('Local ', ''),
+                  },
+                  selected: selected,
+                  onTap: () => vm.toggleCategory(category),
+                ),
+              );
+            }).toList(),
           ),
         ),
         if (vm.filtersOpen) ...<Widget>[
@@ -199,46 +193,31 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
                 const SizedBox(height: 5),
                 Wrap(
                   spacing: 6,
-                  children:
-                      <String>[
-                            'Kuala Lumpur',
-                            'Selangor',
-                            'Penang',
-                            'Melaka',
-                            'Johor',
-                            'Sabah',
-                            'Sarawak',
-                          ]
-                          .map(
-                            (String s) => AppChip(
-                              label: s,
-                              selected: vm.states.contains(s),
-                              onTap: () => vm.toggleState(s),
-                            ),
-                          )
-                          .toList(),
+                  children: vm.availableStates
+                      .map(
+                        (String s) => AppChip(
+                          label: s,
+                          selected: vm.states.contains(s),
+                          onTap: () => vm.toggleState(s),
+                        ),
+                      )
+                      .toList(),
                 ),
                 const SizedBox(height: 12),
                 const Eyebrow('Experience', color: AppColors.muted),
                 const SizedBox(height: 5),
                 Wrap(
                   spacing: 6,
-                  children:
-                      <String>[
-                            'Traditional Heritage Site',
-                            'Local Craft',
-                            'Local Food',
-                            'Local Micro Business',
-                          ]
-                          .map(
-                            (String c) => AppChip(
-                              label: c,
-                              selected: vm.categories.contains(c),
-                              selectedColor: AppColors.teal,
-                              onTap: () => vm.toggleCategory(c),
-                            ),
-                          )
-                          .toList(),
+                  children: vm.availableCategories
+                      .map(
+                        (String c) => AppChip(
+                          label: c,
+                          selected: vm.categories.contains(c),
+                          selectedColor: AppColors.teal,
+                          onTap: () => vm.toggleCategory(c),
+                        ),
+                      )
+                      .toList(),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(

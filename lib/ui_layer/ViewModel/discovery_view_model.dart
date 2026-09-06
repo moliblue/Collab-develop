@@ -2,10 +2,15 @@ import 'package:flutter/foundation.dart';
 
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Models/mock_data.dart';
+import '../../data_layer/Service Managers/Remote Services/heritage_catalog_service.dart';
 
 enum DiscoverSection { discover, bookmarks }
 
 class DiscoveryViewModel extends ChangeNotifier {
+  DiscoveryViewModel({HeritageCatalogService? heritageService})
+    : _heritageService = heritageService ?? HeritageCatalogService();
+
+  final HeritageCatalogService _heritageService;
   final List<HeritagePlace> _places = createPlaces();
   DiscoverSection _section = DiscoverSection.discover;
   HeritagePlace? _selected;
@@ -13,6 +18,8 @@ class DiscoveryViewModel extends ChangeNotifier {
   final Set<String> _states = <String>{};
   final Set<String> _categories = <String>{};
   bool _filtersOpen = false;
+  bool _catalogueLoading = false;
+  String? _catalogueIssue;
 
   List<HeritagePlace> get places => List<HeritagePlace>.unmodifiable(_places);
   DiscoverSection get section => _section;
@@ -21,6 +28,22 @@ class DiscoveryViewModel extends ChangeNotifier {
   Set<String> get states => Set<String>.unmodifiable(_states);
   Set<String> get categories => Set<String>.unmodifiable(_categories);
   bool get filtersOpen => _filtersOpen;
+  bool get catalogueLoading => _catalogueLoading;
+  String? get catalogueIssue => _catalogueIssue;
+  List<String> get availableStates =>
+      (_places
+          .map((place) => place.state)
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort());
+  List<String> get availableCategories =>
+      (_places
+          .map((place) => place.category)
+          .where((value) => value.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort());
   List<HeritagePlace> get bookmarks =>
       _places.where((HeritagePlace p) => p.bookmarked).toList();
   List<HeritagePlace> get filteredPlaces {
@@ -36,6 +59,39 @@ class DiscoveryViewModel extends ChangeNotifier {
             (_categories.isEmpty || _categories.contains(p.category));
       }).toList()
       ..sort((HeritagePlace a, HeritagePlace b) => a.name.compareTo(b.name));
+  }
+
+  Future<void> loadHeritageCatalogue() async {
+    if (_catalogueLoading) return;
+    _catalogueLoading = true;
+    _catalogueIssue = null;
+    notifyListeners();
+    try {
+      final remote = await _heritageService.fetchCatalogue();
+      final existingByName = <String, HeritagePlace>{
+        for (final place in _places) place.name.trim().toLowerCase(): place,
+      };
+      for (final place in remote) {
+        final key = place.name.trim().toLowerCase();
+        final existing = existingByName[key];
+        if (existing != null) {
+          place.bookmarked = existing.bookmarked;
+          place.reviews.addAll(existing.reviews);
+          place.rating = existing.rating;
+          place.reviewsCount = existing.reviewsCount;
+          final index = _places.indexOf(existing);
+          _places[index] = place;
+        } else {
+          _places.add(place);
+        }
+      }
+    } catch (_) {
+      _catalogueIssue =
+          'Supabase heritage catalogue is unavailable; showing saved app locations.';
+    } finally {
+      _catalogueLoading = false;
+      notifyListeners();
+    }
   }
 
   void setSection(DiscoverSection value) {

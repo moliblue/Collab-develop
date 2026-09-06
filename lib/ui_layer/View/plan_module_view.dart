@@ -653,12 +653,35 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   children: <Widget>[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(11),
-                      child: Image.asset(
-                        p.image,
-                        width: 74,
-                        height: 66,
-                        fit: BoxFit.cover,
-                      ),
+                      child: p.image.startsWith('http')
+                          ? Image.network(
+                              p.image,
+                              width: 74,
+                              height: 66,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const SizedBox(
+                                width: 74,
+                                height: 66,
+                                child: Icon(Icons.account_balance_rounded),
+                              ),
+                            )
+                          : p.image.isNotEmpty
+                          ? Image.asset(
+                              p.image,
+                              width: 74,
+                              height: 66,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const SizedBox(
+                                width: 74,
+                                height: 66,
+                                child: Icon(Icons.account_balance_rounded),
+                              ),
+                            )
+                          : const SizedBox(
+                              width: 74,
+                              height: 66,
+                              child: Icon(Icons.account_balance_rounded),
+                            ),
                     ),
                     const SizedBox(width: 9),
                     Expanded(
@@ -1113,6 +1136,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     HeritagePlace? selected;
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
+    String? successMessage;
     await showPlannerDialog<void>(
       context,
       StatefulBuilder(
@@ -1195,7 +1219,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
               onChanged: (value) {
                 selected = null;
                 sheetSet(() {
-                  if (category == 'Traditional Heritage Site') {
+                  if (widget.recommendations.any(
+                    (place) => place.category == category,
+                  )) {
                     category = 'Sightseeing';
                   }
                   locationSuggestions = _curatedLocationSuggestions(value);
@@ -1294,16 +1320,14 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       contentPadding: EdgeInsets.fromLTRB(10, 10, 6, 10),
                     ),
                     selectedItemBuilder: (context) =>
-                        <String>[
+                        <String>{
                               'Sightseeing',
                               'Culture',
                               'Food',
-                              if (selected != null ||
-                                  (item?.category ==
-                                          'Traditional Heritage Site' &&
-                                      location.text.trim() == item?.location))
-                                'Traditional Heritage Site',
-                            ]
+                              if (selected != null) selected!.category,
+                              if (item != null) item.category,
+                            }
+                            .toList()
                             .map(
                               (value) => Align(
                                 alignment: Alignment.centerLeft,
@@ -1316,16 +1340,14 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                             )
                             .toList(),
                     items:
-                        <String>[
+                        <String>{
                               'Sightseeing',
                               'Culture',
                               'Food',
-                              if (selected != null ||
-                                  (item?.category ==
-                                          'Traditional Heritage Site' &&
-                                      location.text.trim() == item?.location))
-                                'Traditional Heritage Site',
-                            ]
+                              if (selected != null) selected!.category,
+                              if (item != null) item.category,
+                            }
+                            .toList()
                             .map(
                               (value) => DropdownMenuItem(
                                 value: value,
@@ -1383,12 +1405,15 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       }
                       final verifiedHeritage =
                           selected != null ||
-                          (item?.category == 'Traditional Heritage Site' &&
-                              location.text.trim() == item?.location);
-                      if (category == 'Traditional Heritage Site' &&
+                          (item != null &&
+                              location.text.trim() == item.location);
+                      final heritageCategories = widget.recommendations
+                          .map((place) => place.category)
+                          .toSet();
+                      if (heritageCategories.contains(category) &&
                           !verifiedHeritage) {
                         widget.notify(
-                          'Select a verified heritage suggestion before using the Traditional Heritage Site category.',
+                          'Select a verified heritage suggestion before using a heritage category.',
                           AppColors.danger,
                         );
                         return;
@@ -1537,13 +1562,10 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         }
                       }
                       if (!context.mounted) return;
+                      successMessage = item == null
+                          ? PlannerMessages.cardAdded
+                          : 'Activity card updated.';
                       Navigator.pop(context);
-                      widget.notify(
-                        item == null
-                            ? PlannerMessages.cardAdded
-                            : 'Activity card updated.',
-                        AppColors.teal,
-                      );
                     },
                     child: Text(
                       item == null ? 'Add Activity Card' : 'Save Changes',
@@ -1556,6 +1578,13 @@ class _PlanModuleViewState extends State<PlanModuleView> {
         ),
       ),
     );
+    // showDialog completes when pop is requested, before its reverse animation
+    // has necessarily detached every inherited dependency. Let the route finish
+    // leaving the tree before rebuilding Plan or disposing field controllers.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (mounted && successMessage != null) {
+      widget.notify(successMessage!, AppColors.teal);
+    }
     time.dispose();
     title.dispose();
     location.dispose();
@@ -1595,14 +1624,11 @@ class _PlanModuleViewState extends State<PlanModuleView> {
   }
 
   String _plannerCategoryForPlace(HeritagePlace place) {
-    if (place.category == 'Traditional Heritage Site') {
-      return 'Traditional Heritage Site';
-    }
     if (place.category == 'Food' || place.category == 'Local Food') {
       return 'Food';
     }
     if (place.category == 'Sightseeing') return 'Sightseeing';
-    return 'Culture';
+    return place.category.isEmpty ? 'Culture' : place.category;
   }
 
   Future<bool> _confirmDistantLocation(
