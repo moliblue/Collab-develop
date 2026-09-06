@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../Models/app_models.dart';
+import '../Models/mock_data.dart';
+import '../Service Managers/Remote Services/heritage_location_normalizer.dart';
 
 abstract class DiscoveryRepository {
   Future<List<HeritagePlace>> getDestinations();
@@ -30,7 +32,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         .eq('is_active', true)
         .eq('is_verified', true)
         .order('name');
-    final unique = <String, HeritagePlace>{};
+    final candidates = <HeritagePlace>[];
     for (final raw in rows) {
       final row = Map<String, dynamic>.from(raw);
       final id = '${row['osm_id']}'.trim();
@@ -38,7 +40,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
       final lat = (row['latitude'] as num?)?.toDouble();
       final lng = (row['longitude'] as num?)?.toDouble();
       if (id.isEmpty || name.isEmpty || lat == null || lng == null) continue;
-      final sourceCategory = '${row['category']}';
+      final sourceCategory = HeritageLocationNormalizer.clean(row['category']);
       final tags = Map<String, String>.from(
         row['osm_tags'] as Map? ?? const {},
       );
@@ -49,28 +51,41 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
                 v.contains('craft') ||
                 v.contains('artisan');
           });
-      unique[id] = HeritagePlace(
-        id: id,
-        osmId: id,
+      final state = HeritageLocationNormalizer.stateFor(row, tags);
+      final address = HeritageLocationNormalizer.addressFor(
+        row,
+        tags,
         name: name,
-        category: isWorkshop
-            ? 'Heritage Workshops'
-            : 'Traditional Heritage Site',
-        state: '${row['state'] ?? ''}'.trim(),
-        shortDescription: '${row['address'] ?? ''}'.trim(),
-        description: '${row['description'] ?? ''}'.trim(),
-        image: '${row['image_url'] ?? ''}'.trim(),
-        distanceKm: 0,
-        rating: 0,
-        reviewsCount: 0,
-        latitude: lat,
-        longitude: lng,
-        address: '${row['address'] ?? ''}'.trim(),
-        hours: '${row['opening_hours'] ?? ''}'.trim(),
-        osmTags: tags,
+        state: state,
+      );
+      candidates.add(
+        HeritagePlace(
+          id: id,
+          osmId: id,
+          name: name,
+          category: isWorkshop
+              ? 'Heritage Workshops'
+              : 'Traditional Heritage Site',
+          state: state,
+          shortDescription: address,
+          description: '${row['description'] ?? ''}'.trim(),
+          image: '${row['image_url'] ?? ''}'.trim(),
+          distanceKm: 0,
+          rating: 0,
+          reviewsCount: 0,
+          latitude: lat,
+          longitude: lng,
+          address: address,
+          hours: '${row['opening_hours'] ?? ''}'.trim(),
+          osmTags: tags,
+        ),
       );
     }
-    return unique.values.toList()..sort((a, b) => a.name.compareTo(b.name));
+    // Keep the original curated cards and their local images. Supabase records
+    // remain authoritative when they describe the same nearby place.
+    candidates.addAll(createPlaces());
+    return HeritageLocationNormalizer.deduplicate(candidates)
+      ..sort((a, b) => a.name.compareTo(b.name));
   }
 
   @override
