@@ -1,14 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../../data_layer/Models/app_models.dart';
 import '../../data_layer/Repositories/discovery_repository.dart';
+import '../../data_layer/Service Managers/device/location_service.dart';
 
 enum DiscoverSection { discover, bookmarks }
 
 class DiscoveryViewModel extends ChangeNotifier {
-  DiscoveryViewModel({DiscoveryRepository? repository})
-    : _repository = repository ?? SupabaseDiscoveryRepository();
+  DiscoveryViewModel({DiscoveryRepository? repository, this.locationService})
+    : _repository = repository ?? SupabaseDiscoveryRepository(),
+      super();
   final DiscoveryRepository _repository;
+  final LocationService? locationService;
   final List<HeritagePlace> _places = <HeritagePlace>[];
   DiscoverSection _section = DiscoverSection.discover;
   HeritagePlace? _selected;
@@ -63,12 +68,11 @@ class DiscoveryViewModel extends ChangeNotifier {
   List<HeritagePlace> get filteredPlaces {
     final q = _query.trim().toLowerCase();
     return _places.where((HeritagePlace p) {
-        final textMatches = q.isEmpty || p.name.toLowerCase().contains(q);
-        return textMatches &&
-            (_states.isEmpty || _states.contains(p.state)) &&
-            (_categories.isEmpty || _categories.contains(p.category));
-      }).toList()
-      ..sort((HeritagePlace a, HeritagePlace b) => a.name.compareTo(b.name));
+      final textMatches = q.isEmpty || p.name.toLowerCase().contains(q);
+      return textMatches &&
+          (_states.isEmpty || _states.contains(p.state)) &&
+          (_categories.isEmpty || _categories.contains(p.category));
+    }).toList()..sort(compareHeritagePlacesForListing);
   }
 
   void setSection(DiscoverSection value) {
@@ -87,6 +91,7 @@ class DiscoveryViewModel extends ChangeNotifier {
       _places
         ..clear()
         ..addAll(places);
+      unawaited(_refreshDistances());
       try {
         final bookmarked = await _repository.getBookmarkIds();
         for (final place in _places) {
@@ -106,6 +111,23 @@ class DiscoveryViewModel extends ChangeNotifier {
   }
 
   Future<void> loadHeritageCatalogue() => load();
+
+  Future<void> _refreshDistances() async {
+    final service = locationService;
+    if (service == null || _places.isEmpty) return;
+    try {
+      final current = await service.getFreshLocation();
+      for (final place in _places) {
+        place.distanceKm =
+            service.distanceBetween(current, place.latitude, place.longitude) /
+            1000;
+      }
+      _places.sort(compareHeritagePlacesForListing);
+      notifyListeners();
+    } catch (_) {
+      // Keep the catalogue usable when GPS is disabled or permission is denied.
+    }
+  }
 
   Future<void> select(HeritagePlace? value) async {
     _selected = value;

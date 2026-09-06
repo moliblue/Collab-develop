@@ -540,8 +540,9 @@ class _DestinationCard extends StatelessWidget {
                 bottom: 11,
                 child: _ImagePill(
                   icon: Icons.star_rounded,
-                  text:
-                      '${place.rating.toStringAsFixed(1)} (${place.reviewsCount})',
+                  text: place.reviewsCount == 0
+                      ? 'New'
+                      : '${place.rating.toStringAsFixed(1)} (${place.reviewsCount})',
                   color: AppColors.warning,
                 ),
               ),
@@ -1072,7 +1073,9 @@ class _LocationDetailState extends State<_LocationDetail> {
                           size: 16,
                         ),
                         Text(
-                          ' ${p.rating.toStringAsFixed(1)} (${p.reviewsCount})',
+                          p.reviewsCount == 0
+                              ? ' No ratings yet'
+                              : ' ${p.rating.toStringAsFixed(1)} (${p.reviewsCount})',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
@@ -1086,7 +1089,9 @@ class _LocationDetailState extends State<_LocationDetail> {
                           size: 14,
                         ),
                         Text(
-                          ' ${p.distanceKm.toStringAsFixed(1)} km',
+                          p.distanceKm > 0
+                              ? ' ${p.distanceKm.toStringAsFixed(1)} km'
+                              : ' GPS unavailable',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,

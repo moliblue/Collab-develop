@@ -537,16 +537,19 @@ class _PlanModuleViewState extends State<PlanModuleView> {
   Widget _heritageRecommendations(PlanDay day) {
     final vm = widget.viewModel;
     final query = _heritageQuery.toLowerCase();
-    final places = widget.recommendations
-        .where(
-          (p) =>
-              query.isEmpty ||
-              p.name.toLowerCase().contains(query) ||
-              p.state.toLowerCase().contains(query) ||
-              p.category.toLowerCase().contains(query),
-        )
-        .take(4)
-        .toList();
+    final places =
+        (widget.recommendations
+                .where(
+                  (p) =>
+                      query.isEmpty ||
+                      p.name.toLowerCase().contains(query) ||
+                      p.state.toLowerCase().contains(query) ||
+                      p.category.toLowerCase().contains(query),
+                )
+                .toList()
+              ..sort(compareHeritagePlacesForListing))
+            .take(4)
+            .toList();
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1140,7 +1143,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     // A place can arrive through both the built-in catalogue and Supabase.
     // DropdownButton requires exactly one item for each selected value, so
     // remove repeated object instances before building its menu.
-    final savedPlaces = widget.bookmarks.toSet().toList();
+    final savedPlaces = widget.bookmarks.toSet().toList()
+      ..sort(compareHeritagePlacesForListing);
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
     String? successMessage;
@@ -1626,22 +1630,21 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       ...widget.bookmarks,
       ...widget.recommendations,
     ]) {
-      final isHeritage =
-          place.category == 'Traditional Heritage Site' ||
-          place.category == 'Culture';
-      if (place.bookmarked || isHeritage) unique[place.id] = place;
+      unique[place.id] = place;
     }
-    return unique.values
-        .where(
-          (place) =>
-              !_containsCjk(place.name) && query.isEmpty ||
-              (!_containsCjk(place.name) &&
-                  (place.name.toLowerCase().contains(query) ||
-                      place.address.toLowerCase().contains(query) ||
-                      place.category.toLowerCase().contains(query))),
-        )
-        .take(5)
-        .toList();
+    final matches =
+        unique.values
+            .where(
+              (place) =>
+                  !_containsCjk(place.name) && query.isEmpty ||
+                  (!_containsCjk(place.name) &&
+                      (place.name.toLowerCase().contains(query) ||
+                          place.address.toLowerCase().contains(query) ||
+                          place.category.toLowerCase().contains(query))),
+            )
+            .toList()
+          ..sort(compareHeritagePlacesForListing);
+    return matches.take(5).toList();
   }
 
   bool _containsCjk(String value) =>

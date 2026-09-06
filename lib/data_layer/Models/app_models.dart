@@ -110,7 +110,7 @@ class HeritagePlace {
   final String shortDescription;
   final String description;
   final String image;
-  final double distanceKm;
+  double distanceKm;
   double rating;
   int reviewsCount;
   final double latitude;
@@ -256,6 +256,24 @@ class HeritagePlace {
     }
     return result.join(', ');
   }
+}
+
+int compareHeritagePlacesForListing(HeritagePlace a, HeritagePlace b) {
+  int priority(HeritagePlace place) =>
+      place.category.trim().toLowerCase() == 'traditional heritage site'
+      ? 0
+      : 1;
+
+  final byPriority = priority(a).compareTo(priority(b));
+  if (byPriority != 0) return byPriority;
+  final aHasDistance = a.distanceKm > 0;
+  final bHasDistance = b.distanceKm > 0;
+  if (aHasDistance != bHasDistance) return aHasDistance ? -1 : 1;
+  if (aHasDistance) {
+    final byDistance = a.distanceKm.compareTo(b.distanceKm);
+    if (byDistance != 0) return byDistance;
+  }
+  return a.name.toLowerCase().compareTo(b.name.toLowerCase());
 }
 
 class MysteryMapCompletion {

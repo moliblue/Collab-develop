@@ -32,6 +32,27 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         .eq('is_active', true)
         .eq('is_verified', true)
         .order('name');
+    final reviewRows = await client
+        .from('destination_reviews')
+        .select('destination_id,rating');
+    final ratingTotals = <String, int>{};
+    final ratingCounts = <String, int>{};
+    for (final raw in reviewRows) {
+      final row = Map<String, dynamic>.from(raw);
+      final destinationId = '${row['destination_id']}'.trim();
+      final rating = (row['rating'] as num?)?.toInt();
+      if (destinationId.isEmpty || rating == null) continue;
+      ratingTotals.update(
+        destinationId,
+        (value) => value + rating,
+        ifAbsent: () => rating,
+      );
+      ratingCounts.update(
+        destinationId,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
+    }
     List<dynamic> coverRows = const <dynamic>[];
     try {
       coverRows = await client
@@ -93,8 +114,10 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
         description: '${row['description'] ?? ''}'.trim(),
         image: '${row['cover_image_url'] ?? row['image_url'] ?? ''}'.trim(),
         distanceKm: 0,
-        rating: 0,
-        reviewsCount: 0,
+        rating: ratingCounts[id] == null
+            ? 0
+            : ratingTotals[id]! / ratingCounts[id]!,
+        reviewsCount: ratingCounts[id] ?? 0,
         latitude: lat,
         longitude: lng,
         address: address,
@@ -123,7 +146,7 @@ class SupabaseDiscoveryRepository implements DiscoveryRepository {
             : <DestinationImage>[covers[id]!],
       );
     }
-    return unique.values.toList()..sort((a, b) => a.name.compareTo(b.name));
+    return unique.values.toList()..sort(compareHeritagePlacesForListing);
   }
 
   @override

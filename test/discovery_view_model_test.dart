@@ -129,6 +129,25 @@ void main() {
     expect(place.discoveryShareText, endsWith(place.googleMapsUri!));
   });
 
+  test('Traditional Heritage Site is listed before other categories', () {
+    final repository = _FakeDiscoveryRepository();
+    final places = <HeritagePlace>[
+      repository._place('museum', 'A Museum', 'Museum'),
+      repository._place(
+        'heritage',
+        'Z Heritage House',
+        'Traditional Heritage Site',
+      ),
+      repository._place('craft', 'B Craft Studio', 'Cultural Heritage'),
+    ]..sort(compareHeritagePlacesForListing);
+
+    expect(places.map((place) => place.id), <String>[
+      'heritage',
+      'museum',
+      'craft',
+    ]);
+  });
+
   group('DiscoveryViewModel', () {
     testWidgets('detail hero pages through three destination images', (
       tester,

@@ -8,6 +8,7 @@ import '../../data_layer/Models/journey.dart' show JourneyStatus;
 import '../../data_layer/Repositories/shake_find_repository.dart';
 import '../../data_layer/Repositories/shake_find_repository_impl.dart';
 import '../../data_layer/Service Managers/device/shake_sensor_service.dart';
+import '../../data_layer/Service Managers/device/location_service.dart';
 import '../../features/collaborative_planner/models/planner_messages.dart';
 import 'auth_view_model.dart';
 import 'collaborative_planning_view_model.dart';
@@ -32,7 +33,7 @@ class AppViewModel extends ChangeNotifier {
   }) : mystery = MysteryJourneyViewModel(
          mysteryRepository ?? ShakeFindRepositoryImpl(ShakeSensorService()),
        ),
-       discovery = DiscoveryViewModel(),
+       discovery = DiscoveryViewModel(locationService: const LocationService()),
        map = mapViewModel ?? MapQuestViewModel(),
        plan = CollaborativePlanningViewModel(),
        profile = ProfileViewModel(),
