@@ -25,6 +25,14 @@ class DiscoverModuleView extends StatefulWidget {
 
 class _DiscoverModuleViewState extends State<DiscoverModuleView> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.viewModel.load();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: widget.viewModel,
     builder: (BuildContext context, _) {
@@ -47,6 +55,22 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
   Widget _discover() {
     final vm = widget.viewModel;
     final results = vm.filteredPlaces;
+    if (vm.loading && vm.places.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (vm.loadError != null && vm.places.isEmpty) {
+      return Center(
+        child: EmptyState(
+          icon: Icons.cloud_off_rounded,
+          title: vm.loadError!,
+          message: 'Check your connection and try again.',
+          action: FilledButton(
+            onPressed: () => vm.load(force: true),
+            child: const Text('Retry'),
+          ),
+        ),
+      );
+    }
     return ListView(
       key: const PageStorageKey<String>('discover-list'),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -122,7 +146,7 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
                 onChanged: vm.setQuery,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search_rounded),
-                  hintText: 'Search places, food or stories…',
+                  hintText: 'Search heritage locations…',
                 ),
               ),
             ),
@@ -158,11 +182,7 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: AppChip(
-                  label: switch (category) {
-                    'Traditional Heritage Site' => 'Heritage',
-                    'Local Micro Business' => 'Local makers',
-                    _ => category.replaceFirst('Local ', ''),
-                  },
+                  label: category,
                   selected: selected,
                   onTap: () => vm.toggleCategory(category),
                 ),
@@ -254,8 +274,10 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
         if (results.isEmpty)
           EmptyState(
             icon: Icons.travel_explore_rounded,
-            title: 'No adventures found',
-            message: 'Try another place, type or search term.',
+            title: vm.categories.isNotEmpty
+                ? 'No locations match the selected category.'
+                : 'No locations found.',
+            message: 'Try another category or search term.',
             action: TextButton(
               onPressed: vm.clearFilters,
               child: const Text('Reset filters'),
@@ -268,11 +290,18 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
               child: _DestinationCard(
                 place: p,
                 onTap: () => vm.select(p),
-                onBookmark: () {
-                  final saved = vm.toggleBookmark(p);
+                onBookmark: () async {
+                  final saved = await vm.toggleBookmark(p);
+                  if (saved == null) {
+                    widget.notify(
+                      vm.takeActionError() ?? 'Unable to update bookmark.',
+                      AppColors.danger,
+                    );
+                    return;
+                  }
                   widget.notify(
                     saved
-                        ? 'Added to your bookmarks.'
+                        ? 'Destination added to your bookmarks.'
                         : 'Removed from bookmarks.',
                     AppColors.primary,
                   );
@@ -326,7 +355,16 @@ class _DiscoverModuleViewState extends State<DiscoverModuleView> {
               child: _DestinationCard(
                 place: p,
                 onTap: () => widget.viewModel.select(p),
-                onBookmark: () => widget.viewModel.toggleBookmark(p),
+                onBookmark: () async {
+                  final saved = await widget.viewModel.toggleBookmark(p);
+                  if (saved == null) {
+                    widget.notify(
+                      widget.viewModel.takeActionError() ??
+                          'Unable to update bookmark.',
+                      AppColors.danger,
+                    );
+                  }
+                },
               ),
             ),
           ),
@@ -368,10 +406,7 @@ class _DestinationCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(19),
                 ),
-                child: Hero(
-                  tag: place.id,
-                  child: Image.asset(place.image, fit: BoxFit.cover),
-                ),
+                child: Hero(tag: place.id, child: _PlaceImage(place.image)),
               ),
               const DecoratedBox(
                 decoration: BoxDecoration(
@@ -433,7 +468,7 @@ class _DestinationCard extends StatelessWidget {
                 bottom: 11,
                 child: _ImagePill(
                   icon: Icons.place_rounded,
-                  text: '${place.distanceKm.toStringAsFixed(1)} km',
+                  text: place.state,
                   color: accent,
                 ),
               ),
@@ -528,6 +563,35 @@ class _ImagePill extends StatelessWidget {
   );
 }
 
+class _PlaceImage extends StatelessWidget {
+  const _PlaceImage(this.source);
+  final String source;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmed = source.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return Image.network(trimmed, fit: BoxFit.cover, errorBuilder: _fallback);
+    }
+    if (trimmed.isNotEmpty) {
+      return Image.asset(trimmed, fit: BoxFit.cover, errorBuilder: _fallback);
+    }
+    return _fallback(context, Object(), null);
+  }
+
+  Widget _fallback(BuildContext context, Object _, StackTrace? stackTrace) =>
+      const ColoredBox(
+        color: Color(0xFFEAF0F4),
+        child: Center(
+          child: Icon(
+            Icons.account_balance_rounded,
+            size: 58,
+            color: AppColors.muted,
+          ),
+        ),
+      );
+}
+
 class _LocationDetail extends StatefulWidget {
   const _LocationDetail({
     required this.place,
@@ -566,10 +630,7 @@ class _LocationDetailState extends State<_LocationDetail> {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Hero(
-                tag: p.id,
-                child: Image.asset(p.image, fit: BoxFit.cover),
-              ),
+              Hero(tag: p.id, child: _PlaceImage(p.image)),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -612,7 +673,18 @@ class _LocationDetailState extends State<_LocationDetail> {
                     const SizedBox(width: 6),
                     IconButton(
                       tooltip: 'Bookmark',
-                      onPressed: () => widget.viewModel.toggleBookmark(p),
+                      onPressed: () async {
+                        final saved = await widget.viewModel.toggleBookmark(p);
+                        widget.notify(
+                          saved == true
+                              ? 'Destination added to your bookmarks.'
+                              : saved == false
+                              ? 'Removed from bookmarks.'
+                              : widget.viewModel.takeActionError() ??
+                                    'Unable to update bookmark.',
+                          saved == null ? AppColors.danger : AppColors.primary,
+                        );
+                      },
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: p.bookmarked
@@ -786,6 +858,8 @@ class _LocationDetailState extends State<_LocationDetail> {
               const SizedBox(height: 18),
               const SectionTitle('Traveller reviews'),
               const SizedBox(height: 9),
+              if (widget.viewModel.detailsLoading)
+                const Center(child: CircularProgressIndicator()),
               ...p.reviews.map(
                 (Review r) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -877,19 +951,27 @@ class _LocationDetailState extends State<_LocationDetail> {
           ),
           const SizedBox(height: 12),
           FilledButton(
-            onPressed: () {
-              final error = widget.viewModel.addReview(
-                widget.place,
-                rating,
-                review.text,
-              );
-              if (error != null) {
-                widget.notify(error, AppColors.danger);
-                return;
-              }
-              Navigator.pop(context);
-              widget.notify('Review submitted successfully!', AppColors.teal);
-            },
+            onPressed: widget.viewModel.reviewSubmitting
+                ? null
+                : () async {
+                    final error = await widget.viewModel.addReview(
+                      widget.place,
+                      rating,
+                      review.text,
+                    );
+                    if (error != null) {
+                      widget.notify(error, AppColors.danger);
+                      return;
+                    }
+                    if (!context.mounted) return;
+                    Navigator.pop(context);
+                    rating = 0;
+                    review.clear();
+                    widget.notify(
+                      'Review submitted successfully.',
+                      AppColors.teal,
+                    );
+                  },
             child: const Text('Submit Review'),
           ),
         ],

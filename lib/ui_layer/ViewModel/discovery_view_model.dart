@@ -1,25 +1,27 @@
 import 'package:flutter/foundation.dart';
 
 import '../../data_layer/Models/app_models.dart';
-import '../../data_layer/Models/mock_data.dart';
-import '../../data_layer/Service Managers/Remote Services/heritage_catalog_service.dart';
+import '../../data_layer/Repositories/discovery_repository.dart';
 
 enum DiscoverSection { discover, bookmarks }
 
 class DiscoveryViewModel extends ChangeNotifier {
-  DiscoveryViewModel({HeritageCatalogService? heritageService})
-    : _heritageService = heritageService ?? HeritageCatalogService();
-
-  final HeritageCatalogService _heritageService;
-  final List<HeritagePlace> _places = createPlaces();
+  DiscoveryViewModel({DiscoveryRepository? repository})
+    : _repository = repository ?? SupabaseDiscoveryRepository();
+  final DiscoveryRepository _repository;
+  final List<HeritagePlace> _places = <HeritagePlace>[];
   DiscoverSection _section = DiscoverSection.discover;
   HeritagePlace? _selected;
   String _query = '';
   final Set<String> _states = <String>{};
   final Set<String> _categories = <String>{};
   bool _filtersOpen = false;
-  bool _catalogueLoading = false;
-  String? _catalogueIssue;
+  bool _loading = false;
+  bool _loaded = false;
+  bool _detailsLoading = false;
+  bool _reviewSubmitting = false;
+  String? _loadError;
+  String? _actionError;
 
   List<HeritagePlace> get places => List<HeritagePlace>.unmodifiable(_places);
   DiscoverSection get section => _section;
@@ -28,8 +30,14 @@ class DiscoveryViewModel extends ChangeNotifier {
   Set<String> get states => Set<String>.unmodifiable(_states);
   Set<String> get categories => Set<String>.unmodifiable(_categories);
   bool get filtersOpen => _filtersOpen;
-  bool get catalogueLoading => _catalogueLoading;
-  String? get catalogueIssue => _catalogueIssue;
+  bool get loading => _loading;
+  bool get detailsLoading => _detailsLoading;
+  bool get reviewSubmitting => _reviewSubmitting;
+  String? get loadError => _loadError;
+  // Compatibility surface used by the latest shared AppViewModel/Discover UI.
+  // It delegates to the single repository-backed loading state below.
+  bool get catalogueLoading => _loading;
+  String? get catalogueIssue => _loadError;
   List<String> get availableStates =>
       (_places
           .map((place) => place.state)
@@ -37,61 +45,27 @@ class DiscoveryViewModel extends ChangeNotifier {
           .toSet()
           .toList()
         ..sort());
-  List<String> get availableCategories =>
-      (_places
-          .map((place) => place.category)
-          .where((value) => value.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort());
+  List<String> get availableCategories => const <String>[
+    'Traditional Heritage Site',
+    'Heritage Workshops',
+  ];
+  String? takeActionError() {
+    final value = _actionError;
+    _actionError = null;
+    return value;
+  }
+
   List<HeritagePlace> get bookmarks =>
       _places.where((HeritagePlace p) => p.bookmarked).toList();
   List<HeritagePlace> get filteredPlaces {
     final q = _query.trim().toLowerCase();
     return _places.where((HeritagePlace p) {
-        final textMatches =
-            q.isEmpty ||
-            p.name.toLowerCase().contains(q) ||
-            p.category.toLowerCase().contains(q) ||
-            p.state.toLowerCase().contains(q);
+        final textMatches = q.isEmpty || p.name.toLowerCase().contains(q);
         return textMatches &&
             (_states.isEmpty || _states.contains(p.state)) &&
             (_categories.isEmpty || _categories.contains(p.category));
       }).toList()
       ..sort((HeritagePlace a, HeritagePlace b) => a.name.compareTo(b.name));
-  }
-
-  Future<void> loadHeritageCatalogue() async {
-    if (_catalogueLoading) return;
-    _catalogueLoading = true;
-    _catalogueIssue = null;
-    notifyListeners();
-    try {
-      final remote = await _heritageService.fetchCatalogue();
-      final existingByName = <String, HeritagePlace>{
-        for (final place in _places) place.name.trim().toLowerCase(): place,
-      };
-      for (final place in remote) {
-        final key = place.name.trim().toLowerCase();
-        final existing = existingByName[key];
-        if (existing != null) {
-          place.bookmarked = existing.bookmarked;
-          place.reviews.addAll(existing.reviews);
-          place.rating = existing.rating;
-          place.reviewsCount = existing.reviewsCount;
-          final index = _places.indexOf(existing);
-          _places[index] = place;
-        } else {
-          _places.add(place);
-        }
-      }
-    } catch (_) {
-      _catalogueIssue =
-          'Supabase heritage catalogue is unavailable; showing saved app locations.';
-    } finally {
-      _catalogueLoading = false;
-      notifyListeners();
-    }
   }
 
   void setSection(DiscoverSection value) {
@@ -100,9 +74,57 @@ class DiscoveryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void select(HeritagePlace? value) {
+  Future<void> load({bool force = false}) async {
+    if (_loading || (_loaded && !force)) return;
+    _loading = true;
+    _loadError = null;
+    notifyListeners();
+    try {
+      final places = await _repository.getDestinations();
+      _places
+        ..clear()
+        ..addAll(places);
+      try {
+        final bookmarked = await _repository.getBookmarkIds();
+        for (final place in _places) {
+          place.bookmarked = bookmarked.contains(place.id);
+        }
+      } catch (_) {
+        // The catalogue remains readable while the pending UC201 persistence
+        // migration has not yet been approved/deployed.
+      }
+      _loaded = true;
+    } catch (_) {
+      _loadError = 'Unable to load locations. Please try again.';
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadHeritageCatalogue() => load();
+
+  Future<void> select(HeritagePlace? value) async {
     _selected = value;
     notifyListeners();
+    if (value == null) return;
+    _detailsLoading = true;
+    notifyListeners();
+    try {
+      final reviews = await _repository.getReviews(value.id);
+      value.reviews
+        ..clear()
+        ..addAll(reviews);
+      value.reviewsCount = reviews.length;
+      value.rating = reviews.isEmpty
+          ? 0
+          : reviews.fold<int>(0, (sum, r) => sum + r.rating) / reviews.length;
+    } catch (_) {
+      _actionError = 'Unable to load reviews. Please try again.';
+    } finally {
+      _detailsLoading = false;
+      notifyListeners();
+    }
   }
 
   void setQuery(String value) {
@@ -138,39 +160,55 @@ class DiscoveryViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool toggleBookmark(HeritagePlace place) {
-    place.bookmarked = !place.bookmarked;
-    notifyListeners();
-    return place.bookmarked;
+  Future<bool?> toggleBookmark(HeritagePlace place) async {
+    final target = !place.bookmarked;
+    try {
+      if (target) {
+        await _repository.addBookmark(place);
+      } else {
+        await _repository.removeBookmark(place.id);
+      }
+      place.bookmarked = target;
+      notifyListeners();
+      return target;
+    } catch (_) {
+      _actionError = 'Unable to update bookmark. Please try again.';
+      notifyListeners();
+      return null;
+    }
   }
 
-  String? addReview(HeritagePlace place, int rating, String comment) {
+  Future<String?> addReview(
+    HeritagePlace place,
+    int rating,
+    String comment,
+  ) async {
     if (rating < 1 || rating > 5) {
-      return 'Please select a rating before submitting.';
+      return 'Error: Please provide a valid rating before submitting your review.';
     }
-    place.reviews.insert(
-      0,
-      Review(
-        name: 'Amberly',
-        date: 'August 24, 2026',
-        rating: rating,
-        comment: comment.trim().isEmpty
-            ? 'A memorable Malaysian heritage stop.'
-            : comment.trim(),
-      ),
-    );
-    place.reviewsCount = place.reviews.length;
-    place.rating =
-        place.reviews.fold<int>(0, (int sum, Review r) => sum + r.rating) /
-        place.reviews.length;
+    _reviewSubmitting = true;
     notifyListeners();
-    return null;
+    try {
+      await _repository.addReview(place.id, rating, comment);
+      final reviews = await _repository.getReviews(place.id);
+      place.reviews
+        ..clear()
+        ..addAll(reviews);
+      place.reviewsCount = reviews.length;
+      place.rating =
+          reviews.fold<int>(0, (sum, r) => sum + r.rating) / reviews.length;
+      return null;
+    } catch (_) {
+      return 'Unable to submit review. Please try again.';
+    } finally {
+      _reviewSubmitting = false;
+      notifyListeners();
+    }
   }
 
   void reset() {
-    _places
-      ..clear()
-      ..addAll(createPlaces());
+    _places.clear();
+    _loaded = false;
     _section = DiscoverSection.discover;
     _selected = null;
     _query = '';
