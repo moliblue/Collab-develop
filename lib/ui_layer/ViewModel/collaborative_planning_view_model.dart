@@ -17,11 +17,55 @@ class PlanChoice {
     required this.id,
     required this.name,
     required this.inviteCode,
+    required this.regions,
+    required this.startDate,
+    required this.endDate,
+    required this.dayCount,
+    required this.memberCount,
   });
 
   final String id;
   final String name;
   final String inviteCode;
+  final List<String> regions;
+  final DateTime startDate;
+  final DateTime endDate;
+  final int dayCount;
+  final int memberCount;
+
+  String get regionLabel => regions.isEmpty ? 'Malaysia' : regions.join(' & ');
+
+  String get dateLabel =>
+      '${_date(startDate)} to ${_date(endDate)} ($dayCount Day ${dayCount == 1 ? 'tab' : 'tabs'})';
+
+  static String _date(DateTime value) =>
+      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+
+  String get coverAsset {
+    final region = regions.isEmpty ? '' : regions.first.toLowerCase();
+    if (region.isEmpty) {
+      const legacyCovers = <String>[
+        'assets/sultan_abdul_samad.png',
+        'assets/blue_mansion.png',
+        'assets/pewter_craft.png',
+        'assets/woodcraft_antique.png',
+      ];
+      final index =
+          id.codeUnits.fold<int>(0, (sum, value) => sum + value) %
+          legacyCovers.length;
+      return legacyCovers[index];
+    }
+    if (region.contains('perak')) return 'assets/pewter_craft.png';
+    if (region.contains('penang')) return 'assets/blue_mansion.png';
+    if (region.contains('kuala lumpur') || region.contains('selangor')) {
+      return 'assets/sultan_abdul_samad.png';
+    }
+    if (region.contains('melaka')) return 'assets/petaling_street.png';
+    if (region.contains('sabah') || region.contains('sarawak')) {
+      return 'assets/woodcraft_antique.png';
+    }
+    return 'assets/discovery_placeholder.png';
+  }
 }
 
 class CollaborativePlanningViewModel extends ChangeNotifier {
@@ -36,6 +80,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   PlanSection _section = PlanSection.workspace;
   int _dayIndex = 0;
   String _planName = 'Malaysia UNESCO Heritage Tour';
+  List<String> _planRegions = <String>[];
   bool _exporting = false;
   final PlannerPdfService _pdfService = PlannerPdfService();
   final CollaborativePlannerRepository repository;
@@ -70,6 +115,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
         _inviteCode = null;
         _planPersisted = false;
         _planRevision = 0;
+        _planRegions = <String>[];
         _availablePlans = <planner.TravelPlan>[];
         _travellers = <Traveller>[];
         _days = <PlanDay>[
@@ -119,6 +165,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _planId = loaded.id;
       _inviteCode = loaded.inviteCode;
       _planName = loaded.name;
+      _planRegions = List<String>.of(loaded.regions);
       _planPersisted = true;
       _planRevision = loaded.revision;
       _days = loaded.days.indexed.map((entry) {
@@ -222,8 +269,16 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
   List<PlanChoice> get planChoices => List<PlanChoice>.unmodifiable(
     _availablePlans.map(
-      (plan) =>
-          PlanChoice(id: plan.id, name: plan.name, inviteCode: plan.inviteCode),
+      (plan) => PlanChoice(
+        id: plan.id,
+        name: plan.name,
+        inviteCode: plan.inviteCode,
+        regions: List<String>.unmodifiable(plan.regions),
+        startDate: plan.startDate,
+        endDate: plan.endDate,
+        dayCount: plan.days.length,
+        memberCount: plan.members.length,
+      ),
     ),
   );
   String? get activePlanId => _planId;
@@ -529,11 +584,17 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     return _persistCurrentPlan();
   }
 
-  Future<bool> createPlan(String name, DateTime start, int dayCount) async {
+  Future<bool> createPlan(
+    String name,
+    DateTime start,
+    int dayCount, {
+    required List<String> regions,
+  }) async {
     final previousPlanId = _planId;
     final previousInviteCode = _inviteCode;
     final previousRevision = _planRevision;
     final previousPlanName = _planName;
+    final previousPlanRegions = _planRegions;
     final previousDays = _days;
     final previousSection = _section;
     final previousPersisted = _planPersisted;
@@ -542,6 +603,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     _planRevision = 0;
     _planPersisted = false;
     _planName = name.trim();
+    _planRegions = List<String>.of(regions);
     _days = List<PlanDay>.generate(
       dayCount,
       (int i) => PlanDay(
@@ -560,6 +622,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _inviteCode = previousInviteCode;
       _planRevision = previousRevision;
       _planName = previousPlanName;
+      _planRegions = previousPlanRegions;
       _days = previousDays;
       _section = previousSection;
       _planPersisted = previousPersisted;
@@ -637,6 +700,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
           endDate: mappedDays.last.date,
           inviteCode: 'HERITAGE-${_planId!.substring(0, 6).toUpperCase()}',
           revision: _planRevision,
+          regions: _planRegions,
           days: mappedDays,
         ),
         accessToken: session.accessToken,
@@ -916,6 +980,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   void reset() {
     _days = createPlanDays();
     _planName = 'Malaysia UNESCO Heritage Tour';
+    _planRegions = <String>[];
     _section = PlanSection.workspace;
     _dayIndex = 0;
     notifyListeners();

@@ -865,7 +865,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           (PlanChoice plan) => Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: 184,
+              width: double.infinity,
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -886,18 +886,33 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                   Stack(
                     children: <Widget>[
                       Image.asset(
-                        'assets/sultan_abdul_samad.png',
-                        height: 134,
+                        plan.coverAsset,
+                        height: 150,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
                       Positioned(
                         left: 10,
-                        top: 62,
-                        child: AppChip(
-                          label: 'PIN: ${plan.inviteCode}',
-                          selected: true,
-                          selectedColor: AppColors.warning,
+                        bottom: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xE62B3340),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white70),
+                          ),
+                          child: SelectableText(
+                            'JOIN CODE  ${plan.inviteCode}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: .35,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -917,25 +932,25 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          '📍 Penang & Kuala Lumpur',
-                          style: TextStyle(
+                        Text(
+                          '📍 ${plan.regionLabel}',
+                          style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 5),
-                        const Text(
-                          '📅 2026-08-20 to 2026-08-23 (3 Date Tabs)',
-                          style: TextStyle(
+                        Text(
+                          '📅 ${plan.dateLabel}',
+                          style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 5),
-                        const Text(
-                          '♙ 2 Members',
-                          style: TextStyle(
+                        Text(
+                          '♙ ${plan.memberCount} ${plan.memberCount == 1 ? 'Member' : 'Members'}',
+                          style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.primary,
                           ),
@@ -1933,6 +1948,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                               name.text,
                               start,
                               days,
+                              regions: selectedAreas.toList()..sort(),
                             );
                             if (!context.mounted) return;
                             if (!saved) {

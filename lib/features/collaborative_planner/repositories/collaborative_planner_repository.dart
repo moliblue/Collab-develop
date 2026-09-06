@@ -84,7 +84,37 @@ class CollaborativePlannerRepository {
       query: 'select=*&order=updated_at.desc',
       accessToken: active,
     );
-    return rows.map(TravelPlan.fromJson).toList();
+    final plans = rows.map(TravelPlan.fromJson).toList();
+    if (plans.isEmpty) return plans;
+    final ids = plans.map((plan) => plan.id).join(',');
+    final dayRows = await supabase.select(
+      'plan_days',
+      query: 'select=id,plan_id,date&plan_id=in.($ids)',
+      accessToken: active,
+    );
+    final memberRows = await supabase.select(
+      'plan_members',
+      query: 'select=plan_id,user_id,role,joined_at&plan_id=in.($ids)',
+      accessToken: active,
+    );
+    for (final plan in plans) {
+      plan.days.addAll(
+        dayRows
+            .where((row) => '${row['plan_id']}' == plan.id)
+            .map(
+              (row) => PlannerDay(
+                id: '${row['id']}',
+                date: DateTime.parse('${row['date']}'),
+              ),
+            ),
+      );
+      plan.members.addAll(
+        memberRows
+            .where((row) => '${row['plan_id']}' == plan.id)
+            .map(PlannerMember.fromJson),
+      );
+    }
+    return plans;
   }
 
   Future<TravelPlan?> loadPlan(String planId, {String? accessToken}) async {
@@ -128,22 +158,23 @@ class CollaborativePlannerRepository {
     if (memberIds.isNotEmpty) {
       final profileRows = await supabase.select(
         'profiles',
-        query:
-            'select=id,full_name,username&id=in.(${memberIds.join(',')})',
+        query: 'select=id,full_name,username&id=in.(${memberIds.join(',')})',
         accessToken: active,
       );
       for (final profile in profileRows) {
         profilesById['${profile['id']}'] = profile;
       }
     }
-    plan.members.addAll(memberRows.map((row) {
-      final enriched = Map<String, dynamic>.from(row);
-      final profile = profilesById['${row['user_id']}'];
-      final fullName = '${profile?['full_name'] ?? ''}'.trim();
-      final username = '${profile?['username'] ?? ''}'.trim();
-      enriched['display_name'] = fullName.isNotEmpty ? fullName : username;
-      return PlannerMember.fromJson(enriched);
-    }));
+    plan.members.addAll(
+      memberRows.map((row) {
+        final enriched = Map<String, dynamic>.from(row);
+        final profile = profilesById['${row['user_id']}'];
+        final fullName = '${profile?['full_name'] ?? ''}'.trim();
+        final username = '${profile?['username'] ?? ''}'.trim();
+        enriched['display_name'] = fullName.isNotEmpty ? fullName : username;
+        return PlannerMember.fromJson(enriched);
+      }),
+    );
     return plan;
   }
 

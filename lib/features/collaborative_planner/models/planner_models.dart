@@ -161,9 +161,11 @@ class TravelPlan {
     required this.endDate,
     required this.inviteCode,
     this.revision = 0,
+    List<String>? regions,
     List<PlannerDay>? days,
     List<PlannerMember>? members,
-  }) : days = days ?? <PlannerDay>[],
+  }) : regions = regions ?? <String>[],
+       days = days ?? <PlannerDay>[],
        members = members ?? <PlannerMember>[];
   final String id;
   final String ownerId;
@@ -172,6 +174,7 @@ class TravelPlan {
   DateTime endDate;
   final String inviteCode;
   int revision;
+  final List<String> regions;
   final List<PlannerDay> days;
   final List<PlannerMember> members;
   int get activityCount =>
@@ -184,6 +187,7 @@ class TravelPlan {
     'end_date': endDate.toIso8601String().substring(0, 10),
     'invite_code': inviteCode,
     'revision': revision,
+    'regions': regions,
   };
   String encodeSharePayload() => base64Url.encode(
     utf8.encode(jsonEncode(<String, String>{'plan': id, 'code': inviteCode})),
@@ -197,5 +201,9 @@ class TravelPlan {
     endDate: DateTime.parse('${json['end_date']}'),
     inviteCode: '${json['invite_code']}',
     revision: (json['revision'] as num?)?.toInt() ?? 0,
+    regions: (json['regions'] as List<dynamic>? ?? const <dynamic>[])
+        .map((value) => '$value')
+        .where((value) => value.trim().isNotEmpty)
+        .toList(),
   );
 }
