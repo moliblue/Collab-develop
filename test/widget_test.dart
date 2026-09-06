@@ -283,7 +283,7 @@ void main() {
       expect(service.lastRecoveryEmail, 'traveller@example.com');
       expect(
         service.lastRedirectTo,
-        'finditmy://login-callback/',
+        AuthRedirectResolver.androidCallback,
       );
       expect(auth.recoverySent, isTrue);
     });
