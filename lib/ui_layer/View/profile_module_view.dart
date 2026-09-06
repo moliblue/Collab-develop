@@ -2,13 +2,14 @@ import 'dart:ui' as ui;
 
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Text;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/localization/app_localization.dart';
+import '../../core/localization/localized_text.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data_layer/Models/app_models.dart';
 import '../ViewModel/auth_view_model.dart';
