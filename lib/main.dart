@@ -5,16 +5,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'ui_layer/View/app_shell_view.dart';
 import 'ui_layer/ViewModel/app_view_model.dart';
+import 'ui_layer/ViewModel/auth_view_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  final callbackUri = Uri.base;
+  final fragmentParameters = _fragmentParameters(callbackUri.fragment);
+  final callbackType =
+      callbackUri.queryParameters['type'] ?? fragmentParameters['type'];
   // Remember whether the web app opened from an Auth callback before
   // Supabase consumes the one-time PKCE code.
   final openedFromAuthCallback =
       kIsWeb &&
-      (Uri.base.queryParameters.containsKey('code') ||
-          Uri.base.fragment.contains('type='));
+      (callbackUri.queryParameters.containsKey('code') ||
+          callbackUri.queryParameters.containsKey('error_code') ||
+          fragmentParameters.containsKey('type') ||
+          fragmentParameters.containsKey('error_code'));
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
     debugPrint('Flutter framework error: ${details.exceptionAsString()}');
@@ -41,16 +48,15 @@ Future<void> main() async {
     publishableKey: supabasePublishableKey,
   );
 
+  AuthNotice? initialAuthNotice;
+  var initialPasswordRecovery = false;
+  var initialRecoveryError = false;
   // Keep a password-recovery session so the user can update their password.
   // Signup confirmation still returns to Login, as required by the app flow.
   if (openedFromAuthCallback) {
     AuthChangeEvent? callbackEvent;
     try {
-      callbackEvent = await Supabase
-          .instance
-          .client
-          .auth
-          .onAuthStateChange
+      callbackEvent = await Supabase.instance.client.auth.onAuthStateChange
           .firstWhere((state) => state.event != AuthChangeEvent.initialSession)
           .then((state) => state.event)
           .timeout(const Duration(seconds: 5));
@@ -58,27 +64,80 @@ Future<void> main() async {
       // AuthViewModel presents expired/invalid recovery links without exposing
       // the underlying Auth exception. An invalid callback has no usable session.
     }
-    if (callbackEvent != AuthChangeEvent.passwordRecovery &&
-        Supabase.instance.client.auth.currentSession != null) {
+    final hasSession = Supabase.instance.client.auth.currentSession != null;
+    final isRecoveryCallback =
+        callbackType == 'recovery' ||
+        callbackEvent == AuthChangeEvent.passwordRecovery;
+    if (isRecoveryCallback) {
+      initialPasswordRecovery = hasSession;
+      initialRecoveryError = !hasSession;
+    } else if (hasSession) {
+      initialAuthNotice = const AuthNotice(
+        AuthViewModel.verificationSuccessMessage,
+        AuthNoticeKind.success,
+      );
       await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+    } else {
+      initialAuthNotice = const AuthNotice(
+        AuthViewModel.invalidVerificationLinkMessage,
+        AuthNoticeKind.error,
+      );
     }
   }
-  runApp(const FindItMyApp());
+  runApp(
+    FindItMyApp(
+      initialAuthNotice: initialAuthNotice,
+      initialPasswordRecovery: initialPasswordRecovery,
+      initialRecoveryError: initialRecoveryError,
+    ),
+  );
+}
+
+Map<String, String> _fragmentParameters(String fragment) {
+  if (fragment.isEmpty) return const <String, String>{};
+  final query = fragment.contains('?')
+      ? fragment.substring(fragment.indexOf('?') + 1)
+      : fragment;
+  try {
+    return Uri.splitQueryString(query);
+  } on FormatException {
+    return const <String, String>{};
+  }
 }
 
 class FindItMyApp extends StatelessWidget {
-  const FindItMyApp({super.key, this.viewModel, this.appViewModel});
+  const FindItMyApp({
+    super.key,
+    this.viewModel,
+    this.appViewModel,
+    this.initialAuthNotice,
+    this.initialPasswordRecovery = false,
+    this.initialRecoveryError = false,
+  });
 
   /// Retained for compatibility with the original Shake & Find smoke test.
   /// Integrated UI state is supplied by [appViewModel] through MVVM.
   final Object? viewModel;
   final AppViewModel? appViewModel;
+  final AuthNotice? initialAuthNotice;
+  final bool initialPasswordRecovery;
+  final bool initialRecoveryError;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Explore My · FindIt',
     debugShowCheckedModeBanner: false,
     theme: AppTheme.light,
-    home: AppShellView(viewModel: appViewModel ?? AppViewModel()),
+    home: AppShellView(
+      viewModel:
+          appViewModel ??
+          AppViewModel(
+            authViewModel: AuthViewModel(
+              initialNotice: initialAuthNotice,
+              initialPasswordRecovery: initialPasswordRecovery,
+              initialRecoveryError: initialRecoveryError,
+            ),
+          ),
+    ),
   );
 }

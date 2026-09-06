@@ -1626,7 +1626,7 @@ class _RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<_RegisterView> {
   final formKey = GlobalKey<FormState>();
   final fields = List<TextEditingController>.generate(
-    6,
+    7,
     (_) => TextEditingController(),
   );
   final birthday = TextEditingController();
@@ -1651,7 +1651,6 @@ class _RegisterViewState extends State<_RegisterView> {
       'Password *',
       'Confirm Password *',
       'Phone Number *',
-      'IC Number *',
     ];
     const icons = <IconData>[
       Icons.person_outline_rounded,
@@ -1659,7 +1658,6 @@ class _RegisterViewState extends State<_RegisterView> {
       Icons.lock_outline_rounded,
       Icons.lock_outline_rounded,
       Icons.phone_outlined,
-      Icons.badge_outlined,
     ];
     return ListView(
       key: const Key('register_screen'),
@@ -1689,7 +1687,7 @@ class _RegisterViewState extends State<_RegisterView> {
                 : AutovalidateMode.onUserInteraction,
             child: Column(
               children: <Widget>[
-                for (var i = 0; i < fields.length; i++) ...<Widget>[
+                for (var i = 0; i < 5; i++) ...<Widget>[
                   TextFormField(
                     key: i == 0 ? const Key('register_name') : null,
                     controller: fields[i],
@@ -1697,13 +1695,12 @@ class _RegisterViewState extends State<_RegisterView> {
                     keyboardType: switch (i) {
                       1 => TextInputType.emailAddress,
                       4 => TextInputType.phone,
-                      5 => TextInputType.number,
                       _ => TextInputType.text,
                     },
-                    inputFormatters: i == 4 || i == 5
+                    inputFormatters: i == 4
                         ? <TextInputFormatter>[
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(i == 4 ? 11 : 12),
+                            LengthLimitingTextInputFormatter(11),
                           ]
                         : null,
                     validator: (String? value) =>
@@ -1717,18 +1714,132 @@ class _RegisterViewState extends State<_RegisterView> {
                     decoration: InputDecoration(
                       labelText: labels[i],
                       prefixIcon: Icon(icons[i]),
-                      hintText: i == 5 ? 'e.g. 050704101234' : null,
                       helperText: i == 2
                           ? '8+ characters with an uppercase letter and symbol'
                           : i == 4
                           ? '10–11 digits without spaces or dashes'
-                          : i == 5
-                          ? 'Enter 12 digits without dashes'
                           : null,
                     ),
                   ),
                   const SizedBox(height: 9),
                 ],
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Identification document',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<IdentityType>(
+                    key: const Key('register_identity_type'),
+                    segments: const <ButtonSegment<IdentityType>>[
+                      ButtonSegment<IdentityType>(
+                        value: IdentityType.ic,
+                        icon: Icon(Icons.badge_outlined),
+                        label: Text('Malaysian IC'),
+                      ),
+                      ButtonSegment<IdentityType>(
+                        value: IdentityType.passport,
+                        icon: Icon(Icons.menu_book_outlined),
+                        label: Text('Passport'),
+                      ),
+                    ],
+                    selected: <IdentityType>{widget.auth.selectedIdentityType},
+                    onSelectionChanged: widget.auth.busy
+                        ? null
+                        : (Set<IdentityType> selection) {
+                            final type = selection.first;
+                            setState(() {
+                              if (type == IdentityType.ic) {
+                                fields[6].clear();
+                              } else {
+                                fields[5].clear();
+                              }
+                              lastError = null;
+                            });
+                            widget.auth.selectIdentityType(type);
+                          },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: widget.auth.selectedIdentityType == IdentityType.ic
+                      ? TextFormField(
+                          key: const Key('register_ic'),
+                          controller: fields[5],
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(12),
+                          ],
+                          validator: (String? value) =>
+                              _identityFieldError(value ?? ''),
+                          onChanged: (_) => _clearDuplicateError(),
+                          decoration: const InputDecoration(
+                            labelText: 'IC Number *',
+                            hintText: 'e.g. 050704101234',
+                            helperText: 'Enter 12 digits without dashes',
+                            prefixIcon: Icon(Icons.badge_outlined),
+                          ),
+                        )
+                      : Column(
+                          key: const Key('register_passport_fields'),
+                          children: <Widget>[
+                            TextFormField(
+                              key: const Key('register_passport'),
+                              controller: fields[6],
+                              textCapitalization: TextCapitalization.characters,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[A-Za-z0-9\s-]'),
+                                ),
+                                LengthLimitingTextInputFormatter(22),
+                              ],
+                              validator: (String? value) =>
+                                  _identityFieldError(value ?? ''),
+                              onChanged: (_) => _clearDuplicateError(),
+                              decoration: const InputDecoration(
+                                labelText: 'Passport Number *',
+                                helperText: '5–20 letters or digits',
+                                prefixIcon: Icon(Icons.menu_book_outlined),
+                              ),
+                            ),
+                            const SizedBox(height: 9),
+                            DropdownButtonFormField<String>(
+                              key: const Key('register_issuing_country'),
+                              initialValue: widget.auth.selectedIssuingCountry,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Issuing Country *',
+                                prefixIcon: Icon(Icons.public_rounded),
+                              ),
+                              items: _issuingCountries.entries
+                                  .map(
+                                    (entry) => DropdownMenuItem<String>(
+                                      value: entry.key,
+                                      child: Text(
+                                        '${entry.value} (${entry.key})',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: widget.auth.busy
+                                  ? null
+                                  : (String? value) {
+                                      if (value != null) {
+                                        widget.auth.selectIssuingCountry(value);
+                                      }
+                                    },
+                            ),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 9),
                 TextFormField(
                   key: const Key('register_birthday'),
                   controller: birthday,
@@ -1772,7 +1883,9 @@ class _RegisterViewState extends State<_RegisterView> {
       password: fields[2].text,
       confirmation: fields[3].text,
       phone: fields[4].text,
-      ic: fields[5].text,
+      identityNumber: widget.auth.selectedIdentityType == IdentityType.ic
+          ? fields[5].text
+          : fields[6].text,
       birthday: selectedBirthday,
     );
     if (!mounted) return;
@@ -1808,14 +1921,8 @@ class _RegisterViewState extends State<_RegisterView> {
     if (index == 4 && !AuthViewModel.isValidPhone(trimmed)) {
       return 'Phone number must contain 10–11 digits.';
     }
-    if (index == 5 && !AuthViewModel.isValidIc(trimmed)) {
-      return 'IC number must contain exactly 12 digits.';
-    }
-    if ((index == 1 || index == 5) &&
-        lastError == AuthViewModel.duplicateRegistrationMessage) {
-      return index == 1
-          ? 'Email may already be registered.'
-          : 'IC may already be registered.';
+    if (index == 1 && lastError == AuthViewModel.duplicateRegistrationMessage) {
+      return 'Email may already be registered.';
     }
     return null;
   }
@@ -1826,8 +1933,51 @@ class _RegisterViewState extends State<_RegisterView> {
     'Password',
     'Confirm password',
     'Phone number',
-    'IC number',
   ][index];
+
+  String? _identityFieldError(String value) {
+    if (value.trim().isEmpty) {
+      return widget.auth.selectedIdentityType == IdentityType.ic
+          ? 'IC number is required.'
+          : 'Passport number is required.';
+    }
+    if (widget.auth.selectedIdentityType == IdentityType.ic &&
+        !AuthViewModel.isValidIc(value)) {
+      return 'IC number must contain exactly 12 digits.';
+    }
+    if (widget.auth.selectedIdentityType == IdentityType.passport &&
+        !AuthViewModel.isValidPassport(value)) {
+      return 'Passport number must contain 5–20 letters or digits.';
+    }
+    if (lastError == AuthViewModel.duplicateRegistrationMessage) {
+      return 'Identification number may already be registered.';
+    }
+    return null;
+  }
+
+  void _clearDuplicateError() {
+    if (lastError == AuthViewModel.duplicateRegistrationMessage) {
+      setState(() => lastError = null);
+    }
+  }
+
+  static const Map<String, String> _issuingCountries = <String, String>{
+    'MY': 'Malaysia',
+    'SG': 'Singapore',
+    'CN': 'China',
+    'IN': 'India',
+    'ID': 'Indonesia',
+    'TH': 'Thailand',
+    'PH': 'Philippines',
+    'VN': 'Vietnam',
+    'BN': 'Brunei',
+    'MM': 'Myanmar',
+    'JP': 'Japan',
+    'KR': 'South Korea',
+    'AU': 'Australia',
+    'GB': 'United Kingdom',
+    'US': 'United States',
+  };
 
   Future<void> _selectBirthday() async {
     final now = DateTime.now();
@@ -1886,10 +2036,41 @@ class _VerifyEmailView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            if (auth.verificationError != null) ...<Widget>[
+              Container(
+                key: const Key('verification_link_error'),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEEEE),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.danger),
+                ),
+                child: Text(
+                  auth.verificationError!,
+                  style: const TextStyle(
+                    color: AppColors.danger,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
             FilledButton.icon(
-              onPressed: auth.busy ? null : () => _resend(context),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Resend confirmation email'),
+              key: const Key('resend_verification'),
+              onPressed: auth.canResendVerification
+                  ? () => _resend(context)
+                  : null,
+              icon: auth.busy
+                  ? const SizedBox.square(
+                      dimension: 17,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.refresh_rounded),
+              label: Text(auth.verificationResendLabel),
             ),
             TextButton(
               onPressed: auth.busy

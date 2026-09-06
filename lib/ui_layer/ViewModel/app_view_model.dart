@@ -44,6 +44,9 @@ class AppViewModel extends ChangeNotifier {
     } else {
       unawaited(profile.loadProfile());
     }
+    if (auth.shouldShowResetPassword || auth.hasAuthNotice) {
+      _handleAuthChanged();
+    }
   }
 
   final MysteryJourneyViewModel mystery;
@@ -65,6 +68,18 @@ class AppViewModel extends ChangeNotifier {
       !auth.isAuthenticated || auth.shouldShowResetPassword;
 
   void _handleAuthChanged() {
+    final authNotice = auth.takeAuthNotice();
+    if (authNotice != null) {
+      if (auth.pendingVerificationEmail == null) {
+        profile.setStage(ProfileStage.login);
+      }
+      showToast(
+        authNotice.message,
+        authNotice.kind == AuthNoticeKind.success
+            ? AppColors.teal
+            : AppColors.danger,
+      );
+    }
     if (auth.shouldShowResetPassword) {
       if (profile.stage != ProfileStage.resetPassword) {
         profile.setStage(ProfileStage.resetPassword);

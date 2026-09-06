@@ -238,6 +238,27 @@ void main() {
   );
 
   group('password recovery', () {
+    test('auth redirect resolver uses web origin and Android manifest URI', () {
+      expect(
+        AuthRedirectResolver.resolve(
+          web: true,
+          baseUri: Uri.parse('http://localhost:8080/register'),
+        ),
+        AuthRedirectResolver.localhostWebCallback,
+      );
+      expect(
+        AuthRedirectResolver.resolve(web: false),
+        'com.finditmy.findit_my://login-callback/',
+      );
+      expect(
+        AuthRedirectResolver.resolve(
+          configured: 'https://example.com/auth/',
+          web: false,
+        ),
+        'https://example.com/auth/',
+      );
+    });
+
     test('rejects invalid email without sending a recovery request', () async {
       final service = FakeRecoverySupabaseService();
       final auth = AuthViewModel(supabaseService: service);
@@ -369,16 +390,97 @@ void main() {
           password: 'ValidPass!',
           confirmation: 'ValidPass!',
           phone: '0123456789',
-          ic: '010101010101',
+          identityNumber: '010101010101',
           birthday: DateTime(2001),
         ),
         isNull,
       );
       expect(service.lastRegistrationData?['username'], 'Traveller One');
+      expect(service.lastRegistrationData?['identity_type'], 'ic');
+      expect(service.lastRegistrationData?['identity_number'], '010101010101');
+      expect(service.lastRegistrationData?['issuing_country'], 'MY');
+      expect(
+        service.lastRegistrationRedirectTo,
+        AuthRedirectResolver.androidCallback,
+      );
       service.emit(AuthChangeEvent.signedIn, hasSession: true);
       await Future<void>.delayed(Duration.zero);
       expect(service.localSignOuts, 1);
       expect(auth.isPasswordRecovery, isFalse);
+      expect(
+        auth.takeAuthNotice()?.message,
+        AuthViewModel.verificationSuccessMessage,
+      );
+      expect(auth.takeAuthNotice(), isNull);
+    });
+
+    test('verification resend cooldown enables and restarts safely', () async {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(
+        supabaseService: service,
+        verificationResendCooldownSeconds: 2,
+        verificationResendTick: const Duration(milliseconds: 2),
+      );
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      expect(
+        await auth.register(
+          name: 'Traveller One',
+          email: 'new@example.com',
+          password: 'ValidPass!',
+          confirmation: 'ValidPass!',
+          phone: '0123456789',
+          identityNumber: '010101010101',
+          birthday: DateTime(2001),
+        ),
+        isNull,
+      );
+      expect(auth.canResendVerification, isFalse);
+      expect(auth.verificationResendLabel, 'Resend available in 2s');
+      await Future<void>.delayed(const Duration(milliseconds: 8));
+      expect(auth.canResendVerification, isTrue);
+
+      expect(await auth.resendVerificationEmail(), isNull);
+      expect(service.verificationResends, 1);
+      expect(auth.verificationResendSecondsRemaining, 2);
+      expect(auth.canResendVerification, isFalse);
+    });
+
+    test('invalid signup link stays separate from password recovery', () {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(supabaseService: service);
+      addTearDown(auth.dispose);
+      addTearDown(service.dispose);
+
+      auth.reportInvalidVerificationLink();
+      expect(auth.isPasswordRecovery, isFalse);
+      expect(auth.shouldShowResetPassword, isFalse);
+      expect(
+        auth.takeAuthNotice()?.message,
+        AuthViewModel.invalidVerificationLinkMessage,
+      );
+    });
+
+    test('initial verification success is surfaced once by the app', () {
+      final service = FakeRecoverySupabaseService();
+      final auth = AuthViewModel(
+        supabaseService: service,
+        initialNotice: const AuthNotice(
+          AuthViewModel.verificationSuccessMessage,
+          AuthNoticeKind.success,
+        ),
+      );
+      final model = AppViewModel(
+        mysteryRepository: FakeShakeFindRepository(),
+        authViewModel: auth,
+      );
+      addTearDown(model.dispose);
+      addTearDown(service.dispose);
+
+      expect(model.toast?.message, AuthViewModel.verificationSuccessMessage);
+      expect(auth.takeAuthNotice(), isNull);
+      expect(model.profile.stage, ProfileStage.login);
     });
 
     testWidgets('recovery event renders the dedicated reset screen', (
@@ -414,6 +516,130 @@ void main() {
       expect(find.byKey(const Key('login_screen')), findsOneWidget);
       expect(find.text(AuthViewModel.resetSuccessMessage), findsOneWidget);
     });
+
+    test(
+      'passport registration normalizes and submits document metadata',
+      () async {
+        final service = FakeRecoverySupabaseService();
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
+
+        auth.selectIdentityType(IdentityType.passport);
+        auth.selectIssuingCountry('sg');
+        expect(
+          await auth.register(
+            name: 'Passport Traveller',
+            email: 'passport@example.com',
+            password: 'ValidPass!',
+            confirmation: 'ValidPass!',
+            phone: '0123456789',
+            identityNumber: 'a12-345 678',
+            birthday: DateTime(2001),
+          ),
+          isNull,
+        );
+        expect(service.lastRegistrationData?['identity_type'], 'passport');
+        expect(service.lastRegistrationData?['identity_number'], 'A12345678');
+        expect(service.lastRegistrationData?['issuing_country'], 'SG');
+        expect(service.lastRegistrationData, isNot(contains('ic')));
+      },
+    );
+
+    test('identity validators keep IC and passport rules separate', () {
+      expect(AuthViewModel.isValidIc('010101-01-0101'), isTrue);
+      expect(AuthViewModel.isValidIc('A12345678'), isFalse);
+      expect(AuthViewModel.isValidPassport('A12345678'), isTrue);
+      expect(AuthViewModel.isValidPassport('12'), isFalse);
+      expect(AuthViewModel.isValidPassport('ABC@123'), isFalse);
+    });
+
+    test(
+      'unrelated signup database failures are not mapped to duplicate M10',
+      () async {
+        final service = FakeRecoverySupabaseService()
+          ..registrationError = const AuthException(
+            'Database error saving new user',
+          );
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
+
+        expect(
+          await auth.register(
+            name: 'Traveller One',
+            email: 'new@example.com',
+            password: 'ValidPass!',
+            confirmation: 'ValidPass!',
+            phone: '0123456789',
+            identityNumber: '010101010101',
+            birthday: DateTime(2001),
+          ),
+          AuthViewModel.genericRegistrationErrorMessage,
+        );
+      },
+    );
+
+    test(
+      'proven duplicate identity failure maps to generic M10 wording',
+      () async {
+        final service = FakeRecoverySupabaseService()
+          ..registrationError = const AuthException(
+            'Identification number is already registered',
+          );
+        final auth = AuthViewModel(supabaseService: service);
+        addTearDown(auth.dispose);
+        addTearDown(service.dispose);
+
+        expect(
+          await auth.register(
+            name: 'Traveller One',
+            email: 'new@example.com',
+            password: 'ValidPass!',
+            confirmation: 'ValidPass!',
+            phone: '0123456789',
+            identityNumber: '010101010101',
+            birthday: DateTime(2001),
+          ),
+          AuthViewModel.duplicateRegistrationMessage,
+        );
+      },
+    );
+
+    testWidgets(
+      'registration shows exactly one identity document field at a time',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final auth = FakeAuthViewModel(signedIn: false);
+        final model = AppViewModel(
+          mysteryRepository: FakeShakeFindRepository(),
+          authViewModel: auth,
+        );
+        await tester.pumpWidget(FindItMyApp(appViewModel: model));
+        await tester.pump(const Duration(milliseconds: 50));
+        model.profile.setStage(ProfileStage.register);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('register_ic')), findsOneWidget);
+        expect(find.byKey(const Key('register_passport')), findsNothing);
+        expect(find.byKey(const Key('register_issuing_country')), findsNothing);
+
+        await tester.tap(find.text('Passport'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('register_ic')), findsNothing);
+        expect(find.byKey(const Key('register_passport')), findsOneWidget);
+        expect(
+          find.byKey(const Key('register_issuing_country')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Malaysian IC'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('register_ic')), findsOneWidget);
+        expect(find.byKey(const Key('register_passport')), findsNothing);
+      },
+    );
   });
 
   Future<(AppViewModel, FakeShakeFindRepository)> pumpApp(
@@ -2219,9 +2445,12 @@ class FakeRecoverySupabaseService extends SupabaseService {
   int passwordUpdates = 0;
   int localSignOuts = 0;
   int loginRequests = 0;
+  int verificationResends = 0;
   String? lastRecoveryEmail;
   String? lastRedirectTo;
+  String? lastRegistrationRedirectTo;
   Map<String, dynamic>? lastRegistrationData;
+  AuthException? registrationError;
 
   static const User fakeUser = User(
     id: 'auth-test-user',
@@ -2293,8 +2522,20 @@ class FakeRecoverySupabaseService extends SupabaseService {
     required String redirectTo,
     required Map<String, dynamic> data,
   }) async {
+    final error = registrationError;
+    if (error != null) throw error;
+    lastRegistrationRedirectTo = redirectTo;
     lastRegistrationData = data;
     return AuthResponse(user: fakeUser);
+  }
+
+  @override
+  Future<void> resendSignupConfirmation({
+    required String email,
+    required String redirectTo,
+  }) async {
+    verificationResends++;
+    lastRedirectTo = redirectTo;
   }
 
   void dispose() {
