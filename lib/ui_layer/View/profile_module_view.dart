@@ -2234,8 +2234,28 @@ class _RegisterViewState extends State<_RegisterView> {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          key: const Key('register_customer_support'),
+          onPressed: _callSupport,
+          icon: const Icon(Icons.support_agent_rounded),
+          label: Text('${context.tr('Customer support')}: +60 11-2065 0712'),
+        ),
       ],
     );
+  }
+
+  Future<void> _callSupport() async {
+    final copiedMessage = context.tr(
+      'Customer support number copied. Paste it into your Phone app.',
+    );
+    final launched = await launchUrl(
+      Uri(scheme: 'tel', path: '+601120650712'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (launched) return;
+    await Clipboard.setData(const ClipboardData(text: '+60 11-2065 0712'));
+    widget.notify(copiedMessage, AppColors.primary);
   }
 
   Future<void> _register() async {
