@@ -11,6 +11,8 @@ import '../../data_layer/Models/app_models.dart';
 import '../ViewModel/collaborative_planning_view_model.dart';
 import 'shared/app_widgets.dart';
 import '../../features/collaborative_planner/models/planner_messages.dart';
+import '../../features/collaborative_planner/models/planner_models.dart'
+    as planner;
 
 Future<T?> showPlannerDialog<T>(
   BuildContext context,
@@ -201,7 +203,14 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Image.asset('assets/sultan_abdul_samad.png', fit: BoxFit.cover),
+              Image.asset(
+                vm.planCoverAsset,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Image.asset(
+                  'assets/discovery_placeholder.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -247,9 +256,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       ],
                     ),
                     const Spacer(),
-                    const Text(
-                      'Aug 20 – Aug 23, 2026',
-                      style: TextStyle(
+                    Text(
+                      '${_isoDate(vm.planStartDate)} to ${_isoDate(vm.planEndDate)}',
+                      style: const TextStyle(
                         color: Color(0xCCFFFFFF),
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -266,28 +275,35 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const Text(
-                      'Penang & Kuala Lumpur · Malaysia',
-                      style: TextStyle(
+                    Text(
+                      '${vm.planRegions.isEmpty ? 'Malaysia' : vm.planRegions.join(' & ')} · Malaysia',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         color: Color(0xDDFFFFFF),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Row(
+                    Row(
                       children: <Widget>[
-                        InitialsAvatar('AM', radius: 15, color: Colors.white),
-                        SizedBox(width: 3),
-                        InitialsAvatar(
-                          'LT',
-                          radius: 15,
-                          color: Color(0xFFE9FAF4),
-                        ),
-                        Spacer(),
+                        ...vm.travellers
+                            .take(2)
+                            .map(
+                              (traveller) => Padding(
+                                padding: const EdgeInsets.only(right: 3),
+                                child: InitialsAvatar(
+                                  traveller.initials,
+                                  radius: 15,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        const Spacer(),
                         Text(
-                          '2 destinations',
-                          style: TextStyle(
+                          '${vm.destinationCount} ${vm.destinationCount == 1 ? 'destination' : 'destinations'}',
+                          style: const TextStyle(
                             color: Color(0xDDFFFFFF),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
@@ -850,7 +866,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
         ),
       ),
       const SizedBox(height: 14),
-      if (widget.viewModel.history.isEmpty)
+      if (widget.viewModel.availablePlans.isEmpty)
         EmptyState(
           icon: Icons.luggage_outlined,
           title: 'No travel plans yet',
@@ -861,11 +877,11 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           ),
         )
       else
-        ...widget.viewModel.planChoices.map(
-          (PlanChoice plan) => Align(
+        ...widget.viewModel.availablePlans.map(
+          (plan) => Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: double.infinity,
+              width: 184,
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -887,34 +903,35 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                     children: <Widget>[
                       Image.asset(
                         plan.coverAsset,
-                        height: 150,
+                        height: 134,
                         width: double.infinity,
                         fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Image.asset(
+                          'assets/discovery_placeholder.png',
+                          height: 134,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                       Positioned(
                         left: 10,
-                        bottom: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xE62B3340),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.white70),
-                          ),
-                          child: SelectableText(
-                            'JOIN CODE  ${plan.inviteCode}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: .35,
-                            ),
-                          ),
+                        top: 62,
+                        child: AppChip(
+                          label: 'PIN: ${plan.inviteCode}',
+                          selected: true,
+                          selectedColor: AppColors.warning,
                         ),
                       ),
+                      if (plan.primaryRegion.isNotEmpty)
+                        Positioned(
+                          right: 10,
+                          top: 10,
+                          child: AppChip(
+                            label: plan.primaryRegion,
+                            selected: true,
+                            selectedColor: AppColors.primary,
+                          ),
+                        ),
                     ],
                   ),
                   Padding(
@@ -933,7 +950,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '📍 ${plan.regionLabel}',
+                          '📍 ${plan.regions.isEmpty ? 'Malaysia' : plan.regions.join(' & ')}',
                           style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.textSecondary,
@@ -941,24 +958,17 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         ),
                         const SizedBox(height: 5),
                         Text(
-                          '📅 ${plan.dateLabel}',
+                          '📅 ${plan.startDate.toIso8601String().substring(0, 10)} to ${plan.endDate.toIso8601String().substring(0, 10)} (${plan.endDate.difference(plan.startDate).inDays + 1} Date Tabs)',
                           style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: 5),
-                        Text(
-                          '♙ ${plan.memberCount} ${plan.memberCount == 1 ? 'Member' : 'Members'}',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            color: AppColors.primary,
-                          ),
-                        ),
                         const SizedBox(height: 10),
                         FilledButton.icon(
                           onPressed: () =>
-                              widget.viewModel.openHistoryPlanById(plan.id),
+                              widget.viewModel.openHistoryPlan(plan.name),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(40),
                             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -976,7 +986,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                           alignment: Alignment.centerRight,
                           child: IconButton(
                             tooltip: 'Delete Plan',
-                            onPressed: () => _deletePlan(plan),
+                            onPressed: () => _deletePlan(plan.name),
                             icon: const Icon(
                               Icons.delete_outline_rounded,
                               color: AppColors.danger,
@@ -1154,15 +1164,11 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     final notes = TextEditingController(text: item?.notes);
     HeritagePlace? selected;
     String? selectedPlaceId;
-    // Editing may select any verified catalogue location; creating highlights
-    // bookmarks first while still making the complete catalogue searchable.
-    final savedPlaces = <String, HeritagePlace>{
-      for (final place in <HeritagePlace>[
-        ...widget.bookmarks,
-        ...widget.recommendations,
-      ])
-        place.id: place,
-    }.values.toList()..sort(compareHeritagePlacesForListing);
+    // A place can arrive through both the built-in catalogue and Supabase.
+    // DropdownButton requires exactly one item for each selected value, so
+    // remove repeated object instances before building its menu.
+    final savedPlaces = widget.bookmarks.toSet().toList()
+      ..sort(compareHeritagePlacesForListing);
     List<HeritagePlace> locationSuggestions = <HeritagePlace>[];
     var category = item?.category ?? 'Sightseeing';
     String? successMessage;
@@ -1187,19 +1193,13 @@ class _PlanModuleViewState extends State<PlanModuleView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
+                  const Row(
                     children: <Widget>[
-                      const Icon(
-                        Icons.location_on_rounded,
-                        size: 15,
-                        color: Color(0xFF9A4400),
-                      ),
-                      const SizedBox(width: 6),
+                      Icon(Icons.bookmark, size: 15, color: Color(0xFF9A4400)),
+                      SizedBox(width: 6),
                       Text(
-                        item == null
-                            ? 'Choose a verified heritage location'
-                            : 'Change to a verified heritage location',
-                        style: const TextStyle(
+                        'Add a bookmarked location',
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF7A3500),
@@ -1212,7 +1212,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                     initialValue: selectedPlaceId,
                     isExpanded: true,
                     hint: Text(
-                      'Choose from ${savedPlaces.length} heritage places',
+                      'Choose from ${savedPlaces.length} saved heritage places',
                     ),
                     items: savedPlaces.indexed
                         .map(
@@ -1781,200 +1781,25 @@ class _PlanModuleViewState extends State<PlanModuleView> {
   }
 
   Future<void> _createPlan() async {
-    final name = TextEditingController();
-    final selectedAreas = <String>{};
-    final areaOptions = <String>{
-      'Johor',
-      'Kedah',
-      'Kelantan',
-      'Kuala Lumpur',
-      'Labuan',
-      'Melaka',
-      'Negeri Sembilan',
-      'Pahang',
-      'Penang',
-      'Perak',
-      'Perlis',
-      'Putrajaya',
-      'Sabah',
-      'Sarawak',
-      'Selangor',
-      'Terengganu',
-      ...widget.recommendations
-          .map((place) => place.state.trim())
-          .where((state) => state.isNotEmpty),
-    }.toList()..sort();
-    DateTime start = DateTime.now();
-    DateTime end = DateTime.now().add(const Duration(days: 3));
-    await showPlannerDialog<void>(
+    final request = await showPlannerDialog<_CreatePlanRequest>(
       context,
-      StatefulBuilder(
-        builder: (BuildContext context, StateSetter sheetSet) => SheetBody(
-          children: <Widget>[
-            const ModalTitle(
-              title: 'Create New Travel Plan',
-              subtitle: 'Malaysia destinations only',
-              icon: Icons.add_location_alt_rounded,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: name,
-              onChanged: (_) => sheetSet(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Plan Name *',
-                hintText: 'e.g. Penang Heritage Getaway',
-              ),
-            ),
-            const SizedBox(height: 9),
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Row(
-                    children: <Widget>[
-                      Icon(Icons.place_rounded, color: AppColors.primary),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Trip Areas / Regions *',
-                          style: TextStyle(fontWeight: FontWeight.w900),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Choose one or more Malaysian states or territories.',
-                    style: TextStyle(fontSize: 11, color: AppColors.muted),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: areaOptions
-                        .map(
-                          (area) => AppChip(
-                            label: area,
-                            selected: selectedAreas.contains(area),
-                            onTap: () => sheetSet(() {
-                              selectedAreas.contains(area)
-                                  ? selectedAreas.remove(area)
-                                  : selectedAreas.add(area);
-                            }),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 9),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: _dateField('Start Date', start, () async {
-                    final value = await showDatePicker(
-                      context: context,
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2035),
-                      initialDate: start.isBefore(DateTime.now())
-                          ? DateTime.now()
-                          : start,
-                    );
-                    if (value != null) {
-                      sheetSet(() {
-                        start = value;
-                        if (end.isBefore(start)) end = start;
-                      });
-                    }
-                  }),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _dateField('End Date', end, () async {
-                    final value = await showDatePicker(
-                      context: context,
-                      firstDate: start,
-                      lastDate: DateTime(2035),
-                      initialDate: end.isBefore(start) ? start : end,
-                    );
-                    if (value != null) sheetSet(() => end = value);
-                  }),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            AppCard(
-              color: AppColors.softBlue,
-              child: Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.check_rounded,
-                    color: AppColors.primary,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${end.difference(start).inDays + 1} days · ${selectedAreas.length} trip areas · ${end.difference(start).inDays + 1} Day tabs will be created',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton(
-                    key: const Key('create_plan_confirm'),
-                    onPressed: name.text.trim().isEmpty || selectedAreas.isEmpty
-                        ? null
-                        : () async {
-                            final days = end.difference(start).inDays + 1;
-                            final saved = await widget.viewModel.createPlan(
-                              name.text,
-                              start,
-                              days,
-                              regions: selectedAreas.toList()..sort(),
-                            );
-                            if (!context.mounted) return;
-                            if (!saved) {
-                              widget.notify(
-                                widget.viewModel.supabaseError ??
-                                    'The travel plan could not be saved.',
-                                AppColors.danger,
-                              );
-                              return;
-                            }
-                            Navigator.pop(context);
-                            widget.notify(
-                              PlannerMessages.planCreated,
-                              AppColors.teal,
-                            );
-                          },
-                    child: const Text('Create Travel Plan'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      const _CreatePlanDialog(),
     );
-    name.dispose();
+    if (!mounted || request == null) return;
+    final saved = await widget.viewModel.createPlan(
+      request.name,
+      request.start,
+      request.dayCount,
+      regions: request.regions,
+    );
+    if (!mounted) return;
+    widget.notify(
+      saved
+          ? PlannerMessages.planCreated
+          : (widget.viewModel.supabaseError ??
+                'The travel plan could not be saved.'),
+      saved ? AppColors.teal : AppColors.danger,
+    );
   }
 
   Future<void> _deleteDay(PlanDay day) async {
@@ -2451,12 +2276,40 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     if (joined) _joinCode.clear();
   }
 
-  Future<void> _deletePlan(PlanChoice plan) async {
+  Future<void> _deletePlan(String name) async {
+    try {
+      if (!await widget.viewModel.isCurrentUserAdminOfPlan(name)) {
+        if (!mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Exit group first'),
+            content: const Text(PlannerMessages.exitGroupBeforeDelete),
+            actions: <Widget>[
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      widget.notify(
+        widget.viewModel.supabaseError ??
+            'The travel plan membership could not be checked.',
+        AppColors.danger,
+      );
+      return;
+    }
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Delete Travel Plan?'),
-        content: Text(PlannerMessages.deletePlan(plan.name)),
+        content: Text(PlannerMessages.deletePlan(name)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -2471,7 +2324,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       ),
     );
     if (confirmed == true) {
-      final deleted = await widget.viewModel.deletePlanById(plan.id);
+      final deleted = await widget.viewModel.deletePlan(name);
       widget.notify(
         deleted
             ? PlannerMessages.planDeleted
@@ -2496,6 +2349,186 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     'Nov',
     'Dec',
   ][month - 1];
+
+  String _isoDate(DateTime value) => value.toIso8601String().substring(0, 10);
+}
+
+class _CreatePlanRequest {
+  const _CreatePlanRequest({
+    required this.name,
+    required this.start,
+    required this.end,
+    required this.regions,
+  });
+
+  final String name;
+  final DateTime start;
+  final DateTime end;
+  final List<String> regions;
+  int get dayCount => end.difference(start).inDays + 1;
+}
+
+class _CreatePlanDialog extends StatefulWidget {
+  const _CreatePlanDialog();
+
+  @override
+  State<_CreatePlanDialog> createState() => _CreatePlanDialogState();
+}
+
+class _CreatePlanDialogState extends State<_CreatePlanDialog> {
+  final TextEditingController _name = TextEditingController();
+  final Set<String> _regions = <String>{};
+  DateTime _start = DateTime.now();
+  DateTime _end = DateTime.now().add(const Duration(days: 3));
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SheetBody(
+    children: <Widget>[
+      const ModalTitle(
+        title: 'Create New Travel Plan',
+        subtitle: 'Malaysia destinations only',
+        icon: Icons.add_location_alt_rounded,
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _name,
+        onChanged: (_) => setState(() {}),
+        decoration: const InputDecoration(
+          labelText: 'Plan Name *',
+          hintText: 'e.g. Penang Heritage Getaway',
+        ),
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'Trip Areas / Regions *',
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: planner.TravelPlan.supportedRegions
+            .map((region) {
+              final selected = _regions.contains(region);
+              return FilterChip(
+                key: Key('plan_region_$region'),
+                label: Text(region),
+                selected: selected,
+                onSelected: (value) => setState(() {
+                  if (value) {
+                    _regions.add(region);
+                  } else {
+                    _regions.remove(region);
+                  }
+                }),
+              );
+            })
+            .toList(growable: false),
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: <Widget>[
+          Expanded(child: _dateField('Start Date', _start, _pickStart)),
+          const SizedBox(width: 10),
+          Expanded(child: _dateField('End Date', _end, _pickEnd)),
+        ],
+      ),
+      const SizedBox(height: 10),
+      AppCard(
+        color: AppColors.softBlue,
+        child: Row(
+          children: <Widget>[
+            const Icon(Icons.check_rounded, color: AppColors.primary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${_end.difference(_start).inDays + 1} days · ${_regions.length} trip areas · ${_end.difference(_start).inDays + 1} Day tabs will be created',
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: <Widget>[
+          Expanded(
+            child: TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FilledButton(
+              key: const Key('create_plan_confirm'),
+              onPressed: _name.text.trim().isEmpty || _regions.isEmpty
+                  ? null
+                  : () => Navigator.pop(
+                      context,
+                      _CreatePlanRequest(
+                        name: _name.text.trim(),
+                        start: _start,
+                        end: _end,
+                        regions: List<String>.unmodifiable(_regions),
+                      ),
+                    ),
+              child: const Text('Create Travel Plan'),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+
+  Widget _dateField(String label, DateTime date, VoidCallback onTap) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: const Icon(Icons.calendar_today_rounded, size: 16),
+      ),
+      child: Text(
+        '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
+        style: const TextStyle(fontSize: 12),
+      ),
+    ),
+  );
+
+  Future<void> _pickStart() async {
+    final value = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2035),
+      initialDate: _start.isBefore(DateTime.now()) ? DateTime.now() : _start,
+    );
+    if (value == null || !mounted) return;
+    setState(() {
+      _start = value;
+      if (_end.isBefore(_start)) _end = _start;
+    });
+  }
+
+  Future<void> _pickEnd() async {
+    final value = await showDatePicker(
+      context: context,
+      firstDate: _start,
+      lastDate: DateTime(2035),
+      initialDate: _end.isBefore(_start) ? _start : _end,
+    );
+    if (value != null && mounted) setState(() => _end = value);
+  }
 }
 
 class _ActivityCard extends StatelessWidget {

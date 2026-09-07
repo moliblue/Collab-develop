@@ -15,11 +15,9 @@ as $$
         and viewer.user_id = auth.uid()
     );
 $$;
-
 revoke all on function public.shares_travel_plan(uuid) from public;
 grant execute on function public.shares_travel_plan(uuid) to authenticated;
 grant execute on function public.shares_travel_plan(uuid) to service_role;
-
 drop policy if exists "plan members read shared profiles" on public.profiles;
 create policy "plan members read shared profiles"
 on public.profiles

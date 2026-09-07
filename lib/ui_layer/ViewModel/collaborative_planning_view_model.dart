@@ -12,62 +12,6 @@ import 'package:uuid/uuid.dart';
 
 enum PlanSection { workspace, history, groups }
 
-class PlanChoice {
-  const PlanChoice({
-    required this.id,
-    required this.name,
-    required this.inviteCode,
-    required this.regions,
-    required this.startDate,
-    required this.endDate,
-    required this.dayCount,
-    required this.memberCount,
-  });
-
-  final String id;
-  final String name;
-  final String inviteCode;
-  final List<String> regions;
-  final DateTime startDate;
-  final DateTime endDate;
-  final int dayCount;
-  final int memberCount;
-
-  String get regionLabel => regions.isEmpty ? 'Malaysia' : regions.join(' & ');
-
-  String get dateLabel =>
-      '${_date(startDate)} to ${_date(endDate)} ($dayCount Day ${dayCount == 1 ? 'tab' : 'tabs'})';
-
-  static String _date(DateTime value) =>
-      '${value.year}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
-
-  String get coverAsset {
-    final region = regions.isEmpty ? '' : regions.first.toLowerCase();
-    if (region.isEmpty) {
-      const legacyCovers = <String>[
-        'assets/sultan_abdul_samad.png',
-        'assets/blue_mansion.png',
-        'assets/pewter_craft.png',
-        'assets/woodcraft_antique.png',
-      ];
-      final index =
-          id.codeUnits.fold<int>(0, (sum, value) => sum + value) %
-          legacyCovers.length;
-      return legacyCovers[index];
-    }
-    if (region.contains('perak')) return 'assets/pewter_craft.png';
-    if (region.contains('penang')) return 'assets/blue_mansion.png';
-    if (region.contains('kuala lumpur') || region.contains('selangor')) {
-      return 'assets/sultan_abdul_samad.png';
-    }
-    if (region.contains('melaka')) return 'assets/petaling_street.png';
-    if (region.contains('sabah') || region.contains('sarawak')) {
-      return 'assets/woodcraft_antique.png';
-    }
-    return 'assets/discovery_placeholder.png';
-  }
-}
-
 class CollaborativePlanningViewModel extends ChangeNotifier {
   CollaborativePlanningViewModel({CollaborativePlannerRepository? repository})
     : repository = repository ?? CollaborativePlannerRepository() {
@@ -80,7 +24,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   PlanSection _section = PlanSection.workspace;
   int _dayIndex = 0;
   String _planName = 'Malaysia UNESCO Heritage Tour';
-  List<String> _planRegions = <String>[];
+  List<String> _planRegions = const <String>[];
   bool _exporting = false;
   final PlannerPdfService _pdfService = PlannerPdfService();
   final CollaborativePlannerRepository repository;
@@ -93,13 +37,14 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   bool _saving = false;
   Timer? _realtimeDebounce;
   RealtimeChannel? _realtimeChannel;
-  String? _sessionUserId;
+  int _loadGeneration = 0;
   bool get supabaseReady => _supabaseReady;
   String? get supabaseError => _supabaseError;
 
   Future<void> refreshAuthenticatedSession() => _initializeSupabase();
 
   Future<void> _initializeSupabase() async {
+    final generation = ++_loadGeneration;
     if (!repository.supabase.isConfigured) {
       notifyListeners();
       return;
@@ -107,34 +52,12 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     try {
       _supabaseError = null;
       final session = await repository.authenticate();
-      if (_sessionUserId != session?.userId) {
-        await repository.unwatchPlan(_realtimeChannel);
-        _realtimeChannel = null;
-        _realtimeDebounce?.cancel();
-        _planId = null;
-        _inviteCode = null;
-        _planPersisted = false;
-        _planRevision = 0;
-        _planRegions = <String>[];
-        _availablePlans = <planner.TravelPlan>[];
-        _travellers = <Traveller>[];
-        _days = <PlanDay>[
-          PlanDay(
-            id: 'empty-day',
-            label: 'Day 1',
-            date: DateTime.now(),
-            activities: <ActivityItem>[],
-          ),
-        ];
-        _section = PlanSection.history;
-        _dayIndex = 0;
-        _sessionUserId = session?.userId;
-        notifyListeners();
-      }
-      _supabaseReady = session != null;
-      _availablePlans = await repository.loadPlans(
+      final plans = await repository.loadPlans(
         accessToken: session?.accessToken,
       );
+      if (generation != _loadGeneration) return;
+      _supabaseReady = session != null;
+      _availablePlans = plans;
       if (_availablePlans.isNotEmpty) {
         await _loadPlan(_availablePlans.first.id, notify: false);
       } else {
@@ -165,7 +88,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _planId = loaded.id;
       _inviteCode = loaded.inviteCode;
       _planName = loaded.name;
-      _planRegions = List<String>.of(loaded.regions);
+      _planRegions = List<String>.from(loaded.regions);
       _planPersisted = true;
       _planRevision = loaded.revision;
       _days = loaded.days.indexed.map((entry) {
@@ -267,35 +190,21 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
 
   List<String> get history =>
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
-  List<PlanChoice> get planChoices => List<PlanChoice>.unmodifiable(
-    _availablePlans.map(
-      (plan) => PlanChoice(
-        id: plan.id,
-        name: plan.name,
-        inviteCode: plan.inviteCode,
-        regions: List<String>.unmodifiable(plan.regions),
-        startDate: plan.startDate,
-        endDate: plan.endDate,
-        dayCount: plan.days.length,
-        memberCount: plan.members.length,
-      ),
-    ),
-  );
-  String? get activePlanId => _planId;
+  List<planner.TravelPlan> get availablePlans =>
+      List<planner.TravelPlan>.unmodifiable(_availablePlans);
+  planner.TravelPlan? get currentPlan =>
+      _availablePlans.where((plan) => plan.id == _planId).firstOrNull;
+  List<String> get planRegions => List<String>.unmodifiable(_planRegions);
+  String get planCoverAsset =>
+      currentPlan?.coverAsset ??
+      planner.TravelPlan.coverAssetForRegion(_planRegions.firstOrNull ?? '');
+  DateTime get planStartDate => currentPlan?.startDate ?? _days.first.date;
+  DateTime get planEndDate => currentPlan?.endDate ?? _days.last.date;
+  int get destinationCount =>
+      _days.fold<int>(0, (total, day) => total + day.activities.length);
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
-
-  bool activeDayContains(HeritagePlace place) {
-    final targetName = place.name.trim().toLowerCase();
-    return activeDay.activities.any(
-      (activity) =>
-          activity.title.trim().toLowerCase() == targetName &&
-          (activity.latitude - place.latitude).abs() < 0.00001 &&
-          (activity.longitude - place.longitude).abs() < 0.00001,
-    );
-  }
-
   String get planName => _planName;
   String get inviteCode =>
       _inviteCode ??
@@ -590,6 +499,9 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     int dayCount, {
     required List<String> regions,
   }) async {
+    // Invalidate an older initialization/realtime load before creating a new
+    // authoritative plan so a slow response cannot overwrite the new card.
+    _loadGeneration++;
     final previousPlanId = _planId;
     final previousInviteCode = _inviteCode;
     final previousRevision = _planRevision;
@@ -603,7 +515,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     _planRevision = 0;
     _planPersisted = false;
     _planName = name.trim();
-    _planRegions = List<String>.of(regions);
+    _planRegions = List<String>.unmodifiable(regions);
     _days = List<PlanDay>.generate(
       dayCount,
       (int i) => PlanDay(
@@ -615,7 +527,6 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     );
     _dayIndex = 0;
     _section = PlanSection.workspace;
-    notifyListeners();
     final saved = await _persistCurrentPlan();
     if (!saved) {
       _planId = previousPlanId;
@@ -699,8 +610,9 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
           startDate: mappedDays.first.date,
           endDate: mappedDays.last.date,
           inviteCode: 'HERITAGE-${_planId!.substring(0, 6).toUpperCase()}',
-          revision: _planRevision,
           regions: _planRegions,
+          primaryRegion: _planRegions.firstOrNull,
+          revision: _planRevision,
           days: mappedDays,
         ),
         accessToken: session.accessToken,
@@ -710,9 +622,11 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       _inviteCode = 'HERITAGE-${_planId!.substring(0, 6).toUpperCase()}';
       _supabaseReady = true;
       _supabaseError = null;
-      _availablePlans = await repository.loadPlans(
+      final generation = ++_loadGeneration;
+      final plans = await repository.loadPlans(
         accessToken: session.accessToken,
       );
+      if (generation == _loadGeneration) _availablePlans = plans;
       notifyListeners();
       return true;
     } catch (error) {
@@ -731,14 +645,6 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     final plan = _availablePlans.where((item) => item.name == name).firstOrNull;
     if (plan == null) return;
     if (await _loadPlan(plan.id)) {
-      _section = PlanSection.workspace;
-      notifyListeners();
-    }
-  }
-
-  Future<void> openHistoryPlanById(String id) async {
-    if (!_availablePlans.any((plan) => plan.id == id)) return;
-    if (await _loadPlan(id)) {
       _section = PlanSection.workspace;
       notifyListeners();
     }
@@ -793,28 +699,19 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> deletePlanById(String id) async {
-    final matching = _availablePlans.where((plan) => plan.id == id);
+  Future<bool> isCurrentUserAdminOfPlan(String name) async {
+    final matching = _availablePlans.where((plan) => plan.name == name);
     if (matching.isEmpty) return false;
-    final deletingCurrent = _planId == id;
     try {
       final session = await repository.authenticate();
-      await repository.deletePlan(id, accessToken: session?.accessToken);
-      _availablePlans = await repository.loadPlans(
+      return repository.isCurrentUserAdmin(
+        matching.first.id,
         accessToken: session?.accessToken,
       );
-      if (deletingCurrent && _availablePlans.isNotEmpty) {
-        await _loadPlan(_availablePlans.first.id, notify: false);
-      } else if (_availablePlans.isEmpty) {
-        _planId = null;
-        _section = PlanSection.history;
-      }
-      notifyListeners();
-      return true;
     } catch (error) {
       _supabaseError = '$error';
       notifyListeners();
-      return false;
+      rethrow;
     }
   }
 
@@ -980,7 +877,7 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   void reset() {
     _days = createPlanDays();
     _planName = 'Malaysia UNESCO Heritage Tour';
-    _planRegions = <String>[];
+    _planRegions = const <String>[];
     _section = PlanSection.workspace;
     _dayIndex = 0;
     notifyListeners();
