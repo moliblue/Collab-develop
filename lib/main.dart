@@ -53,8 +53,9 @@ Future<void> main() async {
   AuthNotice? initialAuthNotice;
   var initialPasswordRecovery = false;
   var initialRecoveryError = false;
-  // Keep a password-recovery session so the user can update their password.
-  // Signup confirmation still returns to Login, as required by the app flow.
+  // Keep both successful signup and password-recovery callback sessions.
+  // A verified signup should continue directly into the app instead of
+  // signing the user out and leaving the browser on an empty redirect page.
   if (openedFromAuthCallback) {
     AuthChangeEvent? callbackEvent;
     try {
@@ -78,7 +79,6 @@ Future<void> main() async {
         AuthViewModel.verificationSuccessMessage,
         AuthNoticeKind.success,
       );
-      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
     } else {
       initialAuthNotice = const AuthNotice(
         AuthViewModel.invalidVerificationLinkMessage,

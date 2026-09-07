@@ -1820,10 +1820,11 @@ class _LoginViewState extends State<_LoginView> {
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
                     key: const Key('login_password_visibility'),
-                    tooltip: obscurePassword ? 'Show password' : 'Hide password',
-                    onPressed: () => setState(
-                      () => obscurePassword = !obscurePassword,
-                    ),
+                    tooltip: obscurePassword
+                        ? 'Show password'
+                        : 'Hide password',
+                    onPressed: () =>
+                        setState(() => obscurePassword = !obscurePassword),
                     icon: Icon(
                       obscurePassword
                           ? Icons.visibility_outlined
@@ -1938,6 +1939,8 @@ class _RegisterViewState extends State<_RegisterView> {
   DateTime? selectedBirthday;
   String? lastError;
   bool submitted = false;
+  bool obscurePassword = true;
+  bool obscureConfirmation = true;
 
   @override
   void dispose() {
@@ -1994,9 +1997,18 @@ class _RegisterViewState extends State<_RegisterView> {
               children: <Widget>[
                 for (var i = 0; i < 5; i++) ...<Widget>[
                   TextFormField(
-                    key: i == 0 ? const Key('register_name') : null,
+                    key: switch (i) {
+                      0 => const Key('register_name'),
+                      2 => const Key('register_password'),
+                      3 => const Key('register_confirm_password'),
+                      _ => null,
+                    },
                     controller: fields[i],
-                    obscureText: i == 2 || i == 3,
+                    obscureText: i == 2
+                        ? obscurePassword
+                        : i == 3
+                        ? obscureConfirmation
+                        : false,
                     keyboardType: switch (i) {
                       1 => TextInputType.emailAddress,
                       4 => TextInputType.phone,
@@ -2019,6 +2031,33 @@ class _RegisterViewState extends State<_RegisterView> {
                     decoration: InputDecoration(
                       labelText: labels[i],
                       prefixIcon: Icon(icons[i]),
+                      suffixIcon: i == 2 || i == 3
+                          ? IconButton(
+                              key: Key(
+                                i == 2
+                                    ? 'register_password_visibility'
+                                    : 'register_confirm_visibility',
+                              ),
+                              tooltip:
+                                  (i == 2
+                                      ? obscurePassword
+                                      : obscureConfirmation)
+                                  ? 'Show password'
+                                  : 'Hide password',
+                              onPressed: () => setState(() {
+                                if (i == 2) {
+                                  obscurePassword = !obscurePassword;
+                                } else {
+                                  obscureConfirmation = !obscureConfirmation;
+                                }
+                              }),
+                              icon: Icon(
+                                (i == 2 ? obscurePassword : obscureConfirmation)
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            )
+                          : null,
                       helperText: i == 2
                           ? '8+ characters with an uppercase letter and symbol'
                           : i == 4

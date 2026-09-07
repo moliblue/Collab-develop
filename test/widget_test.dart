@@ -416,7 +416,8 @@ void main() {
       );
       service.emit(AuthChangeEvent.signedIn, hasSession: true);
       await Future<void>.delayed(Duration.zero);
-      expect(service.localSignOuts, 1);
+      expect(service.localSignOuts, 0);
+      expect(auth.isAuthenticated, isTrue);
       expect(auth.isPasswordRecovery, isFalse);
       expect(
         auth.takeAuthNotice()?.message,
@@ -493,6 +494,44 @@ void main() {
       expect(auth.takeAuthNotice(), isNull);
       expect(model.profile.stage, ProfileStage.login);
     });
+
+    testWidgets(
+      'registration password and confirmation visibility toggle independently',
+      (tester) async {
+        final service = FakeRecoverySupabaseService();
+        final auth = AuthViewModel(supabaseService: service);
+        final model = AppViewModel(
+          mysteryRepository: FakeShakeFindRepository(),
+          authViewModel: auth,
+        );
+        addTearDown(service.dispose);
+        await tester.pumpWidget(FindItMyApp(appViewModel: model));
+
+        await tester.tap(find.byKey(const Key('open_register')));
+        await tester.pumpAndSettle();
+
+        bool isObscured(String key) => tester
+            .widget<EditableText>(
+              find.descendant(
+                of: find.byKey(Key(key)),
+                matching: find.byType(EditableText),
+              ),
+            )
+            .obscureText;
+        expect(isObscured('register_password'), isTrue);
+        expect(isObscured('register_confirm_password'), isTrue);
+
+        await tester.tap(find.byKey(const Key('register_password_visibility')));
+        await tester.pump();
+        expect(isObscured('register_password'), isFalse);
+        expect(isObscured('register_confirm_password'), isTrue);
+
+        await tester.tap(find.byKey(const Key('register_confirm_visibility')));
+        await tester.pump();
+        expect(isObscured('register_password'), isFalse);
+        expect(isObscured('register_confirm_password'), isFalse);
+      },
+    );
 
     testWidgets('recovery event renders the dedicated reset screen', (
       tester,

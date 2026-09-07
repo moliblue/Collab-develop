@@ -132,7 +132,7 @@ class AuthViewModel extends ChangeNotifier {
   static const resetSuccessMessage =
       'Password reset successfully. Please sign in with your new password.';
   static const verificationSuccessMessage =
-      'Email verified successfully. Please sign in.';
+      'Email verified successfully. Welcome to ExploreMY!';
   static const invalidVerificationLinkMessage =
       'This verification link is invalid or expired. Please request a new confirmation email.';
 
@@ -295,7 +295,6 @@ class AuthViewModel extends ChangeNotifier {
   String get authRedirectUrl => AuthRedirectResolver.resolve();
 
   Future<void> _finishEmailConfirmation() async {
-    await _supabase.signOutLocal();
     _pendingVerificationEmail = null;
     _verificationError = null;
     _verificationResendTimer?.cancel();
