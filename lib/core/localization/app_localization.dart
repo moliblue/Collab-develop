@@ -17,6 +17,9 @@ class AppLocalization {
       'Profile': 'Profil',
       'Language': 'Bahasa',
       'Language Settings': 'Tetapan Bahasa',
+      'Customer support': 'Sokongan pelanggan',
+      'Customer support number copied. Paste it into your Phone app.':
+          'Nombor sokongan pelanggan disalin. Tampalkannya dalam aplikasi Telefon anda.',
       'Back': 'Kembali',
       'Create plan': 'Cipta pelan',
       'Export PDF': 'Eksport PDF',
@@ -150,6 +153,9 @@ class AppLocalization {
       'Profile': '个人资料',
       'Language': '语言',
       'Language Settings': '语言设置',
+      'Customer support': '客户支持',
+      'Customer support number copied. Paste it into your Phone app.':
+          '客户支持号码已复制。请粘贴到您的电话应用中。',
       'Back': '返回',
       'Create plan': '创建行程',
       'Export PDF': '导出 PDF',
@@ -281,6 +287,9 @@ class AppLocalization {
       'Profile': 'சுயவிவரம்',
       'Language': 'மொழி',
       'Language Settings': 'மொழி அமைப்புகள்',
+      'Customer support': 'வாடிக்கையாளர் ஆதரவு',
+      'Customer support number copied. Paste it into your Phone app.':
+          'வாடிக்கையாளர் ஆதரவு எண் நகலெடுக்கப்பட்டது. அதை உங்கள் தொலைபேசி செயலியில் ஒட்டவும்.',
       'Back': 'பின்செல்',
       'Create plan': 'திட்டம் உருவாக்கு',
       'Export PDF': 'PDF ஏற்றுமதி',

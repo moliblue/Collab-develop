@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/localization/app_localization.dart';
 import '../../core/localization/localized_text.dart';
@@ -304,6 +305,15 @@ class _Dashboard extends StatelessWidget {
               viewModel.language,
               AppColors.teal,
               () => _language(context),
+            ),
+            const Divider(height: 1),
+            _action(
+              Icons.support_agent_rounded,
+              context.tr('Customer support'),
+              '+60 11-2065 0712',
+              AppColors.primary,
+              () => _callSupport(context),
+              key: const Key('call_customer_support'),
             ),
           ],
         ),
@@ -606,6 +616,19 @@ class _Dashboard extends StatelessWidget {
       ],
     ),
   );
+
+  Future<void> _callSupport(BuildContext context) async {
+    final copiedMessage = context.tr(
+      'Customer support number copied. Paste it into your Phone app.',
+    );
+    final launched = await launchUrl(
+      Uri(scheme: 'tel', path: '+601120650712'),
+      mode: LaunchMode.externalApplication,
+    );
+    if (launched) return;
+    await Clipboard.setData(const ClipboardData(text: '+60 11-2065 0712'));
+    notify(copiedMessage, AppColors.primary);
+  }
 
   Future<void> _logout(BuildContext context) async {
     final yes = await showDialog<bool>(
