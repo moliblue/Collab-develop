@@ -203,7 +203,14 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           child: Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Image.asset('assets/sultan_abdul_samad.png', fit: BoxFit.cover),
+              Image.asset(
+                vm.planCoverAsset,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Image.asset(
+                  'assets/discovery_placeholder.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -249,9 +256,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       ],
                     ),
                     const Spacer(),
-                    const Text(
-                      'Aug 20 – Aug 23, 2026',
-                      style: TextStyle(
+                    Text(
+                      '${_isoDate(vm.planStartDate)} to ${_isoDate(vm.planEndDate)}',
+                      style: const TextStyle(
                         color: Color(0xCCFFFFFF),
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -268,28 +275,35 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const Text(
-                      'Penang & Kuala Lumpur · Malaysia',
-                      style: TextStyle(
+                    Text(
+                      '${vm.planRegions.isEmpty ? 'Malaysia' : vm.planRegions.join(' & ')} · Malaysia',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         color: Color(0xDDFFFFFF),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Row(
+                    Row(
                       children: <Widget>[
-                        InitialsAvatar('AM', radius: 15, color: Colors.white),
-                        SizedBox(width: 3),
-                        InitialsAvatar(
-                          'LT',
-                          radius: 15,
-                          color: Color(0xFFE9FAF4),
-                        ),
-                        Spacer(),
+                        ...vm.travellers
+                            .take(2)
+                            .map(
+                              (traveller) => Padding(
+                                padding: const EdgeInsets.only(right: 3),
+                                child: InitialsAvatar(
+                                  traveller.initials,
+                                  radius: 15,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        const Spacer(),
                         Text(
-                          '2 destinations',
-                          style: TextStyle(
+                          '${vm.destinationCount} ${vm.destinationCount == 1 ? 'destination' : 'destinations'}',
+                          style: const TextStyle(
                             color: Color(0xDDFFFFFF),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
@@ -2264,7 +2278,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
 
   Future<void> _deletePlan(String name) async {
     try {
-      if (await widget.viewModel.isCurrentUserMemberOfPlan(name)) {
+      if (!await widget.viewModel.isCurrentUserAdminOfPlan(name)) {
         if (!mounted) return;
         await showDialog<void>(
           context: context,
@@ -2335,6 +2349,8 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     'Nov',
     'Dec',
   ][month - 1];
+
+  String _isoDate(DateTime value) => value.toIso8601String().substring(0, 10);
 }
 
 class _CreatePlanRequest {

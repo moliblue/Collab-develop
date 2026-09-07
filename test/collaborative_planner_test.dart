@@ -215,8 +215,8 @@ void main() {
       if (request.url.path.endsWith('/rpc/claim_plan_revision')) {
         return http.Response('1', 200);
       }
-      if (request.url.path.endsWith('/rpc/is_plan_member')) {
-        return http.Response('false', 200);
+      if (request.url.path.endsWith('/rpc/is_plan_admin')) {
+        return http.Response('true', 200);
       }
       return http.Response('', 204);
     });
@@ -265,6 +265,12 @@ void main() {
       '30000000-0000-4000-8000-000000000001',
       accessToken: 'token',
     );
+    await repository.updateMemberRole(
+      '20000000-0000-4000-8000-000000000001',
+      '10000000-0000-4000-8000-000000000002',
+      'admin',
+      accessToken: 'token',
+    );
     await repository.deletePlan(
       '20000000-0000-4000-8000-000000000001',
       accessToken: 'token',
@@ -280,6 +286,7 @@ void main() {
         'PATCH /rest/v1/travel_plans',
         'DELETE /rest/v1/itinerary_cards',
         'DELETE /rest/v1/plan_days',
+        'PATCH /rest/v1/plan_members',
         'DELETE /rest/v1/travel_plans',
       ]),
     );
@@ -295,13 +302,13 @@ void main() {
   });
 
   test(
-    'repository blocks deletion while the current user is a member',
+    'repository blocks deletion when the current user is not an Admin',
     () async {
       final requests = <http.Request>[];
       final client = MockClient((request) async {
         requests.add(request);
-        if (request.url.path.endsWith('/rpc/is_plan_member')) {
-          return http.Response('true', 200);
+        if (request.url.path.endsWith('/rpc/is_plan_admin')) {
+          return http.Response('false', 200);
         }
         return http.Response('', 204);
       });
@@ -321,6 +328,95 @@ void main() {
       repository.dispose();
     },
   );
+
+  test(
+    'repository blocks role promotion when caller is not an Admin',
+    () async {
+      final requests = <http.Request>[];
+      final client = MockClient((request) async {
+        requests.add(request);
+        if (request.url.path.endsWith('/rpc/is_plan_admin')) {
+          return http.Response('false', 200);
+        }
+        return http.Response('', 204);
+      });
+      final repository = CollaborativePlannerRepository(
+        supabase: SupabasePlannerService(
+          url: 'https://example.supabase.co',
+          anonKey: 'test-key',
+          client: client,
+        ),
+      );
+
+      await expectLater(
+        repository.updateMemberRole(
+          '20000000-0000-4000-8000-000000000001',
+          '10000000-0000-4000-8000-000000000002',
+          'admin',
+        ),
+        throwsA(isA<PlanAdminRequiredException>()),
+      );
+      expect(requests.where((request) => request.method == 'PATCH'), isEmpty);
+      repository.dispose();
+    },
+  );
+
+  testWidgets('My trip hero renders the active persisted plan data', (
+    tester,
+  ) async {
+    final plan = TravelPlan(
+      id: '20000000-0000-4000-8000-000000000001',
+      ownerId: '10000000-0000-4000-8000-000000000001',
+      name: 'Penang Heritage Weekend',
+      startDate: DateTime(2026, 9, 7),
+      endDate: DateTime(2026, 9, 10),
+      inviteCode: 'PENANG-1',
+      regions: const <String>['Penang'],
+      days: <PlannerDay>[
+        PlannerDay(id: 'day-1', date: DateTime(2026, 9, 7)),
+        PlannerDay(id: 'day-2', date: DateTime(2026, 9, 10)),
+      ],
+      members: <PlannerMember>[
+        PlannerMember(
+          userId: '10000000-0000-4000-8000-000000000001',
+          name: 'Owner',
+          role: 'admin',
+          initials: 'OW',
+        ),
+      ],
+    );
+    final repository = _MemoryPlannerRepository(savedPlan: plan);
+    final viewModel = CollaborativePlanningViewModel(repository: repository);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PlanModuleView(
+            viewModel: viewModel,
+            bookmarks: const [],
+            recommendations: const [],
+            onDiscover: () {},
+            onViewRoute: (_) {},
+            notify: (_, _) {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Penang Heritage Weekend'), findsOneWidget);
+    expect(find.text('2026-09-07 to 2026-09-10'), findsOneWidget);
+    expect(find.text('Penang · Malaysia'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == 'assets/blue_mansion.png',
+      ),
+      findsOneWidget,
+    );
+    viewModel.dispose();
+  });
 
   testWidgets(
     'create dialog closes before shared plan state updates and persists first region',
@@ -366,7 +462,7 @@ void main() {
 }
 
 class _MemoryPlannerRepository extends CollaborativePlannerRepository {
-  _MemoryPlannerRepository()
+  _MemoryPlannerRepository({this.savedPlan})
     : super(
         supabase: SupabasePlannerService(
           url: 'https://example.supabase.co',
@@ -386,6 +482,10 @@ class _MemoryPlannerRepository extends CollaborativePlannerRepository {
   @override
   Future<List<TravelPlan>> loadPlans({String? accessToken}) async =>
       savedPlan == null ? <TravelPlan>[] : <TravelPlan>[savedPlan!];
+
+  @override
+  Future<TravelPlan?> loadPlan(String planId, {String? accessToken}) async =>
+      savedPlan?.id == planId ? savedPlan : null;
 
   @override
   Future<int> savePlan(

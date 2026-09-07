@@ -192,6 +192,16 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
   List<planner.TravelPlan> get availablePlans =>
       List<planner.TravelPlan>.unmodifiable(_availablePlans);
+  planner.TravelPlan? get currentPlan =>
+      _availablePlans.where((plan) => plan.id == _planId).firstOrNull;
+  List<String> get planRegions => List<String>.unmodifiable(_planRegions);
+  String get planCoverAsset =>
+      currentPlan?.coverAsset ??
+      planner.TravelPlan.coverAssetForRegion(_planRegions.firstOrNull ?? '');
+  DateTime get planStartDate => currentPlan?.startDate ?? _days.first.date;
+  DateTime get planEndDate => currentPlan?.endDate ?? _days.last.date;
+  int get destinationCount =>
+      _days.fold<int>(0, (total, day) => total + day.activities.length);
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
@@ -689,12 +699,12 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> isCurrentUserMemberOfPlan(String name) async {
+  Future<bool> isCurrentUserAdminOfPlan(String name) async {
     final matching = _availablePlans.where((plan) => plan.name == name);
     if (matching.isEmpty) return false;
     try {
       final session = await repository.authenticate();
-      return repository.isCurrentUserMember(
+      return repository.isCurrentUserAdmin(
         matching.first.id,
         accessToken: session?.accessToken,
       );

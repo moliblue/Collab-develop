@@ -230,10 +230,12 @@ class TravelPlan {
     'Labuan',
   ];
 
-  String get coverAsset => switch (primaryRegion) {
+  static String coverAssetForRegion(String region) => switch (region) {
     'Penang' => 'assets/blue_mansion.png',
     'Kuala Lumpur' => 'assets/sultan_abdul_samad.png',
     'Selangor' => 'assets/batu_caves.png',
     _ => 'assets/discovery_placeholder.png',
   };
+
+  String get coverAsset => coverAssetForRegion(primaryRegion);
 }

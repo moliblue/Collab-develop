@@ -14,6 +14,15 @@ class PlanMembershipRequiredException implements Exception {
   String toString() => message;
 }
 
+class PlanAdminRequiredException implements Exception {
+  const PlanAdminRequiredException();
+
+  static const message = 'Only a plan Admin can perform this action.';
+
+  @override
+  String toString() => message;
+}
+
 class CollaborativePlannerRepository {
   CollaborativePlannerRepository({
     SupabasePlannerService? supabase,
@@ -243,8 +252,15 @@ class CollaborativePlannerRepository {
     return result == true;
   }
 
+  Future<bool> isCurrentUserAdmin(String planId, {String? accessToken}) async {
+    final result = await supabase.rpc('is_plan_admin', <String, dynamic>{
+      'target_plan': planId,
+    }, accessToken: accessToken);
+    return result == true;
+  }
+
   Future<void> deletePlan(String planId, {String? accessToken}) async {
-    if (await isCurrentUserMember(planId, accessToken: accessToken)) {
+    if (!await isCurrentUserAdmin(planId, accessToken: accessToken)) {
       throw const PlanMembershipRequiredException();
     }
     await supabase.delete(
@@ -280,6 +296,9 @@ class CollaborativePlannerRepository {
     String role, {
     String? accessToken,
   }) async {
+    if (!await isCurrentUserAdmin(planId, accessToken: accessToken)) {
+      throw const PlanAdminRequiredException();
+    }
     await supabase.update(
       'plan_members',
       'plan_id=eq.$planId&user_id=eq.$userId',
