@@ -49,7 +49,7 @@ void main() {
     expect(plan.encodeSharePayload(), isNotEmpty);
     expect(plan.activityCount, 0);
     expect(plan.primaryRegion, 'Johor');
-    expect(plan.coverAsset, 'assets/discovery_placeholder.png');
+    expect(plan.coverAsset, 'assets/woodcraft_antique.png');
     expect(plan.toJson()['regions'], <String>['Johor', 'Melaka']);
   });
 

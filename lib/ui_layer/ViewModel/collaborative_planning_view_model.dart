@@ -12,6 +12,13 @@ import 'package:uuid/uuid.dart';
 
 enum PlanSection { workspace, history, groups }
 
+class PlanChoice {
+  const PlanChoice({required this.id, required this.name});
+
+  final String id;
+  final String name;
+}
+
 class CollaborativePlanningViewModel extends ChangeNotifier {
   CollaborativePlanningViewModel({CollaborativePlannerRepository? repository})
     : repository = repository ?? CollaborativePlannerRepository() {
@@ -164,9 +171,43 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
         _availablePlans = await repository.loadPlans(
           accessToken: repository.session?.accessToken,
         );
-        await _loadPlan(_planId!);
+        await _reconcileActivePlan();
       });
     });
+  }
+
+  Future<void> _reconcileActivePlan() async {
+    final activeId = _planId;
+    if (activeId != null &&
+        _availablePlans.any((plan) => plan.id == activeId)) {
+      await _loadPlan(activeId);
+      return;
+    }
+    if (_availablePlans.isNotEmpty) {
+      await _loadPlan(_availablePlans.first.id, notify: false);
+    } else {
+      await repository.unwatchPlan(_realtimeChannel);
+      _realtimeChannel = null;
+      _planId = null;
+      _inviteCode = null;
+      _planName = '';
+      _planRegions = const <String>[];
+      _planPersisted = false;
+      _planRevision = 0;
+      _days = <PlanDay>[
+        PlanDay(
+          id: 'empty-day',
+          label: 'Day 1',
+          date: DateTime.now(),
+          activities: <ActivityItem>[],
+        ),
+      ];
+      _travellers = <Traveller>[];
+      _dayIndex = 0;
+      _section = PlanSection.history;
+      _supabaseError = null;
+    }
+    notifyListeners();
   }
 
   List<PlanDay> get days => List<PlanDay>.unmodifiable(_days);
@@ -192,6 +233,11 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
       List<String>.unmodifiable(_availablePlans.map((plan) => plan.name));
   List<planner.TravelPlan> get availablePlans =>
       List<planner.TravelPlan>.unmodifiable(_availablePlans);
+  List<PlanChoice> get planChoices => List<PlanChoice>.unmodifiable(
+    _availablePlans.map((plan) => PlanChoice(id: plan.id, name: plan.name)),
+  );
+  String? get activePlanId =>
+      _availablePlans.any((plan) => plan.id == _planId) ? _planId : null;
   planner.TravelPlan? get currentPlan =>
       _availablePlans.where((plan) => plan.id == _planId).firstOrNull;
   List<String> get planRegions => List<String>.unmodifiable(_planRegions);
@@ -205,6 +251,17 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
   PlanSection get section => _section;
   int get dayIndex => _dayIndex.clamp(0, _days.length - 1);
   PlanDay get activeDay => _days[dayIndex];
+
+  bool activeDayContains(HeritagePlace place) {
+    final targetName = place.name.trim().toLowerCase();
+    return activeDay.activities.any(
+      (activity) =>
+          activity.title.trim().toLowerCase() == targetName &&
+          (activity.latitude - place.latitude).abs() < 0.00001 &&
+          (activity.longitude - place.longitude).abs() < 0.00001,
+    );
+  }
+
   String get planName => _planName;
   String get inviteCode =>
       _inviteCode ??
@@ -641,14 +698,21 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> openHistoryPlan(String name) async {
-    final plan = _availablePlans.where((item) => item.name == name).firstOrNull;
+  Future<void> openHistoryPlan(String id) async {
+    final plan = _availablePlans.where((item) => item.id == id).firstOrNull;
     if (plan == null) return;
     if (await _loadPlan(plan.id)) {
       _section = PlanSection.workspace;
       notifyListeners();
+    } else {
+      _availablePlans = await repository.loadPlans(
+        accessToken: repository.session?.accessToken,
+      );
+      await _reconcileActivePlan();
     }
   }
+
+  Future<void> openHistoryPlanById(String id) => openHistoryPlan(id);
 
   Future<bool> joinPlan(String code) async {
     try {
@@ -671,16 +735,11 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> deletePlan(String name) async {
-    final matching = _availablePlans.where((plan) => plan.name == name);
-    final targetId = matching.isEmpty ? null : matching.first.id;
-    if (targetId != null) {
+  Future<bool> deletePlan(String id) async {
+    if (_availablePlans.any((plan) => plan.id == id)) {
       try {
         final session = await repository.authenticate();
-        await repository.deletePlan(
-          targetId,
-          accessToken: session?.accessToken,
-        );
+        await repository.deletePlan(id, accessToken: session?.accessToken);
       } catch (error) {
         _supabaseError = '$error';
         notifyListeners();
@@ -690,21 +749,16 @@ class CollaborativePlanningViewModel extends ChangeNotifier {
     _availablePlans = await repository.loadPlans(
       accessToken: repository.session?.accessToken,
     );
-    if (_availablePlans.isNotEmpty && _planName == name) {
-      await _loadPlan(_availablePlans.first.id, notify: false);
-    } else if (_availablePlans.isEmpty) {
-      _section = PlanSection.history;
-    }
-    notifyListeners();
+    await _reconcileActivePlan();
     return true;
   }
 
-  Future<bool> isCurrentUserAdminOfPlan(String name) async {
-    final matching = _availablePlans.where((plan) => plan.name == name);
+  Future<bool> isCurrentUserAdminOfPlan(String id) async {
+    final matching = _availablePlans.where((plan) => plan.id == id);
     if (matching.isEmpty) return false;
     try {
       final session = await repository.authenticate();
-      return repository.isCurrentUserAdmin(
+      return await repository.isCurrentUserAdmin(
         matching.first.id,
         accessToken: session?.accessToken,
       );

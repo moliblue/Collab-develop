@@ -234,7 +234,20 @@ class TravelPlan {
     'Penang' => 'assets/blue_mansion.png',
     'Kuala Lumpur' => 'assets/sultan_abdul_samad.png',
     'Selangor' => 'assets/batu_caves.png',
-    _ => 'assets/discovery_placeholder.png',
+    'Johor' => 'assets/woodcraft_antique.png',
+    'Kedah' => 'assets/hainanese_kopitiam.png',
+    'Kelantan' => 'assets/batik_artisan.png',
+    'Melaka' => 'assets/petaling_street.png',
+    'Negeri Sembilan' => 'assets/woodcraft_antique.png',
+    'Pahang' => 'assets/pewter_craft.png',
+    'Perak' => 'assets/pewter_craft.png',
+    'Perlis' => 'assets/hainanese_kopitiam.png',
+    'Putrajaya' => 'assets/sultan_abdul_samad.png',
+    'Sabah' => 'assets/woodcraft_antique.png',
+    'Sarawak' => 'assets/woodcraft_antique.png',
+    'Terengganu' => 'assets/batik_artisan.png',
+    'Labuan' => 'assets/blue_mansion.png',
+    _ => 'assets/sultan_abdul_samad.png',
   };
 
   String get coverAsset => coverAssetForRegion(primaryRegion);

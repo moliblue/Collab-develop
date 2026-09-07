@@ -881,7 +881,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           (plan) => Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              width: 184,
+              width: double.infinity,
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -915,11 +915,26 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       ),
                       Positioned(
                         left: 10,
-                        top: 62,
-                        child: AppChip(
-                          label: 'PIN: ${plan.inviteCode}',
-                          selected: true,
-                          selectedColor: AppColors.warning,
+                        bottom: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xE62B3340),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white70),
+                          ),
+                          child: SelectableText(
+                            'JOIN CODE  ${plan.inviteCode}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: .35,
+                            ),
+                          ),
                         ),
                       ),
                       if (plan.primaryRegion.isNotEmpty)
@@ -965,10 +980,17 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                           ),
                         ),
                         const SizedBox(height: 5),
+                        Text(
+                          '♙ ${plan.members.length} ${plan.members.length == 1 ? 'Member' : 'Members'}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: AppColors.primary,
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         FilledButton.icon(
                           onPressed: () =>
-                              widget.viewModel.openHistoryPlan(plan.name),
+                              widget.viewModel.openHistoryPlan(plan.id),
                           style: FilledButton.styleFrom(
                             minimumSize: const Size.fromHeight(40),
                             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -986,7 +1008,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                           alignment: Alignment.centerRight,
                           child: IconButton(
                             tooltip: 'Delete Plan',
-                            onPressed: () => _deletePlan(plan.name),
+                            onPressed: () => _deletePlan(plan),
                             icon: const Icon(
                               Icons.delete_outline_rounded,
                               color: AppColors.danger,
@@ -1469,6 +1491,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                       if (item == null) {
                         ActivityItem? created;
                         if (selected != null) {
+                          if (!await _confirmOutsidePlanRegions(selected!)) {
+                            return;
+                          }
                           if (!await _confirmDistantLocation(
                             selected!.latitude,
                             selected!.longitude,
@@ -1722,6 +1747,42 @@ class _PlanModuleViewState extends State<PlanModuleView> {
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Yes, add location'),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  Future<bool> _confirmOutsidePlanRegions(HeritagePlace place) async {
+    final planRegions = widget.viewModel.planRegions;
+    final placeState = place.state.trim();
+    if (planRegions.isEmpty ||
+        placeState.isEmpty ||
+        planRegions.any(
+          (region) => region.toLowerCase() == placeState.toLowerCase(),
+        )) {
+      return true;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(
+          Icons.wrong_location_rounded,
+          color: AppColors.warning,
+        ),
+        title: const Text('Location is outside this trip area'),
+        content: Text(
+          '${place.name} is in $placeState, but this plan is for ${planRegions.join(' & ')}. Are you sure you want to add it?',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Choose another place'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Add anyway'),
           ),
         ],
       ),
@@ -2276,9 +2337,9 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     if (joined) _joinCode.clear();
   }
 
-  Future<void> _deletePlan(String name) async {
+  Future<void> _deletePlan(planner.TravelPlan plan) async {
     try {
-      if (!await widget.viewModel.isCurrentUserAdminOfPlan(name)) {
+      if (!await widget.viewModel.isCurrentUserAdminOfPlan(plan.id)) {
         if (!mounted) return;
         await showDialog<void>(
           context: context,
@@ -2309,7 +2370,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Delete Travel Plan?'),
-        content: Text(PlannerMessages.deletePlan(name)),
+        content: Text(PlannerMessages.deletePlan(plan.name)),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -2324,7 +2385,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
       ),
     );
     if (confirmed == true) {
-      final deleted = await widget.viewModel.deletePlan(name);
+      final deleted = await widget.viewModel.deletePlan(plan.id);
       widget.notify(
         deleted
             ? PlannerMessages.planDeleted
