@@ -45,6 +45,8 @@ class AuthViewModel extends ChangeNotifier {
     bool initialRecoveryError = false,
   }) : _supabase = supabaseService ?? const SupabaseService(),
        _authNotice = initialNotice,
+       _invalidVerificationCallbackPending =
+           initialNotice?.message == invalidVerificationLinkMessage,
        _passwordRecovery = initialPasswordRecovery,
        _recoveryError = initialRecoveryError
            ? invalidRecoverySessionMessage
@@ -73,6 +75,7 @@ class AuthViewModel extends ChangeNotifier {
   String? _recoveryError;
   String? _verificationError;
   AuthNotice? _authNotice;
+  bool _invalidVerificationCallbackPending;
   int _verificationResendSecondsRemaining = 0;
   IdentityType _selectedIdentityType = IdentityType.ic;
   String _selectedIssuingCountry = 'MY';
@@ -295,6 +298,7 @@ class AuthViewModel extends ChangeNotifier {
   String get authRedirectUrl => AuthRedirectResolver.resolve();
 
   Future<void> _finishEmailConfirmation() async {
+    _invalidVerificationCallbackPending = false;
     _pendingVerificationEmail = null;
     _verificationError = null;
     _verificationResendTimer?.cancel();
@@ -315,12 +319,20 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   AuthNotice? takeAuthNotice() {
-    final notice = _authNotice;
+    var notice = _authNotice;
     _authNotice = null;
+    if (notice?.message == invalidVerificationLinkMessage && isAuthenticated) {
+      _invalidVerificationCallbackPending = false;
+      notice = const AuthNotice(
+        verificationSuccessMessage,
+        AuthNoticeKind.success,
+      );
+    }
     return notice;
   }
 
   void reportInvalidVerificationLink() {
+    _invalidVerificationCallbackPending = true;
     _passwordRecovery = false;
     _recoveryError = null;
     _verificationError = invalidVerificationLinkMessage;
@@ -445,6 +457,14 @@ class AuthViewModel extends ChangeNotifier {
         state.event == AuthChangeEvent.signedIn) {
       unawaited(_finishEmailConfirmation());
       return;
+    } else if (_invalidVerificationCallbackPending &&
+        state.event == AuthChangeEvent.signedIn &&
+        state.session != null) {
+      _invalidVerificationCallbackPending = false;
+      _authNotice = const AuthNotice(
+        verificationSuccessMessage,
+        AuthNoticeKind.success,
+      );
     }
     if (!_disposed) notifyListeners();
   }

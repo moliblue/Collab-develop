@@ -495,6 +495,36 @@ void main() {
       expect(model.profile.stage, ProfileStage.login);
     });
 
+    test(
+      'authenticated session replaces a stale expired verification warning',
+      () async {
+        final service = FakeRecoverySupabaseService();
+        final auth = AuthViewModel(
+          supabaseService: service,
+          initialNotice: const AuthNotice(
+            AuthViewModel.invalidVerificationLinkMessage,
+            AuthNoticeKind.error,
+          ),
+        );
+        final model = AppViewModel(
+          mysteryRepository: FakeShakeFindRepository(),
+          authViewModel: auth,
+        );
+        addTearDown(model.dispose);
+        addTearDown(service.dispose);
+
+        expect(
+          model.toast?.message,
+          AuthViewModel.invalidVerificationLinkMessage,
+        );
+        service.emit(AuthChangeEvent.signedIn, hasSession: true);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(model.toast?.message, AuthViewModel.verificationSuccessMessage);
+        expect(model.requiresAuthentication, isFalse);
+      },
+    );
+
     testWidgets(
       'registration password and confirmation visibility toggle independently',
       (tester) async {

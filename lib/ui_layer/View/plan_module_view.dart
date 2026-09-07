@@ -1186,6 +1186,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
     final notes = TextEditingController(text: item?.notes);
     HeritagePlace? selected;
     String? selectedPlaceId;
+    var titleWasAutoFilled = false;
     // A place can arrive through both the built-in catalogue and Supabase.
     // DropdownButton requires exactly one item for each selected value, so
     // remove repeated object instances before building its menu.
@@ -1254,7 +1255,10 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         final p = savedPlaces[index];
                         selected = p;
                         location.text = _placeLocation(p);
-                        if (title.text.isEmpty) title.text = p.name;
+                        if (title.text.isEmpty || titleWasAutoFilled) {
+                          title.text = p.name;
+                          titleWasAutoFilled = true;
+                        }
                         category = _plannerCategoryForPlace(p);
                       }
                     }),
@@ -1265,6 +1269,7 @@ class _PlanModuleViewState extends State<PlanModuleView> {
             const SizedBox(height: 9),
             TextField(
               controller: title,
+              onChanged: (_) => titleWasAutoFilled = false,
               decoration: InputDecoration(
                 labelText: context.tr('Activity Title *'),
                 hintText: 'e.g. Visit Batu Caves Cathedral',
@@ -1344,7 +1349,10 @@ class _PlanModuleViewState extends State<PlanModuleView> {
                         onTap: () => sheetSet(() {
                           selected = place;
                           location.text = _placeLocation(place);
-                          if (title.text.isEmpty) title.text = place.name;
+                          if (title.text.isEmpty || titleWasAutoFilled) {
+                            title.text = place.name;
+                            titleWasAutoFilled = true;
+                          }
                           category = _plannerCategoryForPlace(place);
                           locationSuggestions = <HeritagePlace>[];
                         }),
